@@ -441,8 +441,8 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(2px);
+    background-color: rgba(15, 23, 42, 0.45);
+    backdrop-filter: none;
     z-index: 1015;
 }
 
@@ -933,7 +933,7 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
 }
 
 .dash-rec-card:hover {
-    transform: translateY(-2px);
+    transform: none;
     border-color: var(--dash-border-strong);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     color: inherit;
@@ -1077,7 +1077,7 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
 .dash-btn-danger:hover,
 .dash-btn-ghost:hover {
     text-decoration: none;
-    transform: translateY(-1px);
+    transform: none;
 }
 
 .dash-btn:active,

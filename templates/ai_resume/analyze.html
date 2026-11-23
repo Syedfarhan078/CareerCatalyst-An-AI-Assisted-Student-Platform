@@ -5,8 +5,8 @@
 {% block title %}ATS Resume Analyzer — CareerCatalyst{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
-<link rel="stylesheet" href="{% static 'css/resume.css' %}?v=1.0">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/resume.css' %}?v=1.1">
 {% endblock %}
 
 {# Override public marketing navbar, footer, and chatbot for authenticated workspace shell #}
@@ -130,7 +130,7 @@
                                 </p>
 
                                 <!-- Path A: Upload File -->
-                                <div class="p-3 bg-white rounded-3 border mb-3" style="border-color: var(--dash-border) !important;">
+                                <div class="p-3 rounded-3 border mb-3" style="background: var(--dash-surface); border-color: var(--dash-border) !important;">
                                     <label class="form-label fw-semibold text-secondary small mb-1" for="id_uploaded_file">
                                         <i class="bi bi-file-earmark-arrow-up text-primary me-1"></i> Path A: Upload Resume File (PDF or DOCX)
                                     </label>
@@ -143,7 +143,7 @@
                                 <div class="text-center text-muted fw-bold small my-2" style="font-size: 0.72rem;">&mdash; OR &mdash;</div>
 
                                 <!-- Path B: Select Saved Resume -->
-                                <div class="p-3 bg-white rounded-3 border mb-3" style="border-color: var(--dash-border) !important;">
+                                <div class="p-3 rounded-3 border mb-3" style="background: var(--dash-surface); border-color: var(--dash-border) !important;">
                                     <label class="form-label fw-semibold text-secondary small mb-1" for="id_resume">
                                         <i class="bi bi-file-earmark-person text-primary me-1"></i> Path B: Select Built Resume from CareerCatalyst
                                     </label>
@@ -156,7 +156,7 @@
                                 <div class="text-center text-muted fw-bold small my-2" style="font-size: 0.72rem;">&mdash; OR &mdash;</div>
 
                                 <!-- Path C: Paste Text -->
-                                <div class="p-3 bg-white rounded-3 border" style="border-color: var(--dash-border) !important;">
+                                <div class="p-3 rounded-3 border" style="background: var(--dash-surface); border-color: var(--dash-border) !important;">
                                     <label class="form-label fw-semibold text-secondary small mb-1" for="id_raw_text_input">
                                         <i class="bi bi-clipboard-data text-primary me-1"></i> Path C: Paste Resume Text Directly
                                     </label>

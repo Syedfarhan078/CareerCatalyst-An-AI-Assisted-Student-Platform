@@ -142,6 +142,7 @@ html {
 
 body {
     min-width: 320px;
+    overflow-x: clip;
 }
 
 body {
@@ -273,17 +274,23 @@ img {
     max-width: 600px;
 }
 
-/* --- Text Gradient --- */
+/* Solid brand color. Gradient text reads as generated marketing, so this stays a plain color. */
 .text-gradient {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--primary);
 }
 
-/* --- Gradient Background --- */
 .gradient-bg {
-    background: linear-gradient(135deg, var(--primary), #1e40af);
+    background: var(--primary);
+}
+
+.rounded-4 {
+    border-radius: 10px !important;
+}
+
+.rounded-5 {
+    border-radius: 12px !important;
 }
 
 /* ------------------------------------------------------------

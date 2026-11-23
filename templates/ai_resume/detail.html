@@ -4,8 +4,8 @@
 {% block title %}ATS Report: {{ analysis.target_role }} — CareerCatalyst{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
-<link rel="stylesheet" href="{% static 'css/resume.css' %}?v=1.0">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/resume.css' %}?v=1.1">
 {% endblock %}
 
 {# Override public marketing navbar, footer, and chatbot for authenticated workspace shell #}
@@ -113,7 +113,7 @@
                         </a>
                         {% if not analysis.ai_enhanced %}
                         <button type="button" id="btnEnhanceAiTop" class="dash-btn dash-btn-primary dash-btn-sm" onclick="triggerAiEnhancement()">
-                            <i class="bi bi-stars me-1"></i> Enhance with AI
+                            <i class="bi bi-pencil-square me-1"></i> Enhance with AI
                         </button>
                         {% endif %}
                     </div>
@@ -157,7 +157,7 @@
                             <h6 class="fw-bold mb-0" style="color: var(--dash-text);">Core Evaluation Pillars</h6>
                             {% if analysis.ai_enhanced %}
                             <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5 py-1 small">
-                                <i class="bi bi-stars me-1"></i> AI Optimized
+                                <i class="bi bi-pencil-square me-1"></i> AI Optimized
                             </span>
                             {% else %}
                             <span class="badge bg-secondary bg-opacity-10 text-muted rounded-pill px-2.5 py-1 small">
@@ -239,7 +239,7 @@
                  AI ENHANCEMENT BANNER (IF NOT YET ENHANCED)
                  ========================================================== -->
             {% if not analysis.ai_enhanced %}
-            <div id="aiPromoBanner" class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(20, 184, 166, 0.05) 100%); border: 1px solid rgba(37, 99, 235, 0.2) !important;">
+            <div id="aiPromoBanner" class="card border-0 shadow-sm rounded-4 p-4 mb-4" style="background: var(--dash-surface); border: 1px solid var(--dash-border) !important; border-left: 3px solid var(--dash-primary) !important;">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-1">
@@ -253,7 +253,7 @@
                         </p>
                     </div>
                     <button type="button" id="btnEnhanceAi" class="dash-btn dash-btn-primary px-4 py-2 text-nowrap" onclick="triggerAiEnhancement()">
-                        <i class="bi bi-stars me-1"></i> Enhance with AI
+                        <i class="bi bi-pencil-square me-1"></i> Enhance with AI
                     </button>
                 </div>
             </div>
@@ -267,7 +267,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-primary text-white rounded-pill px-3 py-1 small">
-                                <i class="bi bi-stars me-1"></i> AI High-Impact Rewrites
+                                <i class="bi bi-pencil-square me-1"></i> AI High-Impact Rewrites
                             </span>
                             <span class="text-muted small">Targeted for {{ analysis.target_role }}</span>
                         </div>
@@ -589,13 +589,13 @@ function triggerAiEnhancement() {
             const container = document.getElementById('aiInsightsContainer');
             if (container) container.classList.remove('d-none');
         } else {
-            setButtons('<i class="bi bi-stars me-1"></i> Enhance with AI', false);
+            setButtons('<i class="bi bi-pencil-square me-1"></i> Enhance with AI', false);
             alert(data.message || 'AI service running in offline mode.');
         }
     })
     .catch(err => {
         console.error(err);
-        setButtons('<i class="bi bi-stars me-1"></i> Enhance with AI', false);
+        setButtons('<i class="bi bi-pencil-square me-1"></i> Enhance with AI', false);
         alert('Failed to contact AI service.');
     });
 }

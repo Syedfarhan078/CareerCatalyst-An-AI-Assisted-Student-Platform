@@ -42,7 +42,7 @@
 
 .roadmap-hero-card.completed {
     border-color: var(--dash-success-border);
-    background: linear-gradient(to bottom, var(--dash-surface), var(--dash-surface-muted));
+    background: var(--dash-surface);
 }
 
 .roadmap-hero-card::before {
@@ -541,14 +541,14 @@
 }
 
 .roadmap-catalog-card:hover {
-    transform: translateY(-2px);
+    transform: none;
     border-color: var(--dash-border-strong);
-    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: none;
 }
 
 .roadmap-catalog-card.target-match {
     border-color: var(--dash-primary-border);
-    background: linear-gradient(to bottom, var(--dash-primary-subtle), var(--dash-surface));
+    background: var(--dash-surface);
 }
 
 .roadmap-target-match-tag {
@@ -1059,7 +1059,7 @@ html[data-theme="dark"] .pub-detail-hero {
 }
 
 .pub-roadmap-card:hover {
-    transform: translateY(-2px);
+    transform: none;
     box-shadow: var(--shadow-md);
     border-color: var(--border-strong);
 }

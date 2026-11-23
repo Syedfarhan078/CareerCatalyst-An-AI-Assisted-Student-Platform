@@ -5,8 +5,8 @@
 {% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
-<link rel="stylesheet" href="{% static 'css/roadmaps.css' %}?v=2.2">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/roadmaps.css' %}?v=2.3">
 <link rel="stylesheet" href="{% static 'css/certificate.css' %}?v=1.0">
 {% endblock %}
 
@@ -56,6 +56,10 @@
                         <a href="{% url 'roadmaps:certificate_pdf' cert.certificate_id %}" target="_blank" rel="noopener noreferrer" class="btn btn-primary px-3 py-2">
                             <i class="bi bi-download me-1.5"></i>
                             <span>Download PDF</span>
+                        </a>
+                        <a href="https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name={{ cert.career_path.name|urlencode }}%20Mastery&organizationName=CareerCatalyst%20Education&issueYear={{ cert.issued_at|date:'Y' }}&issueMonth={{ cert.issued_at|date:'n' }}&certUrl={{ CANONICAL_ORIGIN }}{% url 'roadmaps:verify_certificate' cert.certificate_id %}&certId={{ cert.certificate_id }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary px-3 py-2">
+                            <i class="bi bi-linkedin me-1.5"></i>
+                            <span>Add to LinkedIn</span>
                         </a>
                     </div>
                 </div>

@@ -4,8 +4,8 @@
 {% block title %}Community & Mentors — CareerCatalyst{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
-<link rel="stylesheet" href="{% static 'css/community.css' %}?v=1.0">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/community.css' %}?v=1.1">
 {% endblock %}
 
 {# Override public marketing navbar, footer, and chatbot for authenticated workspace shell #}
@@ -285,7 +285,7 @@
                             </div>
                             {% empty %}
                             <div class="text-center py-4 text-muted">
-                                <i class="bi bi-stars fs-3 d-block mb-2"></i>
+                                <i class="bi bi-award fs-3 d-block mb-2"></i>
                                 <p class="mb-0">No placement stories published yet.</p>
                             </div>
                             {% endfor %}

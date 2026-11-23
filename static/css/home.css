@@ -107,15 +107,15 @@ html[data-theme="dark"] body.home-page {
     display: inline-flex;
     align-items: center;
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--home-primary);
-    background: var(--home-primary-subtle);
-    border: 1px solid var(--home-primary-border);
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--home-radius-sm);
-    margin-bottom: 1rem;
+    letter-spacing: 0.06em;
+    color: var(--home-text-muted);
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 0.75rem;
 }
 
 .home-page .section-title {
@@ -167,7 +167,7 @@ html[data-theme="dark"] body.home-page {
 }
 
 .btn-cc:hover {
-    transform: translateY(-1px);
+    transform: none;
 }
 
 .btn-cc:active {
@@ -235,7 +235,7 @@ html[data-theme="dark"] body.home-page {
    4. HERO SECTION WITH REALISTIC WORKSPACE MOCKUP
    ------------------------------------------------------------ */
 .hero-section {
-    padding: 5.25rem 0 5rem;
+    padding: 4.5rem 0 4.25rem;
     background: var(--home-bg);
 }
 
@@ -247,24 +247,34 @@ html[data-theme="dark"] body.home-page {
 .hero-eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    background: var(--home-surface);
-    border: 1px solid var(--home-border);
-    padding: 0.3rem 0.85rem;
-    border-radius: var(--radius-full, 9999px);
-    margin-bottom: 1.5rem;
-    box-shadow: var(--home-shadow-sm);
+    gap: 0.55rem;
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 1.15rem;
+    box-shadow: none;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .hero-eyebrow-badge {
-    background: var(--home-primary-subtle);
-    color: var(--home-primary);
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.15rem 0.5rem;
-    border-radius: var(--radius-full, 9999px);
+    background: transparent;
+    color: var(--home-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 0;
+    border-radius: 0;
+}
+
+.hero-eyebrow-badge::after {
+    content: "·";
+    margin-left: 0.55rem;
+    color: var(--home-text-subtle);
+    font-weight: 400;
 }
 
 .hero-eyebrow-text {
@@ -274,11 +284,11 @@ html[data-theme="dark"] body.home-page {
 }
 
 .hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
+    font-size: 3.15rem;
+    font-weight: 700;
     color: var(--home-text);
-    line-height: 1.15;
-    letter-spacing: -0.04em;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
     max-width: 760px;
     margin-left: auto;
     margin-right: auto;
@@ -335,11 +345,18 @@ html[data-theme="dark"] body.home-page {
     }
     .hero-actions .btn-cc {
         width: 100%;
+        white-space: normal;
+    }
+    .hero-section {
+        padding: 2.75rem 0 2.5rem;
+    }
+    .hero-intro {
+        margin-bottom: 2rem;
     }
     .hero-trust-row {
-        gap: 1rem;
+        gap: 0.65rem;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
     }
 }
 
@@ -375,12 +392,12 @@ html[data-theme="dark"] body.home-page {
     background: var(--home-surface);
     border: 1px solid var(--home-border);
     border-radius: var(--home-radius-lg);
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     overflow: hidden;
 }
 
 html[data-theme="dark"] .product-window {
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+    box-shadow: none;
 }
 
 .window-header {
@@ -476,11 +493,23 @@ html[data-theme="dark"] .product-window {
 }
 
 @media (max-width: 575.98px) {
+    .window-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        padding: 0.65rem 0.85rem;
+    }
     .window-breadcrumbs {
         display: none;
     }
     .window-body {
-        padding: 1rem;
+        padding: 0.85rem;
+    }
+    .mockup-step-header,
+    .mockup-card-header,
+    .mockup-breakdown-row,
+    .mockup-metric-line {
+        flex-wrap: wrap;
+        gap: 0.35rem;
     }
 }
 
@@ -1202,8 +1231,8 @@ html[data-theme="dark"] .product-window {
 
 .spotlight-card:hover {
     border-color: var(--home-border-strong);
-    transform: translateY(-2px);
-    box-shadow: var(--home-shadow-md);
+    transform: none;
+    box-shadow: var(--home-shadow-sm);
 }
 
 .spotlight-header {
@@ -1281,7 +1310,7 @@ html[data-theme="dark"] .product-window {
 }
 
 .spotlight-link:hover i {
-    transform: translateX(3px);
+    transform: none;
 }
 
 /* Supporting Cards */
@@ -1296,8 +1325,8 @@ html[data-theme="dark"] .product-window {
 
 .supporting-card:hover {
     border-color: var(--home-border-strong);
-    transform: translateY(-2px);
-    box-shadow: var(--home-shadow-md);
+    transform: none;
+    box-shadow: var(--home-shadow-sm);
 }
 
 .supporting-icon {
@@ -1356,9 +1385,9 @@ html[data-theme="dark"] .product-window {
 }
 
 .principle-num {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--home-primary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--home-text-muted);
     line-height: 1;
     margin-bottom: 0.75rem;
     letter-spacing: -0.02em;
@@ -1392,9 +1421,9 @@ html[data-theme="dark"] .product-window {
 }
 
 .fact-val {
-    font-size: 2.25rem;
-    font-weight: 800;
-    color: var(--home-primary);
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--home-text);
     line-height: 1;
     letter-spacing: -0.025em;
     margin-bottom: 0.35rem;
@@ -1505,17 +1534,23 @@ html[data-theme="dark"] .faq-accordion-editorial .accordion-button::after {
 
 @media (max-width: 991.98px) {
     .cta-panel {
-        padding: 2.25rem 1.75rem;
-        text-align: center;
+        padding: 1.75rem 1.25rem;
+        text-align: left;
     }
     .cta-headline {
-        font-size: 1.6rem;
+        font-size: 1.45rem;
     }
     .cta-subheadline {
-        margin: 0 auto 1.5rem;
+        margin: 0 0 1.25rem;
     }
     .cta-button-group {
-        justify-content: center;
+        justify-content: flex-start;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .cta-button-group .btn-cc {
+        width: 100%;
+        white-space: normal;
     }
 }
 

@@ -393,7 +393,7 @@ html[data-theme="dark"] .settings-card input[type="file"].form-control:hover::fi
 .settings-btn-primary:hover {
     background: var(--settings-primary-hover);
     color: #ffffff !important;
-    transform: translateY(-1px);
+    transform: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-decoration: none;
 }
@@ -423,7 +423,7 @@ html[data-theme="dark"] .settings-card input[type="file"].form-control:hover::fi
     background: var(--dash-surface-hover, var(--settings-bg));
     border-color: var(--dash-border-strong, var(--settings-border));
     color: var(--settings-text);
-    transform: translateY(-1px);
+    transform: none;
     text-decoration: none;
 }
 
@@ -452,7 +452,7 @@ html[data-theme="dark"] .settings-card input[type="file"].form-control:hover::fi
 .settings-btn-danger:hover {
     opacity: 0.92;
     color: #ffffff !important;
-    transform: translateY(-1px);
+    transform: none;
     text-decoration: none;
 }
 

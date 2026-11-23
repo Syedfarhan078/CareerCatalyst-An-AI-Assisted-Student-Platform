@@ -123,7 +123,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/roadmaps.css' %}?v=2.2">
+<link rel="stylesheet" href="{% static 'css/roadmaps.css' %}?v=2.3">
 {% endblock %}
 
 {% block main_wrapper %}
@@ -151,7 +151,7 @@
                     <!-- Badges -->
                     <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                         <span class="badge bg-primary text-white px-2.5 py-1">
-                            <i class="bi bi-stars me-1 text-warning"></i>2027 Edition
+                            <i class="bi bi-patch-check me-1"></i>2027 Edition
                         </span>
                         <span class="level-badge level-{{ path.difficulty|lower }}">
                             {{ path.difficulty }} Level

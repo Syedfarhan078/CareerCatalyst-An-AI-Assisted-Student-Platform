@@ -4,8 +4,8 @@
 {% block title %}Mentors Directory — CareerCatalyst{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
-<link rel="stylesheet" href="{% static 'css/community.css' %}?v=1.0">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/community.css' %}?v=1.1">
 {% endblock %}
 
 {# Override public marketing navbar, footer, and chatbot for authenticated workspace shell #}
@@ -202,7 +202,7 @@
                                 <div class="d-flex align-items-center justify-content-between mb-3">
                                     {% if mentor.match_score is not None %}
                                     <span class="match-score-badge">
-                                        <i class="bi bi-stars"></i> {{ mentor.match_score }}% Match
+                                        <i class="bi bi-bullseye"></i> {{ mentor.match_score }}% Match
                                     </span>
                                     {% else %}
                                     <span class="badge bg-secondary-subtle text-muted border px-2.5 py-1" style="font-size: 0.725rem;">

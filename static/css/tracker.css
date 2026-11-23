@@ -81,7 +81,7 @@
 }
 
 .tracker-metric-card:hover {
-    transform: translateY(-2px);
+    transform: none;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
     border-color: var(--dash-border-strong);
 }
@@ -467,7 +467,7 @@
 }
 
 .tracker-card:hover {
-    transform: translateY(-2px);
+    transform: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: var(--dash-primary);
 }
