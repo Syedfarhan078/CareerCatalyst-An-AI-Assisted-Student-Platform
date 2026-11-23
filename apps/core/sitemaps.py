@@ -9,15 +9,41 @@ from apps.core.guides_data import get_all_guides
 class StaticViewSitemap(Sitemap):
     """
     Sitemap for public canonical pages of CareerCatalyst.
-    Only includes existing, publicly accessible pages intended for search engines.
+    Includes core landing, roadmaps catalogue, company story, contact, and trust/compliance pages.
     """
-    priority = 1.0
-    changefreq = 'weekly'
     protocol = getattr(settings, 'CANONICAL_PROTOCOL', 'https')
 
     def items(self):
-        # Public canonical views intended for search engines.
-        return ['home', 'roadmaps:path_list']
+        return [
+            'home',
+            'roadmaps:path_list',
+            'about_us',
+            'contact',
+            'community_guidelines',
+            'privacy_policy',
+            'terms_of_service',
+            'cookie_policy',
+            'data_deletion',
+        ]
+
+    def priority(self, item):
+        priorities = {
+            'home': 1.0,
+            'roadmaps:path_list': 0.9,
+            'about_us': 0.8,
+            'contact': 0.7,
+            'community_guidelines': 0.6,
+            'privacy_policy': 0.5,
+            'terms_of_service': 0.5,
+            'cookie_policy': 0.4,
+            'data_deletion': 0.4,
+        }
+        return priorities.get(item, 0.5)
+
+    def changefreq(self, item):
+        if item in ('home', 'roadmaps:path_list'):
+            return 'weekly'
+        return 'monthly'
 
     def location(self, item):
         return reverse(item)

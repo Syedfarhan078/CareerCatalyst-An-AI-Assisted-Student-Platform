@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Terms of Service &bull; CareerCatalyst{% endblock %}
+{% block meta_description %}CareerCatalyst Terms of Service. User agreement, acceptable use policy, community guidelines, intellectual property ownership, and our honest placement diagnostics disclaimer.{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="{{ CANONICAL_ORIGIN }}{% url 'terms_of_service' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Editorial Hero -->
+<section class="editorial-hero">
+    <div class="container">
+        <nav class="editorial-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'home' %}">Home</a>
+            <span class="mx-1.5">&bull;</span>
+            <span class="text-secondary fw-medium">Terms of Service</span>
+        </nav>
+        <h1 class="editorial-title">Terms of Service</h1>
+        <p class="editorial-subtitle">
+            Rules, expectations, intellectual property guidelines, and terms governing your use of the CareerCatalyst platform.
+        </p>
+        <div class="editorial-meta-row">
+            <span class="editorial-badge"><i class="bi bi-file-earmark-check me-1"></i>User Agreement</span>
+            <span>Last Updated: November 2026</span>
+            <span>&bull;</span>
+            <span>Effective Date: January 1, 2026</span>
+        </div>
+    </div>
+</section>
+
+<!-- Main Document Layout -->
+<section class="editorial-layout">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar Table of Contents -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="editorial-toc-card">
+                    <div class="editorial-toc-title">
+                        <i class="bi bi-list-nested"></i> Table of Contents
+                    </div>
+                    <ul class="editorial-toc-list">
+                        <li><a href="#section-agreement">1. Agreement to Terms</a></li>
+                        <li><a href="#section-accounts">2. Accounts &amp; Security</a></li>
+                        <li><a href="#section-acceptable-use">3. Acceptable Use Policy</a></li>
+                        <li><a href="#section-community-rules">4. Community &amp; Mentorship</a></li>
+                        <li><a href="#section-disclaimer">5. Placement Disclaimer</a></li>
+                        <li><a href="#section-ats-disclaimer">6. ATS Score Disclaimer</a></li>
+                        <li><a href="#section-intellectual-property">7. Intellectual Property</a></li>
+                        <li><a href="#section-liability">8. Limitation of Liability</a></li>
+                        <li><a href="#section-governing-law">9. Governing Law</a></li>
+                        <li><a href="#section-contact">10. Contact Information</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="col-lg-9">
+                <article class="editorial-card legal-prose">
+                    <h2 id="section-agreement">1. Agreement to Terms</h2>
+                    <p>
+                        These Terms of Service ("Terms") constitute a legally binding agreement between you ("User", "you", or "your") and CareerCatalyst ("we", "us", or "our") concerning your access to and use of the CareerCatalyst website, APIs, curriculum roadmaps, ATS analysis tools, and career development services.
+                    </p>
+                    <p>
+                        By visiting, registering for, or using our Platform, you agree to be bound by these Terms. If you do not agree with any part of these Terms, you must immediately discontinue your use of CareerCatalyst.
+                    </p>
+
+                    <h2 id="section-accounts">2. Accounts &amp; Security</h2>
+                    <ul>
+                        <li><strong>Account Creation:</strong> You must provide accurate, current, and complete information during registration (including your verified email and educational affiliation).</li>
+                        <li><strong>Single Account Rule:</strong> Each user may maintain only one active student account. Creating duplicate, disposable, or automated accounts is strictly prohibited.</li>
+                        <li><strong>Credential Confidentiality:</strong> You are responsible for safeguarding your login credentials. You must immediately notify CareerCatalyst if you suspect unauthorized access to your account.</li>
+                        <li><strong>Account Termination:</strong> You may close and delete your account at any time via Settings. CareerCatalyst reserves the right to suspend or terminate accounts that violate our acceptable use or community policies.</li>
+                    </ul>
+
+                    <h2 id="section-acceptable-use">3. Acceptable Use Policy</h2>
+                    <p>You agree not to engage in any of the following prohibited activities:</p>
+                    <ul>
+                        <li><strong>Automated Scraping &amp; Bot Traffic:</strong> Using web scrapers, bots, automated crawlers, or harvesting tools to extract curricula, question banks, or member profiles.</li>
+                        <li><strong>Security Probing &amp; Abuse:</strong> Attempting to probe, scan, or test the vulnerability of the Platform, bypass authentication checks, reverse engineer sandboxed code executors, or launch denial-of-service attacks.</li>
+                        <li><strong>Fraudulent Keyword Stuffing:</strong> Submitting fake, automated, or maliciously crafted resumes with invisible text or hidden prompts designed to manipulate scanning metrics.</li>
+                        <li><strong>Plagiarism &amp; Impersonation:</strong> Misrepresenting your academic identity, impersonating another candidate or mentor, or claiming false credentials.</li>
+                    </ul>
+
+                    <h2 id="section-community-rules">4. Community Forums &amp; Mentorship Rules</h2>
+                    <p>
+                        CareerCatalyst provides peer networking boards and mentor connection spaces. When participating, you must adhere to our <a href="{% url 'community_guidelines' %}">Community Guidelines</a>:
+                    </p>
+                    <ul>
+                        <li><strong>Respectful Interaction:</strong> Harassment, abusive language, hate speech, bullying, personal attacks, and discriminatory comments are strictly prohibited.</li>
+                        <li><strong>No Commercial Spam:</strong> Do not post unsolicited promotional links, commercial services, paid courses, or affiliate advertisements.</li>
+                        <li><strong>No NDA Assessment Leaks:</strong> Do not share proprietary, leaked, or live interview assessment questions that violate company non-disclosure agreements.</li>
+                        <li><strong>Moderation Rights:</strong> CareerCatalyst staff and community moderators reserve the right to review, edit, unpublish, or permanently delete user posts that violate these Terms, without prior notice.</li>
+                    </ul>
+
+                    <h2 id="section-disclaimer">5. Explicit Job &amp; Placement Disclaimer</h2>
+                    <div class="legal-callout warning">
+                        <div class="legal-callout-title">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i> Honest Diagnostics &bull; No Job Guarantee
+                        </div>
+                        <p class="mb-0">
+                            <strong>CareerCatalyst is an educational preparation, milestone learning, and diagnostic evaluation platform. We do NOT guarantee employment, placement offers, interview shortlists, or recruitment callbacks.</strong>
+                        </p>
+                    </div>
+                    <p>
+                        All engineering roadmaps, milestone topics, mock interview questions, and career readiness scores are provided for structured skill-building and self-assessment purposes only. Final hiring and interview decisions rest solely with individual recruiting companies and prospective employers. CareerCatalyst has no control over employer hiring quotas, market conditions, or interview outcomes.
+                    </p>
+
+                    <h2 id="section-ats-disclaimer">6. ATS Resume Diagnostic Disclaimer</h2>
+                    <p>
+                        Our ATS Resume Analyzer provides deterministic algorithmic feedback based on industry keyword taxonomy, TF-IDF cosine similarity, and Google's XYZ achievement formula:
+                    </p>
+                    <ul>
+                        <li><strong>Simulated Feedback:</strong> ATS scores and compatibility percentages are educational simulations designed to help candidates identify potential keyword omissions and structural flaws.</li>
+                        <li><strong>No Employer Guarantee:</strong> Receiving a high ATS score (e.g., 85%+) does not guarantee that any applicant tracking system or hiring manager will shortlist your application. Every employer configures unique filters, recruiter review stages, and custom screening thresholds.</li>
+                    </ul>
+
+                    <h2 id="section-intellectual-property">7. Intellectual Property &amp; User Content</h2>
+                    <p>
+                        We respect candidate ownership and transparency in intellectual property:
+                    </p>
+                    <ul>
+                        <li><strong>Your Content Remains Yours:</strong> You retain 100% full copyright, title, and ownership of all resume text, project descriptions, code solutions, and personal notes you upload or write on CareerCatalyst.</li>
+                        <li><strong>Limited Hosting License:</strong> By posting content on the Platform (such as in public community threads or portfolio showcases), you grant CareerCatalyst a non-exclusive, worldwide, royalty-free, limited license solely to store, process, display, and format your content for the purpose of operating the Platform.</li>
+                        <li><strong>Platform Ownership:</strong> CareerCatalyst and its licensors retain all right, title, and interest in and to the Platform, including curriculum roadmaps, UI designs, codebases, software engines, trademarks, and documentation. You may not copy, reproduce, or distribute Platform materials without prior written consent.</li>
+                    </ul>
+
+                    <h2 id="section-liability">8. Limitation of Liability</h2>
+                    <p>
+                        To the maximum extent permitted by applicable law, CareerCatalyst, its founders, team members, and contributors shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, employment opportunities, or goodwill, arising out of or related to your use of or inability to use the Platform.
+                    </p>
+
+                    <h2 id="section-governing-law">9. Governing Law &amp; Jurisdiction</h2>
+                    <p>
+                        These Terms and any dispute arising out of or related to them shall be governed by and construed in accordance with the laws of <strong>India</strong>, without regard to conflict of law principles. You agree to submit to the exclusive jurisdiction of the competent courts situated in <strong>Bengaluru, Karnataka, India</strong>.
+                    </p>
+
+                    <h2 id="section-contact">10. Contact Information</h2>
+                    <p>
+                        If you have any questions or legal inquiries regarding these Terms of Service, please contact our team:
+                    </p>
+                    <ul>
+                        <li><strong>Email:</strong> <a href="mailto:supportatcareercatalyst@gmail.com">supportatcareercatalyst@gmail.com</a></li>
+                        <li><strong>Campus Office:</strong> Atria Institute of Technology, ASKB Campus, Hebbal, Bengaluru, Karnataka 560024, India</li>
+                        <li><strong>Contact Form:</strong> <a href="{% url 'contact' %}">Submit an Inquiry</a></li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

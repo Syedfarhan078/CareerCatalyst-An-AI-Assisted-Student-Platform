@@ -114,6 +114,7 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}?v=2.4">
     <link rel="stylesheet" href="{% static 'css/components.css' %}?v=2.4">
     <link rel="stylesheet" href="{% static 'css/chatbot.css' %}?v=2.4">
+    <link rel="stylesheet" href="{% static 'css/pages.css' %}?v=1.0">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -215,6 +216,8 @@
 <script src="{% static 'js/chatbot.js' %}?v=3.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script>
 {% block extra_js %}{% endblock %}
+
+{% include "partials/cookie_banner.html" %}
 
 </body>
 </html>

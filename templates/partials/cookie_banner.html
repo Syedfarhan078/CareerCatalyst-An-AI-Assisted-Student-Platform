@@ -1,0 +1,48 @@
+{% load static %}
+<!-- Cookie Consent Banner -->
+<div id="cc-cookie-banner" class="cc-cookie-banner" role="region" aria-label="Cookie consent banner" aria-live="polite">
+    <div class="cc-cookie-header">
+        <i class="bi bi-shield-lock-fill text-primary"></i>
+        <h3 class="cc-cookie-title">We value your privacy</h3>
+    </div>
+    <p class="cc-cookie-text">
+        CareerCatalyst uses strictly necessary cookies for authentication and security, plus minimal anonymized telemetry to improve our curriculum roadmaps. We never sell your data or use third-party advertising trackers.
+    </p>
+    <div class="cc-cookie-actions">
+        <button type="button" id="cc-cookie-accept" class="cc-cookie-btn cc-cookie-accept">Accept All</button>
+        <button type="button" id="cc-cookie-reject" class="cc-cookie-btn cc-cookie-reject">Reject Non-Essential</button>
+        <a href="{% url 'cookie_policy' %}" class="cc-cookie-btn cc-cookie-manage">Manage / Learn More</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        var consent = localStorage.getItem('cc_cookie_consent');
+        var banner = document.getElementById('cc-cookie-banner');
+        if (!consent && banner) {
+            setTimeout(function() {
+                banner.style.display = 'block';
+            }, 800);
+        }
+
+        var acceptBtn = document.getElementById('cc-cookie-accept');
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', function() {
+                localStorage.setItem('cc_cookie_consent', 'accepted');
+                if (banner) banner.style.display = 'none';
+            });
+        }
+
+        var rejectBtn = document.getElementById('cc-cookie-reject');
+        if (rejectBtn) {
+            rejectBtn.addEventListener('click', function() {
+                localStorage.setItem('cc_cookie_consent', 'rejected');
+                if (banner) banner.style.display = 'none';
+            });
+        }
+    } catch (e) {
+        // LocalStorage disabled or private mode
+    }
+});
+</script>

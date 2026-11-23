@@ -138,6 +138,87 @@ class DashboardRefinementTests(TestCase):
         self.assertContains(response_completed, 'Roadmap completed')
         self.assertContains(response_completed, "You've completed all 2 topics in this track.")
 
+    def test_next_step_prioritizes_low_ats_bottleneck_when_roadmap_completed(self):
+        from apps.tracker.models import JobApplication
+
+        # 1. Complete roadmap
+        path = CareerPath.objects.create(name='Software Engineer', slug='swe-track')
+        milestone = Milestone.objects.create(career_path=path, title='Milestone 1', week_number=1, order=1)
+        t1 = Topic.objects.create(milestone=milestone, title='Topic 1', order=1)
+        ur = UserRoadmap.objects.create(user=self.user, career_path=path, is_active=True)
+        TopicProgress.objects.create(user_roadmap=ur, topic=t1, is_completed=True)
+
+        # 2. 7 Applications, 0 interviews
+        for i in range(7):
+            JobApplication.objects.create(user=self.user, company_name=f'Company {i}', role_title='SWE', status='applied')
+
+        # 3. Resume analysis with 51% score
+        ResumeAnalysis.objects.create(
+            user=self.user,
+            target_role='Software Engineer',
+            ats_score=51,
+            overall_score=51
+        )
+
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+
+        next_step = response.context['next_step']
+        self.assertEqual(next_step['state'], 'improve_resume_ats')
+        self.assertIn('51%', next_step['title'])
+        self.assertIn('70%+', next_step['title'])
+        self.assertEqual(next_step['secondary_cta_text'], 'Review 7 Applications')
+        self.assertIn('7 applications', next_step['why'])
+        self.assertIn('51%', next_step['why'])
+
+        # Journey Step 5 (Resume & ATS) is highlighted as the active focus
+        stages = {s['id']: s for s in response.context['career_journey']}
+        self.assertTrue(stages['resume']['is_focus'])
+        self.assertEqual(stages['resume']['status_pill_class'], 'pill-focus')
+
+        # Engagement metrics exist
+        engagement = response.context['engagement']
+        self.assertGreaterEqual(engagement['streak_days'], 1)
+        self.assertEqual(engagement['weekly_target'], 5)
+        self.assertGreaterEqual(response.context['journey_progress_percent'], 50)
+
+    def test_next_step_followups_due_when_ats_healthy(self):
+        from apps.tracker.models import JobApplication
+        from datetime import timedelta
+        from django.utils import timezone
+
+        # Completed roadmap & 75% ATS
+        path = CareerPath.objects.create(name='Software Engineer', slug='swe-followups')
+        milestone = Milestone.objects.create(career_path=path, title='Milestone 1', week_number=1, order=1)
+        t1 = Topic.objects.create(milestone=milestone, title='Topic 1', order=1)
+        ur = UserRoadmap.objects.create(user=self.user, career_path=path, is_active=True)
+        TopicProgress.objects.create(user_roadmap=ur, topic=t1, is_completed=True)
+
+        ResumeAnalysis.objects.create(
+            user=self.user,
+            target_role='Software Engineer',
+            ats_score=75,
+            overall_score=75
+        )
+
+        # 3 stale applications (applied 6 days ago)
+        for i in range(3):
+            JobApplication.objects.create(
+                user=self.user,
+                company_name=f'Corp {i}',
+                role_title='SWE',
+                status='applied',
+                applied_date=timezone.now().date() - timedelta(days=6)
+            )
+
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+
+        next_step = response.context['next_step']
+        self.assertEqual(next_step['state'], 'send_followups')
+        self.assertIn("haven't been updated in 5+ days", next_step['title'])
+        self.assertIn("in play. Let's get you to your first interview.", next_step['subtitle'])
+
     def test_no_fake_percentages_in_next_step(self):
         # When user has completed roadmap or has no active topic progress
         response = self.client.get(reverse('dashboard'))
@@ -215,23 +296,23 @@ class SEOCrawlerEndpointTests(TestCase):
         response = self.client.get('/sitemap.xml')
         content = response.content.decode('utf-8')
 
-        private_keywords = [
-            '/dashboard',
-            '/admin-portal',
-            '/accounts',
-            '/profile',
-            '/resume',
-            '/ai-resume',
-            '/roadmaps/my',
-            '/interviews',
-            '/community',
-            '/recommendation',
-            '/tracker',
-            '/verify',
-            '/media',
+        private_prefixes = [
+            '/dashboard/',
+            '/admin-portal/',
+            '/accounts/',
+            '/profile/',
+            '/resume/',
+            '/ai-resume/',
+            '/roadmaps/my/',
+            '/interviews/',
+            '/community/',
+            '/recommendation/',
+            '/tracker/',
+            '/verify/',
+            '/media/',
         ]
-        for keyword in private_keywords:
-            self.assertNotIn(keyword, content, f"Sitemap XML must not contain private keyword: {keyword}")
+        for prefix in private_prefixes:
+            self.assertNotIn(prefix, content, f"Sitemap XML must not contain private prefix: {prefix}")
 
     def test_sitemap_xml_canonical_host_configuration(self):
         with override_settings(CANONICAL_HOSTNAME='custom.domain.example', CANONICAL_PROTOCOL='https'):
@@ -256,3 +337,113 @@ class SEOCrawlerEndpointTests(TestCase):
             res = self.client.get(url)
             self.assertEqual(res.status_code, 302, f"Expected 302 redirect for unauthenticated access to {url}")
             self.assertIn('/accounts/login/', res.url)
+
+
+class ComplianceAndTrustPagesTests(TestCase):
+    def setUp(self):
+        self.client = Client(HTTP_HOST='127.0.0.1')
+
+    def test_about_us_page(self):
+        response = self.client.get(reverse('about_us'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        # Check team members and college
+        self.assertIn("Syed Farhan Ahmed", content)
+        self.assertIn("Shaik Sandhani", content)
+        self.assertIn("Mahesh Ankalagi", content)
+        self.assertIn("Abdul Kalam", content)
+        self.assertIn("Atria Institute of Technology", content)
+
+    def test_privacy_policy_page(self):
+        response = self.client.get(reverse('privacy_policy'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("Digital Personal Data Protection", content)
+        self.assertIn("DPDP Act, 2023", content)
+        self.assertIn("Grievance Redressal Officer", content)
+        self.assertIn("Render", content)
+        self.assertIn("Cloudinary", content)
+
+    def test_terms_of_service_page(self):
+        response = self.client.get(reverse('terms_of_service'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("Terms of Service", content)
+        self.assertIn("Job &amp; Placement Disclaimer", content)
+        self.assertIn("ATS Resume Diagnostic Disclaimer", content)
+        self.assertIn("Intellectual Property", content)
+
+    def test_cookie_policy_page(self):
+        response = self.client.get(reverse('cookie_policy'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("Cookie Policy", content)
+        self.assertIn("Essential Cookies", content)
+        self.assertIn("Zero Third-Party Advertising", content)
+
+    def test_data_deletion_page(self):
+        response = self.client.get(reverse('data_deletion'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("Data Deletion", content)
+        self.assertIn(reverse('delete_account'), content)
+        self.assertIn("What Data Is Permanently Purged?", content)
+
+    def test_community_guidelines_page(self):
+        response = self.client.get(reverse('community_guidelines'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("Community Guidelines", content)
+        self.assertIn("Discussion &amp; Code Review Standards", content)
+        self.assertIn("Academic Integrity", content)
+        self.assertIn("community@careercatalyst.in", content)
+
+    def test_contact_page_get(self):
+        response = self.client.get(reverse('contact'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("devfarhan7890@gmail.com", content)
+        self.assertIn("supportatcareercatalyst@gmail.com", content)
+        self.assertIn("Send Us a Message", content)
+        self.assertIn("24 to 48 business hours", content)
+
+    def test_contact_page_post_success(self):
+        response = self.client.post(reverse('contact'), {
+            'name': 'Priya Patel',
+            'email': 'priya@example.com',
+            'category': 'Roadmaps & Syllabus',
+            'message': 'Can you add more system design resources to the backend roadmap?',
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("Thank you, Priya Patel!", content)
+
+    def test_contact_page_post_validation_failure(self):
+        response = self.client.post(reverse('contact'), {
+            'name': '',
+            'email': 'invalid',
+            'category': 'General Question',
+            'message': '',
+        })
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertIn("Please fill in all required fields", content)
+
+    def test_sitemap_includes_all_compliance_pages(self):
+        response = self.client.get('/sitemap.xml')
+        self.assertEqual(response.status_code, 200)
+        root = ET.fromstring(response.content)
+        urls = [loc.text for loc in root.findall('{http://www.sitemaps.org/schemas/sitemap/0.9}url/{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+
+        expected_pages = [
+            'https://career-catalyst-ad5m.onrender.com/about/',
+            'https://career-catalyst-ad5m.onrender.com/privacy/',
+            'https://career-catalyst-ad5m.onrender.com/terms/',
+            'https://career-catalyst-ad5m.onrender.com/contact/',
+            'https://career-catalyst-ad5m.onrender.com/cookies/',
+            'https://career-catalyst-ad5m.onrender.com/data-deletion/',
+            'https://career-catalyst-ad5m.onrender.com/community-guidelines/',
+        ]
+        for page in expected_pages:
+            self.assertIn(page, urls, f"Missing public page from sitemap: {page}")
+

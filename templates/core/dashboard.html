@@ -5,7 +5,7 @@
 {% block robots %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.3">
 {% endblock %}
 
 {# Override navbar, footer, and floating chatbot for a calm, professional application shell #}
@@ -47,21 +47,36 @@
 
         <!-- Dashboard Content Container (Max width 1240px, centered) -->
         <main class="dash-content">
-            <!-- 1. Header / Greeting Section -->
-            <section class="dash-header-section" aria-label="Greeting">
-                <h1 class="dash-greeting">{{ greeting_time }}, {{ user.first_name|default:user.username }}.</h1>
-                <p class="dash-subgreeting">
-                    {% if target_career %}
-                        <span class="dash-subgreeting-track">{{ target_career }}</span>
-                        {% if profile.college %}
-                            <span class="text-muted">&bull;</span>
-                            <span>{{ profile.college }}</span>
+            <!-- 1. Header / Greeting Section with Engagement Streak & Goal -->
+            <section class="dash-header-section d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" aria-label="Greeting & Activity">
+                <div>
+                    <h1 class="dash-greeting">{{ greeting_time }}, {{ user.first_name|default:user.username }}.</h1>
+                    <p class="dash-subgreeting mb-0">
+                        {% if target_career %}
+                            <span class="dash-subgreeting-track">{{ target_career }}</span>
+                            {% if profile.college %}
+                                <span class="text-muted">&bull;</span>
+                                <span>{{ profile.college }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span>Choose a target career to start building your career journey.</span>
+                            <a href="{% url 'profile_edit' %}" class="dash-subgreeting-link">Set career goal &rarr;</a>
                         {% endif %}
-                    {% else %}
-                        <span>Choose a target career to start building your career journey.</span>
-                        <a href="{% url 'profile_edit' %}" class="dash-subgreeting-link">Set career goal &rarr;</a>
-                    {% endif %}
-                </p>
+                    </p>
+                </div>
+
+                <!-- Engagement Pill: Streak & Weekly Goal -->
+                <div class="dash-engagement-strip d-flex align-items-center gap-2 flex-wrap">
+                    <div class="dash-streak-pill" title="Consecutive days active on CareerCatalyst">
+                        <i class="bi bi-fire text-danger"></i>
+                        <span><strong>{{ engagement.streak_days }}-day</strong> streak</span>
+                    </div>
+                    <div class="dash-goal-pill" title="Weekly preparation target: 5 sessions">
+                        <i class="bi bi-bullseye text-primary"></i>
+                        <span>Goal: <strong>{{ engagement.weekly_completed }}/{{ engagement.weekly_target }}</strong> sessions</span>
+                        <span class="dash-goal-hint d-none d-sm-inline text-muted small">&bull; {{ engagement.goal_hint }}</span>
+                    </div>
+                </div>
             </section>
 
             <!-- 2. Primary Hero Feature: "Your Next Step" -->
@@ -90,36 +105,74 @@
                     <div class="dash-step-why">
                         <strong>Why it helps:</strong> {{ next_step.why }}
                     </div>
-                    <a href="{{ next_step.cta_url }}" class="dash-btn-primary dash-step-btn">
-                        <span>{{ next_step.cta_text }}</span>
-                        <i class="bi bi-arrow-right"></i>
-                    </a>
+                    <div class="dash-step-actions-group d-flex align-items-center gap-2 flex-wrap">
+                        {% if next_step.secondary_cta_text and next_step.secondary_cta_url %}
+                        <a href="{{ next_step.secondary_cta_url }}" class="dash-btn-secondary dash-step-secondary-btn">
+                            <span>{{ next_step.secondary_cta_text }}</span>
+                        </a>
+                        {% endif %}
+                        <a href="{{ next_step.cta_url }}" class="dash-btn-primary dash-step-btn">
+                            <span>{{ next_step.cta_text }}</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
             </section>
 
             <!-- 3. "Your Career Journey" - Educational Progress Path -->
             <section class="dash-journey-section" aria-label="Career Journey">
-                <div class="dash-section-header">
+                <div class="dash-section-header d-flex justify-content-between align-items-center">
                     <h3 class="dash-section-title">Your Career Journey</h3>
+                    <div class="dash-journey-overall-badge small text-muted">
+                        <span>Overall Progress: </span>
+                        <strong class="text-secondary">{{ journey_progress_percent }}%</strong>
+                    </div>
                 </div>
 
-                <div class="dash-journey-track">
-                    {% for step in career_journey %}
-                    <a href="{{ step.url }}" class="dash-journey-node {{ step.status }}">
-                        <div class="dash-node-indicator">
-                            {% if step.status == 'complete' %}
-                                <i class="bi bi-check-lg"></i>
-                            {% elif step.status == 'current' %}
-                                <i class="bi bi-circle-fill" style="font-size: 0.55rem;"></i>
-                            {% else %}
-                                <span>{{ forloop.counter }}</span>
+                <div class="dash-journey-track-wrapper position-relative">
+                    <!-- Progress Line Connecting All 6 Steps -->
+                    <div class="dash-journey-line" aria-hidden="true">
+                        <div class="dash-journey-line-fill" style="width: {{ journey_progress_percent }}%;"></div>
+                    </div>
+
+                    <div class="dash-journey-track">
+                        {% for step in career_journey %}
+                        <a href="{{ step.url }}" class="dash-journey-node {{ step.status }}{% if step.is_focus %} is-focus-step{% endif %}" title="{{ step.title }}: {{ step.metric }}">
+                            {% if step.is_focus %}
+                            <div class="dash-node-focus-tag">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                <span>You are here</span>
+                            </div>
                             {% endif %}
-                        </div>
-                        <div class="dash-node-title">{{ step.title }}</div>
-                        <div class="dash-node-detail text-truncate" title="{{ step.detail }}">{{ step.detail }}</div>
-                        <span class="dash-node-status">{{ step.status_text }}</span>
-                    </a>
-                    {% endfor %}
+
+                            <div class="dash-node-indicator">
+                                {% if step.status == 'complete' %}
+                                    <i class="bi bi-check-lg"></i>
+                                {% elif step.is_focus %}
+                                    <i class="bi bi-crosshair"></i>
+                                {% else %}
+                                    <span>{{ forloop.counter }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="dash-node-title">{{ step.title }}</div>
+                            <div class="dash-node-detail text-truncate" title="{{ step.detail }}">{{ step.detail }}</div>
+                            <div class="dash-node-metric" title="{{ step.metric }}">{{ step.metric }}</div>
+
+                            <span class="dash-status-pill {{ step.status_pill_class }}">
+                                {% if step.status == 'complete' %}
+                                    <i class="bi bi-check2 me-1"></i>Complete
+                                {% elif step.is_focus %}
+                                    <i class="bi bi-record-circle-fill me-1"></i>Current Focus
+                                {% elif step.status == 'in-progress' %}
+                                    In Progress
+                                {% else %}
+                                    Upcoming
+                                {% endif %}
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </section>
 

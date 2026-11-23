@@ -2,52 +2,79 @@
 <footer class="footer-section" id="site-footer">
     <div class="container">
         <div class="row g-4 justify-content-between">
-            <!-- Column 1 — Brand -->
-            <div class="col-lg-5 col-md-12">
+            <!-- Column 1 — Brand & Origin -->
+            <div class="col-lg-4 col-md-12">
                 <a class="footer-brand d-inline-flex align-items-center mb-3 text-decoration-none" href="{% url 'home' %}">
                     <img src="{% static 'images/favicon.png' %}?v=3.0" alt="CareerCatalyst Logo" class="me-2" width="28" height="28" style="border-radius: 6px;">
                     <span>Career<span class="brand-accent">Catalyst</span></span>
                 </a>
-                <p class="footer-desc mb-0">
-                    AI-assisted tech career development platform for engineering students and freshers. Structured week-by-week learning roadmaps, deterministic ATS resume diagnostics, coding interview preparation, and job application tracking.
+                <p class="footer-desc mb-3">
+                    AI-assisted tech career operating system for engineering students and freshers. Built with care by students from Atria Institute of Technology, Bangalore, to replace tutorial hell with structured curricula, deterministic ATS diagnostics, and mock interview practice.
                 </p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge bg-light text-secondary border px-2 py-1 small" style="font-size: 0.75rem;">
+                        <i class="bi bi-shield-check text-success me-1"></i>DPDP Act, 2023 Compliant
+                    </span>
+
+                </div>
             </div>
             
-            <!-- Column 2 — Curricula & Guides -->
-            <div class="col-6 col-md-3 col-lg-3">
-                <h5 class="footer-heading">Curricula &amp; Guides</h5>
+            <!-- Column 2 — Curricula & Tools -->
+            <div class="col-6 col-md-4 col-lg-2">
+                <h5 class="footer-heading">Curricula &amp; Tools</h5>
                 <ul class="footer-links">
                     <li><a href="{% url 'roadmaps:path_list' %}">Career Roadmaps</a></li>
                     <li><a href="{% url 'guide_list' %}">Career Guides</a></li>
+                    <li><a href="{% url 'ai_resume:analyze' %}">ATS Resume Checker</a></li>
+                    <li><a href="{% url 'interviews:hub' %}">Interview Prep</a></li>
+                    <li><a href="{% url 'tracker:kanban' %}">Job Tracker (CRM)</a></li>
                     <li><a href="{% url 'home' %}#how-it-works">How It Works</a></li>
-                    <li><a href="{% url 'home' %}#journey">Career Journey</a></li>
                 </ul>
             </div>
             
-            <!-- Column 3 — Platform & Account -->
-            <div class="col-6 col-md-3 col-lg-3">
-                <h5 class="footer-heading">Platform</h5>
+            <!-- Column 3 — Company & Community -->
+            <div class="col-6 col-md-4 col-lg-3">
+                <h5 class="footer-heading">Company &amp; Community</h5>
                 <ul class="footer-links">
-                    <li><a href="{% url 'home' %}#features">Features</a></li>
-                    <li><a href="{% url 'home' %}#faq">FAQ</a></li>
+                    <li><a href="{% url 'about_us' %}">About Us &amp; Team</a></li>
+                    <li><a href="{% url 'contact' %}">Contact &amp; Support</a></li>
+                    <li><a href="{% url 'community:hub' %}">Community Hub</a></li>
+                    <li><a href="{% url 'community:mentor_list' %}">Find a Mentor</a></li>
+                    <li><a href="{% url 'community_guidelines' %}">Community Guidelines</a></li>
                     {% if not user.is_authenticated %}
-                    <li><a href="{% url 'login' %}">Login</a></li>
                     <li><a href="{% url 'register' %}">Get Started Free</a></li>
                     {% else %}
                     <li><a href="{% url 'dashboard' %}">Student Workspace</a></li>
                     {% endif %}
                 </ul>
             </div>
+
+            <!-- Column 4 — Legal & Privacy -->
+            <div class="col-12 col-md-4 col-lg-3">
+                <h5 class="footer-heading">Legal &amp; Privacy</h5>
+                <ul class="footer-links">
+                    <li><a href="{% url 'privacy_policy' %}">Privacy Policy</a></li>
+                    <li><a href="{% url 'terms_of_service' %}">Terms of Service</a></li>
+                    <li><a href="{% url 'cookie_policy' %}">Cookie Policy</a></li>
+                    <li><a href="{% url 'data_deletion' %}">Data &amp; Account Deletion</a></li>
+                    <li><a href="{% url 'terms_of_service' %}#placement-disclaimer">Placement &amp; ATS Disclaimer</a></li>
+                </ul>
+                <div class="mt-3 pt-2 border-top">
+                    <p class="small text-muted mb-0" style="font-size: 0.75rem; line-height: 1.4;">
+                        <i class="bi bi-info-circle me-1 text-primary"></i>CareerCatalyst provides simulated diagnostics and learning aids. We do not guarantee employment or interview offers.
+                    </p>
+                </div>
+            </div>
         </div>
         
         <!-- Bottom Bar -->
         <div class="footer-bottom">
             <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
-                    <p class="mb-0">&copy; 2026 CareerCatalyst. All rights reserved.</p>
+                <div class="col-md-7 text-center text-md-start mb-2 mb-md-0">
+                    <p class="mb-0">&copy; 2027 CareerCatalyst. Built with care by Final Year Engineering Students. All rights reserved.</p>
                 </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0 footer-secondary-note">Career Development Platform &bull; Learn. Build. Innovate.</p>
+                <div class="col-md-5 text-center text-md-end">
+                    <p class="mb-0 footer-secondary-note">Honest Diagnostics &bull; 100% Free &bull; DPDP Act, 2023 Compliant</p>
                 </div>
             </div>
         </div>

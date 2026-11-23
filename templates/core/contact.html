@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contact Us &amp; Support &bull; CareerCatalyst{% endblock %}
+{% block meta_description %}Contact CareerCatalyst. Get support with your career roadmaps, ATS resume analysis, report issues, or contact our Grievance Officer. Response within 24–48 hours.{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="{{ CANONICAL_ORIGIN }}{% url 'contact' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Editorial Hero -->
+<section class="editorial-hero">
+    <div class="container">
+        <nav class="editorial-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'home' %}">Home</a>
+            <span class="mx-1.5">&bull;</span>
+            <span class="text-secondary fw-medium">Contact &amp; Support</span>
+        </nav>
+        <h1 class="editorial-title">We're here to help. Get in touch.</h1>
+        <p class="editorial-subtitle">
+            Have a question about a career roadmap, an issue with ATS resume scoring, a feature suggestion, or a privacy inquiry? Reach out to our team directly.
+        </p>
+        <div class="editorial-meta-row">
+            <span class="editorial-badge"><i class="bi bi-clock-history me-1"></i>Response Time: 24–48 Hours</span>
+            <span>Support: supportatcareercatalyst@gmail.com</span>
+            <span>&bull;</span>
+            <span>Bangalore, Karnataka, India</span>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Layout -->
+<section class="editorial-layout">
+    <div class="container">
+        {% if form_submitted %}
+        <div class="alert alert-success d-flex align-items-center gap-3 p-3 mb-4 rounded-3 border" role="alert">
+            <i class="bi bi-check-circle-fill fs-3 text-success"></i>
+            <div>
+                <h4 class="h6 fw-bold mb-1">Message Received!</h4>
+                <p class="small mb-0 text-muted">
+                    Thank you, <strong>{{ sender_name }}</strong>. We have received your inquiry regarding <em>"{{ subject_category }}"</em> and will respond to <strong>{{ sender_email }}</strong> within 24 to 48 business hours.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Left Column: Contact Methods & Officer Info -->
+            <div class="col-lg-5">
+                <div class="contact-info-card">
+                    <h2 class="h5 fw-bold mb-4">Direct Contact Channels</h2>
+
+                    <!-- Email Support -->
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="bi bi-envelope-at-fill"></i>
+                        </div>
+                        <div>
+                            <div class="contact-label">Student Support &amp; General Inquiries</div>
+                            <div class="contact-val">
+                                <a href="mailto:supportatcareercatalyst@gmail.com">supportatcareercatalyst@gmail.com</a>
+                            </div>
+                            <span class="text-muted small">For roadmaps, bug reports, and account help</span>
+                        </div>
+                    </div>
+
+                    <!-- Direct Lead Developer -->
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="bi bi-person-fill-gear"></i>
+                        </div>
+                        <div>
+                            <div class="contact-label">Technical Lead &amp; Architecture</div>
+                            <div class="contact-val">
+                                <a href="mailto:devfarhan7890@gmail.com">devfarhan7890@gmail.com</a>
+                            </div>
+                            <span class="text-muted small">Syed Farhan Ahmed (Founder &amp; Tech Lead)</span>
+                        </div>
+                    </div>
+
+                    <!-- Campus Location -->
+                    <div class="contact-item">
+                        <div class="contact-icon">
+                            <i class="bi bi-geo-alt-fill text-danger"></i>
+                        </div>
+                        <div>
+                            <div class="contact-label">Campus Base &amp; Headquarters</div>
+                            <div class="contact-val">
+                                Atria Institute of Technology
+                            </div>
+                            <span class="text-muted small d-block">
+                                ASKB Campus, 1st Main Rd, AGs Layout, Anandnagar, Hebbal, Bengaluru, Karnataka 560024, India
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Grievance / Privacy Officer -->
+                    <div class="contact-item mb-0">
+                        <div class="contact-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <div class="contact-label">DPDP Act, 2023 Grievance Officer</div>
+                            <div class="contact-val">
+                                <a href="mailto:supportatcareercatalyst@gmail.com">supportatcareercatalyst@gmail.com</a>
+                            </div>
+                            <span class="text-muted small">Formal data erasure, access, or compliance requests (SLA: 7 business days)</span>
+                        </div>
+                    </div>
+
+                    <!-- Response Time Notice -->
+                    <div class="p-3 bg-light rounded-3 border mt-4">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-lightning-charge-fill text-warning"></i>
+                            <span class="fw-bold small text-secondary">Response Time Commitment</span>
+                        </div>
+                        <p class="small text-muted mb-0">
+                            We are an active student-developer team. All non-urgent messages are reviewed daily, with typical replies sent within <strong>24 to 48 business hours</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Form -->
+            <div class="col-lg-7">
+                <div class="contact-form-card">
+                    <h2 class="h5 fw-bold mb-2">Send Us a Message</h2>
+                    <p class="text-muted small mb-4">
+                        Fill out the details below and we will follow up with you directly via email.
+                    </p>
+
+                    <form method="post" action="{% url 'contact' %}" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <label for="contact-name" class="form-label small fw-semibold text-secondary">Your Name <span class="text-danger">*</span></label>
+                                <input type="text" id="contact-name" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required value="{{ user.get_full_name|default:'' }}">
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label for="contact-email" class="form-label small fw-semibold text-secondary">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" id="contact-email" name="email" class="form-control" placeholder="e.g. rahul@example.com" required value="{{ user.email|default:'' }}">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="contact-category" class="form-label small fw-semibold text-secondary">Inquiry Category <span class="text-danger">*</span></label>
+                                <select id="contact-category" name="category" class="form-select" required>
+                                    <option value="General Question" selected>General Question</option>
+                                    <option value="Roadmaps &amp; Syllabus">Roadmaps &amp; Syllabus Feedback</option>
+                                    <option value="ATS Resume Analyzer">ATS Resume Scoring / Diagnostics</option>
+                                    <option value="Technical Issue / Bug">Technical Issue / Bug Report</option>
+                                    <option value="Privacy / DPDP Data Request">Privacy / DPDP Data Erasure Request</option>
+                                    <option value="Mentor Application">Mentor / Contributor Application</option>
+                                    <option value="Partnership / College Placement Cell">Partnership / Placement Cell Inquiries</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="contact-message" class="form-label small fw-semibold text-secondary">Your Message <span class="text-danger">*</span></label>
+                                <textarea id="contact-message" name="message" rows="5" class="form-control" placeholder="Please describe your question, issue, or feedback in detail..." required></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="contact-consent" required checked>
+                                    <label class="form-check-label small text-muted" for="contact-consent">
+                                        I agree to let CareerCatalyst process my email to respond to this inquiry in accordance with the <a href="{% url 'privacy_policy' %}" target="_blank">Privacy Policy</a>.
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold">
+                                    <i class="bi bi-send-fill me-2"></i>Send Message
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

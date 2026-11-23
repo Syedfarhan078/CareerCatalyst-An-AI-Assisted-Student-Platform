@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us &bull; CareerCatalyst — Built by Engineering Students for Students{% endblock %}
+{% block meta_description %}Meet the team behind CareerCatalyst. Built by engineering students from Atria Institute of Technology who escaped tutorial hell to build a structured, 100% free career operating system for freshers.{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="{{ CANONICAL_ORIGIN }}{% url 'about_us' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Editorial Hero Section -->
+<section class="editorial-hero">
+    <div class="container">
+        <nav class="editorial-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'home' %}">Home</a>
+            <span class="mx-1.5">&bull;</span>
+            <span class="text-secondary fw-medium">About Us</span>
+        </nav>
+        <h1 class="editorial-title">We built this because we were lost in tutorial hell too.</h1>
+        <p class="editorial-subtitle">
+            CareerCatalyst is an open-access, student-led career development platform founded at Atria Institute of Technology, Bangalore. We replace scattered playlists and placement guesswork with structured, milestone-driven technical roadmaps.
+        </p>
+        <div class="editorial-meta-row">
+            <span class="editorial-badge"><i class="bi bi-mortarboard-fill me-1"></i>Atria Institute of Technology</span>
+            <span>Bangalore, Karnataka, India</span>
+            <span>&bull;</span>
+            <span>100% Free &amp; Open Access</span>
+        </div>
+    </div>
+</section>
+
+<!-- Our Story & Mission Layout -->
+<section class="editorial-layout">
+    <div class="container">
+        <!-- Story Card -->
+        <div class="editorial-card mb-5">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-7">
+                    <span class="text-primary small fw-bold text-uppercase letter-spacing-1 d-block mb-1">Our Story</span>
+                    <h2 class="h3 fw-bold mb-3">From College Dorm Frustration to a Structured Career Platform</h2>
+                    <p class="text-muted leading-relaxed mb-3">
+                        Like thousands of engineering students across India, our college journey started with enthusiasm that quickly turned into overwhelm. Every semester, everyone had conflicting advice: <em>"Learn MERN stack!"</em>, <em>"No, practice LeetCode!"</em>, <em>"Learn Spring Boot!"</em>, <em>"Build full-stack AI apps!"</em>.
+                    </p>
+                    <p class="text-muted leading-relaxed mb-3">
+                        We watched talented classmates get stuck in endless 50-hour tutorial playlists without ever building an end-to-end project. When campus placement season arrived, we experienced the silent sting of automated applicant tracking systems rejecting resumes with zero feedback, while job applications were scattered across chaotic spreadsheets.
+                    </p>
+                    <p class="text-muted leading-relaxed mb-0">
+                        In 2026, we decided to solve our own problem. We built <strong>CareerCatalyst</strong> as a single, calm, unified workspace: curated 12-week syllabi with verifiable checkpoints, an honest ATS engine that tells you exactly why a resume score is 51% instead of giving fake 95% scores, timed CS screening assessments, and a CRM job pipeline.
+                    </p>
+                </div>
+                <div class="col-lg-5">
+                    <div class="p-4 rounded-3 border bg-light h-100 d-flex flex-column justify-content-center">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="rounded-circle bg-primary bg-opacity-10 p-2 text-primary">
+                                <i class="bi bi-compass fs-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="h6 fw-bold mb-0">Our Core Mission</h4>
+                                <span class="text-muted small">Honest, Structured Guidance</span>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            To eliminate placement ambiguity for engineering students and freshers by delivering structured, milestone-driven technical roadmaps, transparent ATS diagnostics, and an integrated recruitment pipeline — 100% free forever.
+                        </p>
+                        <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                            <span class="badge bg-white border text-secondary small py-1.5 px-2.5"><i class="bi bi-check2 text-success me-1"></i>0 Subscription Fees</span>
+                            <span class="badge bg-white border text-secondary small py-1.5 px-2.5"><i class="bi bi-check2 text-success me-1"></i>No Data Selling</span>
+                            <span class="badge bg-white border text-secondary small py-1.5 px-2.5"><i class="bi bi-check2 text-success me-1"></i>Student Built</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Header -->
+        <div class="text-center mb-4">
+            <span class="text-primary small fw-bold text-uppercase letter-spacing-1 d-block mb-1">Meet the Creators</span>
+            <h2 class="h3 fw-bold mb-2">The Team Behind CareerCatalyst</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                We are undergraduate computer science engineers at Atria Institute of Technology, Bengaluru, committed to building tools that genuinely help our peers succeed.
+            </p>
+        </div>
+
+        <!-- Team Grid -->
+        <div class="team-grid">
+            <!-- 1. Syed Farhan Ahmed -->
+            <div class="team-card">
+                <div class="team-photo-wrap">
+                    <img src="{% static 'images/team/syed_farhan_ahmed.jpg' %}" alt="Syed Farhan Ahmed" class="team-photo" onerror="this.src='{% static 'images/chatbot_robot.png' %}'">
+                </div>
+                <div class="team-body">
+                    <h3 class="team-name">Syed Farhan Ahmed</h3>
+                    <div class="team-role">Developer &amp; Team Leader</div>
+                    <div class="team-college">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <span>Atria Institute of Technology &bull; Bengaluru</span>
+                    </div>
+                    <p class="team-bio">
+                        Full-stack software architect leading the core Django/PostgreSQL infrastructure, deterministic ATS parsing engines, and Google XYZ achievement scoring logic. Passionate about systems design, developer tools, and building intuitive user experiences.
+                    </p>
+                    <div class="team-social-links">
+                        <a href="https://github.com/Syedfarhan078" target="_blank" rel="noopener noreferrer" class="team-social-link" title="GitHub Profile" aria-label="Syed Farhan Ahmed GitHub">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/syed-farhan-581b83314" target="_blank" rel="noopener noreferrer" class="team-social-link" title="LinkedIn Profile" aria-label="Syed Farhan Ahmed LinkedIn">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="mailto:devfarhan7890@gmail.com" class="team-social-link" title="Email" aria-label="Email Syed Farhan Ahmed">
+                            <i class="bi bi-envelope-fill"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Shaik Sandhani -->
+            <div class="team-card">
+                <div class="team-photo-wrap">
+                    <img src="{% static 'images/team/shaik_sandhani.jpg' %}" alt="Shaik Sandhani" class="team-photo" onerror="this.src='{% static 'images/chatbot_robot.png' %}'">
+                </div>
+                <div class="team-body">
+                    <h3 class="team-name">Shaik Sandhani</h3>
+                    <div class="team-role">Research &amp; Tester</div>
+                    <div class="team-college">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <span>Atria Institute of Technology &bull; Bengaluru</span>
+                    </div>
+                    <p class="team-bio">
+                        Leads system validation, QA test case architecture, security auditing, and student user feedback loops. Ensures every roadmap checkpoint and timed assessment session behaves predictably and robustly across mobile and desktop devices.
+                    </p>
+                    <div class="team-social-links">
+                        <a href="https://github.com/shaikshandu" target="_blank" rel="noopener noreferrer" class="team-social-link" title="GitHub Profile" aria-label="Shaik Sandhani GitHub">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/shaik-sandhani-abab34344/" target="_blank" rel="noopener noreferrer" class="team-social-link" title="LinkedIn Profile" aria-label="Shaik Sandhani LinkedIn">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="mailto:shaikshandhani91@gmail.com" class="team-social-link" title="Email" aria-label="Email Shaik Sandhani">
+                            <i class="bi bi-envelope-fill"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Mahesh Ankalagi -->
+            <div class="team-card">
+                <div class="team-photo-wrap">
+                    <img src="{% static 'images/team/mahesh_ankalagi.jpg' %}" alt="Mahesh Ankalagi" class="team-photo" onerror="this.src='{% static 'images/chatbot_robot.png' %}'">
+                </div>
+                <div class="team-body">
+                    <h3 class="team-name">Mahesh Ankalagi</h3>
+                    <div class="team-role">Content Researcher</div>
+                    <div class="team-college">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <span>Atria Institute of Technology &bull; Bengaluru</span>
+                    </div>
+                    <p class="team-bio">
+                        Researches tech industry job descriptions, aligns our 15+ engineering career roadmaps with 2027 placement cutoffs, curates official documentation references, and structures our computer science fundamentals assessment questions.
+                    </p>
+                    <div class="team-social-links">
+                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="team-social-link" title="GitHub Profile" aria-label="Mahesh Ankalagi GitHub">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/mahesh-ankalagi-884480386/" target="_blank" rel="noopener noreferrer" class="team-social-link" title="LinkedIn Profile" aria-label="Mahesh Ankalagi LinkedIn">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="mailto:maheshankalagi715@gmail.com" class="team-social-link" title="Email" aria-label="Email Mahesh Ankalagi">
+                            <i class="bi bi-envelope-fill"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Abdul Kalam -->
+            <div class="team-card">
+                <div class="team-photo-wrap">
+                    <img src="{% static 'images/team/abdul_kalam.jpg' %}" alt="Abdul Kalam" class="team-photo" onerror="this.src='{% static 'images/chatbot_robot.png' %}'">
+                </div>
+                <div class="team-body">
+                    <h3 class="team-name">Abdul Kalam</h3>
+                    <div class="team-role">Platform Media Manager</div>
+                    <div class="team-college">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <span>Atria Institute of Technology &bull; Bengaluru</span>
+                    </div>
+                    <p class="team-bio">
+                        Oversees platform digital media, presentation visual assets, documentation diagrams, community engagement boards, and student outreach. Ensures CareerCatalyst communicates complex career topics with clarity and aesthetic polish.
+                    </p>
+                    <div class="team-social-links">
+                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="team-social-link" title="GitHub Profile" aria-label="Abdul Kalam GitHub">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/abdul-kalam-2aa46338b/" target="_blank" rel="noopener noreferrer" class="team-social-link" title="LinkedIn Profile" aria-label="Abdul Kalam LinkedIn">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="mailto:kalamabdul7263@gmail.com" class="team-social-link" title="Email" aria-label="Email Abdul Kalam">
+                            <i class="bi bi-envelope-fill"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Principles Card -->
+        <div class="editorial-card mt-5">
+            <h3 class="h4 fw-bold mb-4 text-center">Our Guiding Principles</h3>
+            <div class="row g-4 text-center">
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-inline-flex p-3 text-primary mb-3">
+                            <i class="bi bi-unlock fs-4"></i>
+                        </div>
+                        <h4 class="h6 fw-bold mb-2">100% Free &amp; Open</h4>
+                        <p class="text-muted small mb-0">
+                            No paywalled roadmaps, no premium subscription tiers, and no hidden upsells. Quality engineering preparation belongs to every student.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 text-success mb-3">
+                            <i class="bi bi-bullseye fs-4"></i>
+                        </div>
+                        <h4 class="h6 fw-bold mb-2">Honest Diagnostics</h4>
+                        <p class="text-muted small mb-0">
+                            We tell you the truth. If your resume lacks Docker or unit testing, we tell you it's 51% so you can fix it before applying — not inflate it with false promises.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <div class="rounded-circle bg-warning bg-opacity-10 d-inline-flex p-3 text-warning mb-3">
+                            <i class="bi bi-shield-check fs-4"></i>
+                        </div>
+                        <h4 class="h6 fw-bold mb-2">Privacy by Design</h4>
+                        <p class="text-muted small mb-0">
+                            Zero third-party data selling. Client-side PII scrubbing on all AI prompts, and immediate self-serve deletion anytime you choose.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

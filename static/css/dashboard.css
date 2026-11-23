@@ -488,6 +488,41 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     text-decoration: underline;
 }
 
+/* Header Activity & Engagement Strip */
+.dash-engagement-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.dash-streak-pill,
+.dash-goal-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background-color: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-sm);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    color: var(--dash-text);
+    box-shadow: var(--dash-shadow-sm);
+}
+
+.dash-streak-pill i {
+    font-size: 0.95rem;
+}
+
+.dash-goal-pill i {
+    font-size: 0.95rem;
+}
+
+.dash-goal-hint {
+    color: var(--dash-text-muted);
+    font-weight: 400;
+}
+
 /* --------------------------------------------------------------------------
    5. PRIMARY HERO FEATURE: "YOUR NEXT STEP" (Height Reduced by ~25-30%)
    -------------------------------------------------------------------------- */
@@ -588,7 +623,7 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     background-color: var(--dash-surface-muted);
     border: 1px solid var(--dash-border);
     border-radius: var(--dash-radius-sm);
-    padding: 0.45rem 0.85rem;
+    padding: 0.55rem 0.95rem;
     font-size: 0.825rem;
     color: var(--dash-text-muted);
     line-height: 1.45;
@@ -599,14 +634,45 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     font-weight: 600;
 }
 
+.dash-step-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
 .dash-step-btn {
     flex-shrink: 0;
-    min-width: 150px;
+    min-width: 140px;
     padding: 0.6rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: var(--dash-radius-sm);
+}
+
+.dash-step-secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    color: var(--dash-text);
+    padding: 0.6rem 1.15rem;
+    border-radius: var(--dash-radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.dash-step-secondary-btn:hover {
+    background-color: var(--dash-surface-hover);
+    border-color: var(--dash-border-strong);
+    color: var(--dash-primary);
 }
 
 /* --------------------------------------------------------------------------
-   6. "YOUR CAREER JOURNEY" STEPPER
+   6. "YOUR CAREER JOURNEY" STEPPER WITH PROGRESS LINE & STATUS PILLS
    -------------------------------------------------------------------------- */
 .dash-journey-section {
     margin-bottom: 1.85rem;
@@ -627,16 +693,41 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     margin-bottom: 0;
 }
 
-/* Stepper Track */
+.dash-journey-track-wrapper {
+    position: relative;
+    background-color: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-lg);
+    padding: 1.25rem 1.15rem 1.15rem;
+    box-shadow: var(--dash-shadow-card);
+}
+
+/* Connected Horizontal Progress Line */
+.dash-journey-line {
+    position: absolute;
+    top: 2.45rem;
+    left: 4.5%;
+    right: 4.5%;
+    height: 3px;
+    background-color: var(--dash-border);
+    border-radius: 9999px;
+    z-index: 1;
+}
+
+.dash-journey-line-fill {
+    height: 100%;
+    background-color: var(--dash-success);
+    border-radius: 9999px;
+    transition: width 0.5s ease;
+}
+
+/* Stepper Grid Track */
 .dash-journey-track {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 0.75rem;
-    background-color: var(--dash-surface);
-    border: 1px solid var(--dash-border);
-    border-radius: var(--dash-radius-lg);
-    padding: 1.15rem;
-    box-shadow: var(--dash-shadow-card);
+    position: relative;
+    z-index: 2;
 }
 
 .dash-journey-node {
@@ -644,12 +735,13 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     flex-direction: column;
     align-items: flex-start;
     position: relative;
-    padding: 0.6rem 0.55rem;
+    padding: 0.65rem 0.6rem;
     border-radius: var(--dash-radius-sm);
     text-decoration: none;
     color: inherit;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
     border: 1px solid transparent;
+    background-color: var(--dash-surface);
 }
 
 .dash-journey-node:hover {
@@ -662,18 +754,45 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     outline-offset: 2px;
 }
 
+/* Focus Node Highlight ("You are here") */
+.dash-journey-node.is-focus-step {
+    background-color: var(--dash-primary-subtle);
+    border-color: var(--dash-primary-border) !important;
+}
+
+.dash-node-focus-tag {
+    position: absolute;
+    top: -0.65rem;
+    left: 0.55rem;
+    background-color: var(--dash-primary);
+    color: #FFFFFF;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.12rem 0.45rem;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: var(--dash-shadow-sm);
+    z-index: 3;
+}
+
 .dash-node-indicator {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 700;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.55rem;
     flex-shrink: 0;
     border: 2px solid transparent;
+    background-color: var(--dash-surface);
+    z-index: 2;
 }
 
 /* State: Complete */
@@ -682,50 +801,29 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     color: var(--dash-success);
     border-color: var(--dash-success-border);
 }
-.dash-journey-node.complete .dash-node-status {
-    color: var(--dash-success);
-}
 
 /* State: In Progress */
-.dash-journey-node.in-progress .dash-node-indicator {
-    background-color: var(--dash-primary-subtle);
+.dash-journey-node.in-progress:not(.is-focus-step) .dash-node-indicator {
+    background-color: var(--dash-surface);
     color: var(--dash-primary);
     border-color: var(--dash-primary-border);
 }
-.dash-journey-node.in-progress .dash-node-status {
-    color: var(--dash-primary);
-}
 
-/* State: Current */
+/* State: Focus / Current Active Step */
+.dash-journey-node.is-focus-step .dash-node-indicator,
 .dash-journey-node.current .dash-node-indicator {
     background-color: var(--dash-primary);
     color: #FFFFFF;
-    box-shadow: 0 0 0 3px var(--dash-primary-subtle);
-    border-color: transparent;
-}
-.dash-journey-node.current .dash-node-status {
-    color: var(--dash-primary);
-    font-weight: 700;
+    box-shadow: 0 0 0 4px var(--dash-primary-subtle);
+    border-color: #FFFFFF;
 }
 
-/* State: Not Started */
+/* State: Upcoming / Not Started */
+.dash-journey-node.upcoming .dash-node-indicator,
 .dash-journey-node.not-started .dash-node-indicator {
     background-color: var(--dash-surface-muted);
     color: var(--dash-text-subtle);
     border-color: var(--dash-border);
-}
-.dash-journey-node.not-started .dash-node-status {
-    color: var(--dash-text-subtle);
-}
-
-/* State: Upcoming */
-.dash-journey-node.upcoming .dash-node-indicator {
-    background-color: var(--dash-surface-muted);
-    color: var(--dash-text-subtle);
-    border-color: var(--dash-border);
-}
-.dash-journey-node.upcoming .dash-node-status {
-    color: var(--dash-text-subtle);
 }
 
 .dash-node-title {
@@ -736,8 +834,8 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     line-height: 1.2;
 }
 
-.dash-journey-node.not-started .dash-node-title,
-.dash-journey-node.upcoming .dash-node-title {
+.dash-journey-node.upcoming .dash-node-title,
+.dash-journey-node.not-started .dash-node-title {
     color: var(--dash-text-muted);
 }
 
@@ -748,11 +846,55 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     word-break: break-word;
 }
 
-.dash-node-status {
+.dash-node-metric {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--dash-text);
+    margin-top: 0.25rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.25;
+}
+
+/* Status Badges / Pills */
+.dash-status-pill {
+    display: inline-flex;
+    align-items: center;
     font-size: 0.675rem;
     font-weight: 600;
-    margin-top: 0.35rem;
-    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    margin-top: auto;
+    line-height: 1.2;
+}
+
+.dash-status-pill.pill-complete {
+    background-color: var(--dash-success-subtle);
+    color: var(--dash-success);
+    border: 1px solid var(--dash-success-border);
+}
+
+.dash-status-pill.pill-focus {
+    background-color: var(--dash-primary);
+    color: #FFFFFF;
+    border: 1px solid var(--dash-primary);
+    font-weight: 700;
+}
+
+.dash-status-pill.pill-progress {
+    background-color: var(--dash-primary-subtle);
+    color: var(--dash-primary);
+    border: 1px solid var(--dash-primary-border);
+}
+
+.dash-status-pill.pill-upcoming {
+    background-color: var(--dash-surface-muted);
+    color: var(--dash-text-subtle);
+    border: 1px solid var(--dash-border);
+}
+
+/* Legacy fallback */
+.dash-node-status {
+    display: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -1483,6 +1625,10 @@ html[data-theme='dark'] .dash-shell .btn-outline-danger:hover {
     .dash-content {
         padding: 1.5rem 1.25rem 4rem 1.25rem;
     }
+
+    .dash-journey-line {
+        display: none;
+    }
     
     .dash-journey-track {
         grid-template-columns: repeat(3, 1fr);
@@ -1495,6 +1641,11 @@ html[data-theme='dark'] .dash-shell .btn-outline-danger:hover {
 
     .dash-next-step-card {
         padding: 1.4rem 1.35rem;
+    }
+
+    .dash-step-actions-group {
+        width: 100%;
+        justify-content: flex-end;
     }
 }
 
@@ -1553,10 +1704,28 @@ html[data-theme='dark'] .dash-shell .btn-outline-danger:hover {
         flex-direction: column;
         align-items: stretch;
     }
+
+    .dash-step-actions-group {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
     
+    .dash-step-secondary-btn,
     .dash-step-btn {
         width: 100%;
         text-align: center;
+        justify-content: center;
+    }
+
+    .dash-engagement-strip {
+        width: 100%;
+    }
+
+    .dash-streak-pill,
+    .dash-goal-pill {
+        width: 100%;
+        justify-content: center;
     }
 }
 

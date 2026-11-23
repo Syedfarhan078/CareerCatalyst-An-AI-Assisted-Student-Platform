@@ -1,0 +1,499 @@
+/* ==========================================================================
+   CAREERCATALYST — STATIC, EDITORIAL & LEGAL PAGES STYLING (pages.css)
+   Clean, accessible, editorial design system aligned with platform tokens.
+   Supports About Us, Contact, Privacy Policy, Terms, Cookies, Guidelines.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. PAGE HERO / HEADER
+   -------------------------------------------------------------------------- */
+.editorial-hero {
+    padding: 3.5rem 0 2.5rem;
+    background-color: var(--surface-muted, #F8FAFC);
+    border-bottom: 1px solid var(--border, #E2E8F0);
+}
+
+.editorial-breadcrumb {
+    font-size: 0.8rem;
+    color: var(--text-muted, #64748B);
+    margin-bottom: 0.85rem;
+}
+
+.editorial-breadcrumb a {
+    color: var(--text-muted, #64748B);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.editorial-breadcrumb a:hover {
+    color: var(--primary, #2563EB);
+}
+
+.editorial-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--text, #0F172A);
+    line-height: 1.2;
+    margin-bottom: 0.65rem;
+}
+
+.editorial-subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted, #64748B);
+    line-height: 1.6;
+    max-width: 720px;
+    margin-bottom: 1rem;
+}
+
+.editorial-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.825rem;
+    color: var(--text-muted, #64748B);
+}
+
+.editorial-badge {
+    background-color: var(--primary-subtle, rgba(37, 99, 235, 0.1));
+    color: var(--primary, #2563EB);
+    border: 1px solid var(--primary-border, rgba(37, 99, 235, 0.25));
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+/* --------------------------------------------------------------------------
+   2. LEGAL / EDITORIAL DOCUMENT LAYOUT
+   -------------------------------------------------------------------------- */
+.editorial-layout {
+    padding: 3rem 0 5rem;
+}
+
+.editorial-card {
+    background-color: var(--card-bg, #FFFFFF);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+}
+
+.editorial-toc-card {
+    background-color: var(--card-bg, #FFFFFF);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 1.5rem;
+    position: sticky;
+    top: 2rem;
+}
+
+.editorial-toc-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, #64748B);
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.editorial-toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.editorial-toc-list li {
+    margin-bottom: 0.5rem;
+}
+
+.editorial-toc-list a {
+    font-size: 0.85rem;
+    color: var(--text, #0F172A);
+    text-decoration: none;
+    display: block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm, 6px);
+    transition: background 0.15s ease, color 0.15s ease;
+    line-height: 1.4;
+}
+
+.editorial-toc-list a:hover {
+    background-color: var(--surface-muted, #F8FAFC);
+    color: var(--primary, #2563EB);
+}
+
+/* Typography for Legal Prose */
+.legal-prose {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text, #0F172A);
+}
+
+.legal-prose h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--text, #0F172A);
+    margin-top: 2.5rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border-subtle, #F1F5F9);
+}
+
+.legal-prose h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text, #0F172A);
+    margin-top: 1.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.legal-prose p {
+    margin-bottom: 1rem;
+    color: var(--text, #0F172A);
+}
+
+.legal-prose ul,
+.legal-prose ol {
+    margin-bottom: 1.25rem;
+    padding-left: 1.5rem;
+}
+
+.legal-prose li {
+    margin-bottom: 0.45rem;
+}
+
+.legal-callout {
+    background-color: var(--surface-muted, #F8FAFC);
+    border-left: 4px solid var(--primary, #2563EB);
+    border-radius: 0 var(--radius-sm, 6px) var(--radius-sm, 6px) 0;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+}
+
+.legal-callout.warning {
+    border-left-color: #D97706;
+    background-color: rgba(217, 119, 6, 0.08);
+}
+
+.legal-callout.success {
+    border-left-color: #16A34A;
+    background-color: rgba(22, 163, 74, 0.08);
+}
+
+.legal-callout-title {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--text, #0F172A);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.legal-table {
+    width: 100%;
+    margin: 1.5rem 0;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.legal-table th,
+.legal-table td {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border, #E2E8F0);
+    text-align: left;
+}
+
+.legal-table th {
+    background-color: var(--surface-muted, #F8FAFC);
+    font-weight: 600;
+    color: var(--text, #0F172A);
+}
+
+/* --------------------------------------------------------------------------
+   3. ABOUT US TEAM GRID & CARDS
+   -------------------------------------------------------------------------- */
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin: 2.5rem 0;
+}
+
+.team-card {
+    background-color: var(--card-bg, #FFFFFF);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: var(--radius-lg, 12px);
+    overflow: hidden;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.team-card:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.07));
+    border-color: var(--border-strong, #CBD5E1);
+}
+
+.team-photo-wrap {
+    width: 100%;
+    height: 240px;
+    background-color: var(--surface-muted, #F8FAFC);
+    overflow: hidden;
+    position: relative;
+}
+
+.team-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    transition: transform 0.25s ease;
+}
+
+.team-card:hover .team-photo {
+    transform: scale(1.02);
+}
+
+.team-body {
+    padding: 1.35rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.team-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text, #0F172A);
+    margin-bottom: 0.15rem;
+}
+
+.team-role {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--primary, #2563EB);
+    margin-bottom: 0.65rem;
+}
+
+.team-college {
+    font-size: 0.775rem;
+    color: var(--text-muted, #64748B);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.team-bio {
+    font-size: 0.85rem;
+    color: var(--text-muted, #64748B);
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+    flex-grow: 1;
+}
+
+.team-social-links {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle, #F1F5F9);
+}
+
+.team-social-link {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm, 6px);
+    background-color: var(--surface-muted, #F8FAFC);
+    color: var(--text, #0F172A);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.team-social-link:hover {
+    background-color: var(--primary-subtle, rgba(37, 99, 235, 0.1));
+    color: var(--primary, #2563EB);
+}
+
+/* --------------------------------------------------------------------------
+   4. CONTACT US & SUPPORT FORM
+   -------------------------------------------------------------------------- */
+.contact-info-card {
+    background-color: var(--card-bg, #FFFFFF);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 2rem;
+    height: 100%;
+}
+
+.contact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.contact-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-sm, 6px);
+    background-color: var(--primary-subtle, rgba(37, 99, 235, 0.1));
+    color: var(--primary, #2563EB);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.contact-label {
+    font-size: 0.775rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted, #64748B);
+    margin-bottom: 0.15rem;
+}
+
+.contact-val {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text, #0F172A);
+}
+
+.contact-val a {
+    color: var(--text, #0F172A);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.contact-val a:hover {
+    color: var(--primary, #2563EB);
+}
+
+.contact-form-card {
+    background-color: var(--card-bg, #FFFFFF);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 2.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   5. INTERACTIVE COOKIE BANNER COMPONENT
+   -------------------------------------------------------------------------- */
+.cc-cookie-banner {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    max-width: 440px;
+    background-color: var(--card-bg, #FFFFFF);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 1.35rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    z-index: 1090;
+    display: none; /* Shown dynamically via JS */
+    animation: ccSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ccSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cc-cookie-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.cc-cookie-title {
+    font-size: 0.925rem;
+    font-weight: 700;
+    color: var(--text, #0F172A);
+    margin: 0;
+}
+
+.cc-cookie-text {
+    font-size: 0.8rem;
+    color: var(--text-muted, #64748B);
+    line-height: 1.45;
+    margin-bottom: 1rem;
+}
+
+.cc-cookie-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.cc-cookie-btn {
+    font-size: 0.775rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.cc-cookie-accept {
+    background-color: var(--primary, #2563EB);
+    color: #FFFFFF;
+}
+
+.cc-cookie-accept:hover {
+    background-color: var(--primary-hover, #1D4ED8);
+}
+
+.cc-cookie-reject {
+    background-color: var(--surface-muted, #F8FAFC);
+    border-color: var(--border, #E2E8F0);
+    color: var(--text, #0F172A);
+}
+
+.cc-cookie-reject:hover {
+    background-color: var(--surface-hover, #F1F5F9);
+}
+
+.cc-cookie-manage {
+    color: var(--primary, #2563EB);
+    background: transparent;
+    padding: 0.35rem 0.5rem;
+}
+
+.cc-cookie-manage:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 575.98px) {
+    .cc-cookie-banner {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        max-width: none;
+    }
+    .editorial-card {
+        padding: 1.5rem 1.15rem;
+    }
+}

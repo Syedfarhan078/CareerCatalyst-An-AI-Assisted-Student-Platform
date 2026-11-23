@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Community Guidelines &bull; CareerCatalyst{% endblock %}
+{% block meta_description %}CareerCatalyst Community Guidelines. Rules on respectful conduct, peer code reviews, mentor etiquette, anti-spam policies, and violation reporting.{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="{{ CANONICAL_ORIGIN }}{% url 'community_guidelines' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Editorial Hero -->
+<section class="editorial-hero">
+    <div class="container">
+        <nav class="editorial-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'home' %}">Home</a>
+            <span class="mx-1.5">&bull;</span>
+            <span class="text-secondary fw-medium">Community Guidelines</span>
+        </nav>
+        <h1 class="editorial-title">Community Guidelines</h1>
+        <p class="editorial-subtitle">
+            Our standards for peer collaboration, constructive code reviews, respectful mentor interactions, and academic integrity across CareerCatalyst.
+        </p>
+        <div class="editorial-meta-row">
+            <span class="editorial-badge"><i class="bi bi-people-fill me-1"></i>Peer Collaboration Standards</span>
+            <span>Last Updated: November 2026</span>
+            <span>&bull;</span>
+            <span>Applicable to All Members &amp; Mentors</span>
+        </div>
+    </div>
+</section>
+
+<!-- Content Layout -->
+<section class="editorial-layout">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar Table of Contents -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="editorial-toc-card">
+                    <div class="editorial-toc-title">
+                        <i class="bi bi-list-nested"></i> Table of Contents
+                    </div>
+                    <ul class="editorial-toc-list">
+                        <li><a href="#section-core-values">1. Our Core Values</a></li>
+                        <li><a href="#section-peer-discussions">2. Discussion &amp; Code Review Rules</a></li>
+                        <li><a href="#section-mentor-etiquette">3. Mentorship Etiquette</a></li>
+                        <li><a href="#section-prohibited">4. Prohibited Behavior</a></li>
+                        <li><a href="#section-nda-academic">5. Academic Integrity &amp; NDAs</a></li>
+                        <li><a href="#section-enforcement">6. Moderation &amp; Enforcement</a></li>
+                        <li><a href="#section-reporting">7. How to Report Violations</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="col-lg-9">
+                <article class="editorial-card legal-prose">
+                    <h2 id="section-core-values">1. Our Core Values</h2>
+                    <p>
+                        CareerCatalyst was built to be a safe, constructive haven for engineering students, fresh graduates, and career changers. We celebrate curious minds, transparent feedback, and shared learning. We expect every member to uphold three foundational values:
+                    </p>
+                    <ul>
+                        <li><strong>Mutual Respect:</strong> Every engineer was once a beginner. Treat fellow learners with patience, dignity, and empathy regardless of college tier, experience level, or background.</li>
+                        <li><strong>Constructive Guidance:</strong> When reviewing another student's resume or project code, offer specific, actionable suggestions rather than generic criticism or condescension.</li>
+                        <li><strong>Honesty &amp; Transparency:</strong> Share genuine placement experiences, real interview insights, and authentic code implementations without exaggeration.</li>
+                    </ul>
+
+                    <h2 id="section-peer-discussions">2. Discussion &amp; Code Review Standards</h2>
+                    <p>When participating in our community marketplace and discussion boards:</p>
+                    <ul>
+                        <li><strong>Stay on Topic:</strong> Keep questions focused on engineering concepts, 12-week roadmap milestones, technical interview preparation, and placement navigation.</li>
+                        <li><strong>Format Code Cleanly:</strong> Use markdown syntax highlighting for code blocks so fellow students can read and review your work easily.</li>
+                        <li><strong>Search First:</strong> Before asking common questions (e.g. <em>"How do I prepare for Python OOP?"</em>), check existing roadmap guides to avoid repetitive threads.</li>
+                        <li><strong>No Self-Promotion or Link Dumping:</strong> Do not post personal YouTube channels, paid Telegram/WhatsApp study groups, or affiliate referral links.</li>
+                    </ul>
+
+                    <h2 id="section-mentor-etiquette">3. Mentorship Etiquette</h2>
+                    <p>
+                        Our platform connects students with experienced industry engineers who volunteer their time to guide the next generation:
+                    </p>
+                    <ul>
+                        <li><strong>Respect Mentor Time:</strong> Come prepared to mentorship interactions with specific questions, clear project links, and your latest ATS report. Do not expect mentors to write code for you.</li>
+                        <li><strong>Professional Communication:</strong> Keep all communication strictly professional, courteous, and career-oriented.</li>
+                        <li><strong>No Job Solicitations:</strong> Do not pressure mentors for direct internal referrals or job offers during introductory guidance sessions. Referrals are earned through demonstrated technical excellence and established rapport.</li>
+                    </ul>
+
+                    <h2 id="section-prohibited">4. Prohibited Behavior</h2>
+                    <div class="legal-callout warning">
+                        <div class="legal-callout-title">
+                            <i class="bi bi-shield-x text-warning"></i> Zero Tolerance Policy
+                        </div>
+                        <p class="mb-0">
+                            The following conduct results in immediate content removal and account suspension or permanent termination:
+                        </p>
+                    </div>
+                    <ul>
+                        <li><strong>Harassment &amp; Bullying:</strong> Personal insults, targeted attacks, trolling, stalking, hate speech, or discrimination based on gender, caste, religion, sexual orientation, disability, or college pedigree.</li>
+                        <li><strong>Commercial Advertising &amp; Spam:</strong> Selling paid courses, promoting third-party bootcamps, advertising resume-writing services, or distributing unauthorized marketing links.</li>
+                        <li><strong>Malicious Code &amp; Exploits:</strong> Sharing links containing malware, phishing URLs, exploit scripts, or unauthorized web scrapers.</li>
+                        <li><strong>Impersonation:</strong> Falsely claiming to be a recruiter from a specific company, impersonating CareerCatalyst staff, or using another student's identity.</li>
+                    </ul>
+
+                    <h2 id="section-nda-academic">5. Academic Integrity &amp; Company NDAs</h2>
+                    <p>
+                        We enforce strict standards regarding recruitment confidentiality and academic honesty:
+                    </p>
+                    <ul>
+                        <li><strong>No Leaked Live Assessment Questions:</strong> Do not post proprietary, copyrighted, or active coding test problems that violate company non-disclosure agreements (NDAs). Discussing general algorithmic patterns (e.g. <em>"The round tested Breadth-First Search on a grid"</em>) is welcome; copy-pasting active proprietary problem statements is strictly prohibited.</li>
+                        <li><strong>No Cheating During Proctored Practice:</strong> Our technical quiz platform uses client telemetry (tab-focus tracking and countdown timers) to simulate authentic placement screening. Attempting to bypass proctoring tools defeats the purpose of honest diagnostic practice.</li>
+                    </ul>
+
+                    <h2 id="section-enforcement">6. Moderation &amp; Enforcement Tiers</h2>
+                    <p>
+                        Community moderators and system administrators apply progressive enforcement based on the severity of violations:
+                    </p>
+                    <ol>
+                        <li><strong>Informal Warning:</strong> For minor first-time infractions (e.g., miscategorized threads or accidental link sharing), the post is moderated with an explanatory note.</li>
+                        <li><strong>Content Removal &amp; Strike:</strong> Repeated offenses result in immediate post deletion and a formal strike against the user profile.</li>
+                        <li><strong>Temporary Account Suspension:</strong> Three strikes or serious misconduct lead to a 7-to-30 day suspension of community and workspace posting privileges.</li>
+                        <li><strong>Permanent Termination:</strong> Severe violations (hate speech, harassment, spam bot campaigns, or security exploits) result in immediate permanent account termination and IP banning.</li>
+                    </ol>
+
+                    <h2 id="section-reporting">7. How to Report Violations</h2>
+                    <p>
+                        Maintaining a healthy, safe community is a shared responsibility. If you encounter abusive comments, spam, or suspicious activity:
+                    </p>
+                    <ul>
+                        <li><strong>In-App Flagging:</strong> Click the <strong>Report</strong> or flag icon next to any community post or message.</li>
+                        <li><strong>Email the Moderation Team:</strong> Send details, screenshots, and URLs to <a href="mailto:community@careercatalyst.in">community@careercatalyst.in</a>.</li>
+                        <li><strong>Confidentiality:</strong> All violation reports are treated with strict confidentiality. The reported user will not be informed of who submitted the report.</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

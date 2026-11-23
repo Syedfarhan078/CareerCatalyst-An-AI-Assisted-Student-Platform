@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cookie Policy &bull; CareerCatalyst{% endblock %}
+{% block meta_description %}CareerCatalyst Cookie Policy. Understand how we use essential authentication cookies, theme preferences, and minimal anonymized telemetry with zero third-party ad tracking.{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="{{ CANONICAL_ORIGIN }}{% url 'cookie_policy' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Editorial Hero -->
+<section class="editorial-hero">
+    <div class="container">
+        <nav class="editorial-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'home' %}">Home</a>
+            <span class="mx-1.5">&bull;</span>
+            <span class="text-secondary fw-medium">Cookie Policy</span>
+        </nav>
+        <h1 class="editorial-title">Cookie Policy</h1>
+        <p class="editorial-subtitle">
+            How CareerCatalyst uses essential cookies, local preferences, and privacy-first telemetry with zero third-party cross-site advertising trackers.
+        </p>
+        <div class="editorial-meta-row">
+            <span class="editorial-badge"><i class="bi bi-shield-check me-1"></i>Zero Third-Party Ad Trackers</span>
+            <span>Last Updated: November 2026</span>
+            <span>&bull;</span>
+            <span>Effective Date: January 1, 2026</span>
+        </div>
+    </div>
+</section>
+
+<!-- Content Layout -->
+<section class="editorial-layout">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar Table of Contents -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="editorial-toc-card">
+                    <div class="editorial-toc-title">
+                        <i class="bi bi-list-nested"></i> Table of Contents
+                    </div>
+                    <ul class="editorial-toc-list">
+                        <li><a href="#section-what-are-cookies">1. What Are Cookies?</a></li>
+                        <li><a href="#section-how-we-use">2. How We Use Cookies</a></li>
+                        <li><a href="#section-cookie-table">3. Cookies We Set</a></li>
+                        <li><a href="#section-managing-consent">4. Manage Your Preferences</a></li>
+                        <li><a href="#section-browser-controls">5. Browser Controls</a></li>
+                        <li><a href="#section-contact">6. Contact Inquiries</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="col-lg-9">
+                <article class="editorial-card legal-prose">
+                    <h2 id="section-what-are-cookies">1. What Are Cookies?</h2>
+                    <p>
+                        Cookies are small text files placed on your computer, smartphone, or tablet when you visit a website. They are widely used to make web applications function efficiently, preserve login sessions, remember user interface preferences, and safeguard platform security.
+                    </p>
+
+                    <h2 id="section-how-we-use">2. How We Use Cookies &amp; Storage</h2>
+                    <p>
+                        CareerCatalyst uses cookies and local browser storage (<code>localStorage</code>) strictly for essential functionality, security verification, and basic aggregated platform telemetry:
+                    </p>
+                    <ul>
+                        <li><strong>Strictly Necessary Cookies:</strong> Essential for keeping you logged in securely, navigating between dashboard pages, and defending against Cross-Site Request Forgery (CSRF) attacks.</li>
+                        <li><strong>Functional Preferences:</strong> Remembering your chosen color mode (Light vs Dark theme), sidebar drawer collapse states, and cookie banner consent status.</li>
+                        <li><strong>Aggregated Anonymous Telemetry:</strong> Counting anonymous page visits to understand which 12-week roadmaps (e.g., Cybersecurity vs Full Stack) are most in-demand, allowing us to allocate curriculum research resources.</li>
+                        <li><strong>Zero Third-Party Advertising:</strong> We do not deploy third-party advertising cookies, retargeting pixels (such as Meta Pixel or Google Ads tracking), or cross-site data aggregators.</li>
+                    </ul>
+
+                    <h2 id="section-cookie-table">3. Specific Cookies &amp; LocalStorage Keys We Set</h2>
+                    <table class="legal-table">
+                        <thead>
+                            <tr>
+                                <th>Name / Key</th>
+                                <th>Category</th>
+                                <th>Duration</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>sessionid</code></td>
+                                <td>Strictly Necessary</td>
+                                <td>2 Weeks / Session</td>
+                                <td>Maintains your authenticated student or mentor session across workspace pages.</td>
+                            </tr>
+                            <tr>
+                                <td><code>csrftoken</code></td>
+                                <td>Security</td>
+                                <td>1 Year</td>
+                                <td>Protects forms and API endpoints from Cross-Site Request Forgery attacks.</td>
+                            </tr>
+                            <tr>
+                                <td><code>theme_mode</code> / <code>theme</code></td>
+                                <td>Functional</td>
+                                <td>Persistent</td>
+                                <td>Preserves your chosen Light or Dark theme preference across visits.</td>
+                            </tr>
+                            <tr>
+                                <td><code>cc_cookie_consent</code></td>
+                                <td>Functional</td>
+                                <td>Persistent</td>
+                                <td>Remembers your cookie choice (Accepted/Rejected) so the banner is not displayed on every page load.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2 id="section-managing-consent">4. Manage Your Cookie Preferences</h2>
+                    <p>
+                        You can reset or change your cookie preferences for CareerCatalyst at any time using the control below. Clicking "Reset Cookie Preferences" will clear your stored preference and display the consent banner on your next action:
+                    </p>
+                    <div class="legal-callout">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div>
+                                <div class="legal-callout-title mb-1">
+                                    <i class="bi bi-gear-wide-connected text-primary"></i> Current Preference State
+                                </div>
+                                <span id="current-consent-status" class="small text-muted">Checking stored preferences...</span>
+                            </div>
+                            <button type="button" id="reset-cookie-consent-btn" class="btn btn-outline-primary btn-sm fw-semibold">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Cookie Preferences
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 id="section-browser-controls">5. Managing Cookies in Your Browser</h2>
+                    <p>
+                        Most modern web browsers allow you to block or delete cookies through browser settings. Please note that blocking strictly necessary cookies will prevent you from signing in or using the authenticated student workspace:
+                    </p>
+                    <ul>
+                        <li><a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener noreferrer">Google Chrome Cookie Settings</a></li>
+                        <li><a href="https://support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-desktop" target="_blank" rel="noopener noreferrer">Mozilla Firefox Cookie Settings</a></li>
+                        <li><a href="https://support.apple.com/en-in/guide/safari/sfri11471/mac" target="_blank" rel="noopener noreferrer">Apple Safari Cookie Settings</a></li>
+                        <li><a href="https://support.microsoft.com/en-us/microsoft-edge/delete-cookies-in-microsoft-edge-63947406-40ac-c3b8-57b9-2a946a29ae09" target="_blank" rel="noopener noreferrer">Microsoft Edge Cookie Settings</a></li>
+                    </ul>
+
+                    <h2 id="section-contact">6. Contact &amp; Questions</h2>
+                    <p>
+                        For any questions about our use of cookies or privacy architecture, please contact our team at <a href="mailto:supportatcareercatalyst@gmail">supportatcareercatalyst@gmail</a> or visit our <a href="{% url 'contact' %}">Contact Page</a>.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var statusEl = document.getElementById('current-consent-status');
+    var resetBtn = document.getElementById('reset-cookie-consent-btn');
+
+    function updateStatus() {
+        var consent = localStorage.getItem('cc_cookie_consent');
+        if (consent === 'accepted') {
+            statusEl.innerHTML = '<strong class="text-success"><i class="bi bi-check-circle-fill me-1"></i>All Cookies Accepted</strong> (Essential + Anonymized Telemetry)';
+        } else if (consent === 'rejected') {
+            statusEl.innerHTML = '<strong class="text-warning"><i class="bi bi-shield-fill-check me-1"></i>Non-Essential Cookies Rejected</strong> (Only Strictly Necessary Active)';
+        } else {
+            statusEl.innerHTML = '<span class="text-muted">No stored preference (Default Banner Active)</span>';
+        }
+    }
+
+    updateStatus();
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            localStorage.removeItem('cc_cookie_consent');
+            updateStatus();
+            var banner = document.getElementById('cc-cookie-banner');
+            if (banner) banner.style.display = 'block';
+            alert('Cookie preferences have been reset. The consent banner is now active.');
+        });
+    }
+});
+</script>
+{% endblock %}

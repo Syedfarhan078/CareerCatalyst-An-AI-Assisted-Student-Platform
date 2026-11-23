@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Data Deletion &amp; Account Erasure &bull; CareerCatalyst{% endblock %}
+{% block meta_description %}Learn how to permanently delete your CareerCatalyst account and all personal, resume, and application data. Self-serve instant deletion and DPDP Act 2023 erasure instructions.{% endblock %}
+{% block robots %}<meta name="robots" content="index, follow">{% endblock %}
+
+{% block canonical %}
+<link rel="canonical" href="{{ CANONICAL_ORIGIN }}{% url 'data_deletion' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Editorial Hero -->
+<section class="editorial-hero">
+    <div class="container">
+        <nav class="editorial-breadcrumb" aria-label="Breadcrumb">
+            <a href="{% url 'home' %}">Home</a>
+            <span class="mx-1.5">&bull;</span>
+            <span class="text-secondary fw-medium">Data Deletion</span>
+        </nav>
+        <h1 class="editorial-title">Data Deletion &amp; Account Erasure</h1>
+        <p class="editorial-subtitle">
+            You own your data. Learn how to immediately and permanently purge your account, student profile, resumes, and job application records from CareerCatalyst.
+        </p>
+        <div class="editorial-meta-row">
+            <span class="editorial-badge"><i class="bi bi-trash3-fill me-1"></i>Permanent Self-Serve Deletion</span>
+            <span>Aligned with India's DPDP Act, 2023</span>
+            <span>&bull;</span>
+            <span>Immediate Hard Delete</span>
+        </div>
+    </div>
+</section>
+
+<!-- Content Layout -->
+<section class="editorial-layout">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar Table of Contents -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <div class="editorial-toc-card">
+                    <div class="editorial-toc-title">
+                        <i class="bi bi-list-nested"></i> Table of Contents
+                    </div>
+                    <ul class="editorial-toc-list">
+                        <li><a href="#section-self-serve">1. Instant Self-Serve Deletion</a></li>
+                        <li><a href="#section-what-gets-deleted">2. What Data Is Purged</a></li>
+                        <li><a href="#section-retention">3. Zero Data Retention</a></li>
+                        <li><a href="#section-manual-request">4. Manual DPDP Request</a></li>
+                        <li><a href="#section-faq">5. Frequently Asked Questions</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="col-lg-9">
+                <article class="editorial-card legal-prose">
+                    <h2 id="section-self-serve">1. Instant Self-Serve Deletion</h2>
+                    <p>
+                        CareerCatalyst gives registered students and mentors a one-click self-serve mechanism to permanently delete their account and wipe all personal data:
+                    </p>
+                    <div class="legal-callout warning">
+                        <div class="legal-callout-title">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i> Irreversible Action
+                        </div>
+                        <p class="mb-3">
+                            Deleting your account is permanent. Once confirmed, all your roadmap progress, earned verification certificates, ATS analysis histories, and tracked job pipelines are deleted immediately and cannot be recovered.
+                        </p>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'delete_account' %}" class="btn btn-danger btn-sm fw-semibold">
+                            <i class="bi bi-trash3 me-1"></i>Proceed to Delete Account
+                        </a>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={% url 'delete_account' %}" class="btn btn-outline-danger btn-sm fw-semibold">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Sign In to Delete Account
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <h3>Step-by-Step Instructions</h3>
+                    <ol>
+                        <li>Sign in to your CareerCatalyst account.</li>
+                        <li>Click on your avatar in the left sidebar or top right and navigate to <strong>Settings</strong>.</li>
+                        <li>Select the <strong>Delete Account</strong> tab or visit <a href="{% url 'delete_account' %}">this direct deletion page</a>.</li>
+                        <li>Enter your account password to authenticate and confirm your decision.</li>
+                        <li>Your account and all associated records are permanently erased, and you are signed out.</li>
+                    </ol>
+
+                    <h2 id="section-what-gets-deleted">2. What Data Is Permanently Purged?</h2>
+                    <p>
+                        When you execute an account deletion, our database cascading delete routines immediately purge all associated objects across all platform tables:
+                    </p>
+                    <table class="legal-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Items Purged</th>
+                                <th>Action Taken</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Authentication &amp; Profile</strong></td>
+                                <td>User account, password hashes, email address, student profile, college name, GPA, graduation year, contact links, and profile photos</td>
+                                <td>Permanently deleted from database &amp; media storage</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Resume Content &amp; Uploads</strong></td>
+                                <td>All custom resumes, uploaded PDF/DOCX files, parsed text, work histories, and project entries</td>
+                                <td>Purged from Cloudinary and PostgreSQL storage</td>
+                            </tr>
+                            <tr>
+                                <td><strong>ATS Diagnostic Reports</strong></td>
+                                <td>All historical ATS analysis scores, bullet evaluations, keyword gap reports, and AI suggestions</td>
+                                <td>Permanently deleted</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Curriculum Roadmaps</strong></td>
+                                <td>Track enrollments, weekly milestone topic completions, and verifiable completion certificates</td>
+                                <td>Permanently deleted; certificate verification URLs deactivated</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Assessment History</strong></td>
+                                <td>Technical quiz attempts, MCQ answer choices, timer telemetry, and proctoring logs</td>
+                                <td>Permanently deleted</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Job Tracker CRM</strong></td>
+                                <td>Job applications, company pipeline stages, recruiter notes, and follow-up deadlines</td>
+                                <td>Permanently deleted</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2 id="section-retention">3. Zero Residual Retention</h2>
+                    <p>
+                        Unlike commercial platforms that "soft-delete" records or move accounts into an archival retention silo for 90 days, CareerCatalyst executes an immediate hard delete. No shadow profiles, backup clones, or user identity logs are maintained once deletion executes.
+                    </p>
+
+                    <h2 id="section-manual-request">4. Manual Deletion Request (DPDP Act, 2023)</h2>
+                    <p>
+                        If you cannot access your account (e.g., lost credentials or expired session), you have the legal right under India's Digital Personal Data Protection Act, 2023 to submit a manual Data Erasure Request directly to our Grievance Officer:
+                    </p>
+                    <ul>
+                        <li><strong>Email:</strong> <a href="mailto:supportatcareercatalyst@gmail.com">supportatcareercatalyst@gmail.com</a></li>
+                        <li><strong>Subject Line:</strong> <code>[DPDP Erasure Request] Full Name - Registered Email</code></li>
+                        <li><strong>Required Information:</strong> Please send the email from the exact email address registered on the platform, along with your registered username.</li>
+                        <li><strong>SLA &amp; Confirmation:</strong> We verify the request within 24 hours and permanently purge all associated records within <strong>72 business hours</strong>, providing written email confirmation.</li>
+                    </ul>
+
+                    <h2 id="section-faq">5. Frequently Asked Questions</h2>
+                    <div class="accordion border-0" id="deletionFaq">
+                        <div class="border-bottom py-3">
+                            <h3 class="h6 fw-bold mb-1">Can I recover my account after deletion?</h3>
+                            <p class="small text-muted mb-0">No. Deletion is irreversible. If you wish to use CareerCatalyst again in the future, you will need to register as a new user.</p>
+                        </div>
+                        <div class="border-bottom py-3">
+                            <h3 class="h6 fw-bold mb-1">What happens to public community forum posts?</h3>
+                            <p class="small text-muted mb-0">Any community discussion posts or questions you authored are either deleted or anonymized (author shown as "Deleted Member"), ensuring no personal identifiers remain.</p>
+                        </div>
+                        <div class="py-3">
+                            <h3 class="h6 fw-bold mb-1">Is there any fee or charge to delete my data?</h3>
+                            <p class="small text-muted mb-0">Never. All data rights, including access, correction, and permanent erasure, are 100% free of charge under our principles and the DPDP Act, 2023.</p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
