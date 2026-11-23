@@ -1,0 +1,211 @@
+{% load static %}
+<section class="ats-quickscan-section section-padding" id="ats-quickscan" aria-labelledby="quickscan-heading">
+    <div class="container">
+        <!-- Section Header -->
+        <div class="section-header text-center mb-4">
+            <div class="section-eyebrow animate-on-scroll">
+                <i class="bi bi-lightning-charge-fill me-1 text-primary"></i>
+                <span>Try Before Signup &bull; Live ATS Diagnostic</span>
+            </div>
+            <h2 class="section-title animate-on-scroll animate-delay-1" id="quickscan-heading">
+                Benchmark your resume with our real ATS engine.
+            </h2>
+            <p class="section-subtitle mx-auto animate-on-scroll animate-delay-2">
+                No sign-up required to test. Paste your resume or bullet points to see live TF-IDF keyword matching, taxonomy skill extraction, and Google XYZ achievement scoring.
+            </p>
+        </div>
+
+        <!-- QuickScan Interactive Widget -->
+        <div class="quickscan-widget-card animate-on-scroll animate-delay-2">
+            <div class="row g-4 align-items-stretch">
+                <!-- Left Column: Input Form -->
+                <div class="col-lg-6 d-flex flex-column">
+                    <div class="quickscan-input-card h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label for="quickscan-role" class="form-label fw-semibold text-secondary mb-0 small">
+                                <i class="bi bi-briefcase me-1 text-primary"></i> Target Engineering Role
+                            </label>
+                            <span class="text-muted small">8+ Roles Supported</span>
+                        </div>
+                        <select id="quickscan-role" class="form-select quickscan-select mb-3" aria-label="Select Target Engineering Role">
+                            <option value="Software Engineer" selected>Software Engineer</option>
+                            <option value="Backend Developer">Backend Developer</option>
+                            <option value="Frontend Developer">Frontend Developer</option>
+                            <option value="Full Stack Developer">Full Stack Developer</option>
+                            <option value="Data Scientist">Data Scientist</option>
+                            <option value="QA Manual Tester">QA Manual Tester / QA Engineer</option>
+                            <option value="DevOps Engineer">DevOps Engineer</option>
+                            <option value="Cybersecurity Analyst">Cybersecurity Analyst</option>
+                        </select>
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="quickscan-text" class="form-label fw-semibold text-secondary mb-0 small">
+                                <i class="bi bi-file-text me-1 text-primary"></i> Resume Text or Bullet Points
+                            </label>
+                            <div class="quickscan-presets d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-link text-primary p-0 text-decoration-none small quickscan-preset-btn" data-preset="swe">
+                                    <i class="bi bi-magic me-1"></i>Sample: SWE
+                                </button>
+                                <span class="text-muted small">&bull;</span>
+                                <button type="button" class="btn btn-sm btn-link text-primary p-0 text-decoration-none small quickscan-preset-btn" data-preset="qa">
+                                    Sample: QA
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="quickscan-textarea-wrapper position-relative flex-grow-1 mb-3">
+                            <textarea id="quickscan-text" class="form-control quickscan-textarea" rows="8" placeholder="Paste your resume summary, work experience, or technical skills here...
+
+Example:
+- Built scalable REST APIs using Python, Django, and PostgreSQL serving 100k daily users.
+- Reduced database query latency by 45% through Redis caching and query indexing.
+- Automated CI/CD deployment pipelines using Docker and GitHub Actions."></textarea>
+                            <div class="quickscan-char-counter small text-muted text-end mt-1">
+                                <span id="quickscan-char-count">0</span> characters (min. 30)
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-2 border-top">
+                            <div class="d-flex align-items-center text-muted small">
+                                <i class="bi bi-shield-check text-success me-1"></i>
+                                <span>100% Client-Safe &bull; Zero Data Stored</span>
+                            </div>
+                            <button type="button" id="quickscan-submit-btn" class="btn-cc btn-cc-primary">
+                                <span id="quickscan-btn-spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-cpu me-2" id="quickscan-btn-icon"></i>
+                                <span id="quickscan-btn-text">Run Instant ATS Scan</span>
+                            </button>
+                        </div>
+
+                        <div id="quickscan-error-msg" class="alert alert-danger alert-dismissible py-2 px-3 small mt-3 d-none" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <span id="quickscan-error-text">Please provide valid resume text.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Results Display -->
+                <div class="col-lg-6 d-flex flex-column">
+                    <div class="quickscan-results-card h-100 position-relative" id="quickscan-results-box" aria-live="polite">
+                        <!-- State 1: Idle Placeholder -->
+                        <div id="quickscan-state-idle" class="quickscan-placeholder text-center my-auto py-5 px-3">
+                            <div class="quickscan-placeholder-icon mb-3">
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                            </div>
+                            <h4 class="h5 fw-bold mb-2">Live ATS Diagnostic Engine</h4>
+                            <p class="text-muted small mx-auto" style="max-width: 380px;">
+                                Click <strong>Sample: SWE</strong> to test in one click or paste your own resume text on the left to inspect real ATS scoring.
+                            </p>
+                            <div class="quickscan-feature-tags d-flex justify-content-center flex-wrap gap-2 mt-3">
+                                <span class="badge quickscan-feature-pill"><i class="bi bi-check2 text-primary me-1"></i> TF-IDF Similarity</span>
+                                <span class="badge quickscan-feature-pill"><i class="bi bi-check2 text-primary me-1"></i> Skill Taxonomy</span>
+                                <span class="badge quickscan-feature-pill"><i class="bi bi-check2 text-primary me-1"></i> Google XYZ Metrics</span>
+                            </div>
+                        </div>
+
+                        <!-- State 2: Active Results Display (Hidden by default) -->
+                        <div id="quickscan-state-active" class="quickscan-active-report d-none">
+                            <!-- Header Score Bar -->
+                            <div class="quickscan-report-header p-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    <span class="text-muted small d-block">Target Role Scored:</span>
+                                    <span class="fw-bold text-secondary" id="res-target-role">Software Engineer</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="text-end">
+                                        <div class="quickscan-big-score" id="res-overall-score">--</div>
+                                        <div class="small text-muted">ATS Score</div>
+                                    </div>
+                                    <div id="res-score-badge" class="badge bg-success bg-opacity-10 text-success fw-semibold px-2 py-1 rounded">
+                                        Strong Match
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Metrics Grid -->
+                            <div class="quickscan-metrics-grid p-3 border-bottom">
+                                <div class="row g-2 text-center">
+                                    <div class="col-6 col-sm-3">
+                                        <div class="quickscan-metric-tile">
+                                            <div class="metric-num" id="res-skill-score">--%</div>
+                                            <div class="metric-lbl">Skill Coverage</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-sm-3">
+                                        <div class="quickscan-metric-tile">
+                                            <div class="metric-num" id="res-jd-score">--%</div>
+                                            <div class="metric-lbl">Role Match</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-sm-3">
+                                        <div class="quickscan-metric-tile">
+                                            <div class="metric-num" id="res-xyz-bullets">--</div>
+                                            <div class="metric-lbl">Quantified Bullets</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-sm-3">
+                                        <div class="quickscan-metric-tile">
+                                            <div class="metric-num" id="res-completeness-score">--%</div>
+                                            <div class="metric-lbl">Completeness</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Skills Chips Comparison -->
+                            <div class="p-3 border-bottom">
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-semibold small text-secondary">
+                                            <i class="bi bi-check-circle-fill text-success me-1"></i> Matched Core Skills:
+                                        </span>
+                                        <span class="text-muted small" id="res-matched-count">0 found</span>
+                                    </div>
+                                    <div class="quickscan-chips-wrap" id="res-matched-chips">
+                                        <!-- Injected via JS -->
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-semibold small text-secondary">
+                                            <i class="bi bi-exclamation-circle-fill text-warning me-1"></i> Missing Required Skills:
+                                        </span>
+                                        <span class="text-muted small" id="res-missing-count">0 missing</span>
+                                    </div>
+                                    <div class="quickscan-chips-wrap" id="res-missing-chips">
+                                        <!-- Injected via JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actionable Suggestion Preview -->
+                            <div class="p-3 border-bottom">
+                                <div class="fw-semibold small text-secondary mb-2">
+                                    <i class="bi bi-lightbulb text-primary me-1"></i> Priority ATS Optimization:
+                                </div>
+                                <div id="res-suggestions-list" class="quickscan-suggestions-box">
+                                    <!-- Injected via JS -->
+                                </div>
+                            </div>
+
+                            <!-- High-Converting Next Step CTA -->
+                            <div class="p-3 quickscan-cta-box bg-primary bg-opacity-10 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                                <div>
+                                    <div class="fw-bold small text-secondary">Get Line-by-Line AI Rewrites &amp; 12-Week Roadmap</div>
+                                    <div class="text-muted small">Unlock full XYZ rewriting, PDF upload parsing, and interview prep.</div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'register' %}" class="btn-cc btn-cc-primary btn-sm text-nowrap">
+                                        <span>Create Free Account</span>
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

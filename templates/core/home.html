@@ -84,12 +84,13 @@
 {% block body_class %}home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/home.css' %}?v=2.0">
+<link rel="stylesheet" href="{% static 'css/home.css' %}?v=2.1">
 {% endblock %}
 
 {% block main_wrapper %}
 <main>
     {% include "core/partials/hero.html" %}
+    {% include "core/partials/instant_ats_scanner.html" %}
     {% include "core/partials/stats.html" %}
     {% include "core/partials/how_it_works.html" %}
     {% include "core/partials/timeline.html" %}
@@ -102,5 +103,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/home.js' %}?v=1.4"></script>
+<script src="{% static 'js/home.js' %}?v=2.0"></script>
 {% endblock %}

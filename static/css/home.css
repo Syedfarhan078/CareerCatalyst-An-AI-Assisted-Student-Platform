@@ -1555,6 +1555,177 @@ html[data-theme="dark"] .faq-accordion-editorial .accordion-button::after {
 }
 
 /* ------------------------------------------------------------
+   10.5. TRY-BEFORE-SIGNUP ATS QUICK-SCAN TOOL
+   ------------------------------------------------------------ */
+.ats-quickscan-section {
+    background-color: var(--home-surface-subtle);
+    border-top: 1px solid var(--home-border);
+    border-bottom: 1px solid var(--home-border);
+}
+
+.quickscan-widget-card {
+    background: var(--home-surface);
+    border: 1px solid var(--home-border);
+    border-radius: var(--home-radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--home-shadow-sm);
+}
+
+.quickscan-input-card,
+.quickscan-results-card {
+    background: var(--home-card-bg);
+    border: 1px solid var(--home-border-subtle);
+    border-radius: var(--home-radius);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.quickscan-select,
+.quickscan-textarea {
+    background-color: var(--home-surface-subtle) !important;
+    border: 1px solid var(--home-border) !important;
+    color: var(--home-text) !important;
+    border-radius: var(--home-radius-sm);
+    font-size: 0.875rem;
+    transition: border-color 0.15s ease;
+}
+
+.quickscan-select:focus,
+.quickscan-textarea:focus {
+    border-color: var(--home-primary) !important;
+    box-shadow: 0 0 0 1px var(--home-primary-border) !important;
+    outline: none;
+}
+
+.quickscan-textarea {
+    resize: vertical;
+    min-height: 190px;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+}
+
+.quickscan-textarea::placeholder {
+    color: var(--home-text-subtle);
+    font-size: 0.825rem;
+    opacity: 0.8;
+}
+
+.quickscan-placeholder-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--home-primary-subtle);
+    color: var(--home-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto;
+    border: 1px solid var(--home-primary-border);
+}
+
+.quickscan-feature-pill {
+    background: var(--home-surface-subtle);
+    color: var(--home-text-muted);
+    border: 1px solid var(--home-border-subtle);
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+}
+
+.quickscan-big-score {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--home-text);
+}
+
+.quickscan-metric-tile {
+    background: var(--home-surface-subtle);
+    border: 1px solid var(--home-border-subtle);
+    border-radius: var(--home-radius-sm);
+    padding: 0.6rem 0.35rem;
+}
+
+.quickscan-metric-tile .metric-num {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--home-text);
+    line-height: 1.2;
+}
+
+.quickscan-metric-tile .metric-lbl {
+    font-size: 0.675rem;
+    color: var(--home-text-muted);
+    font-weight: 500;
+    margin-top: 0.15rem;
+}
+
+.quickscan-chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.quickscan-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+}
+
+.quickscan-chip.matched {
+    background: rgba(22, 163, 74, 0.12);
+    color: var(--home-success);
+    border: 1px solid rgba(22, 163, 74, 0.25);
+}
+
+.quickscan-chip.missing {
+    background: rgba(217, 119, 6, 0.12);
+    color: #D97706;
+    border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.quickscan-suggestion-item {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--home-text);
+    background: var(--home-surface-subtle);
+    border-left: 3px solid var(--home-primary);
+    padding: 0.4rem 0.65rem;
+    border-radius: 0 var(--home-radius-sm) var(--home-radius-sm) 0;
+    margin-bottom: 0.45rem;
+}
+
+.quickscan-suggestion-item strong {
+    color: var(--home-text);
+    display: block;
+    margin-bottom: 0.1rem;
+}
+
+.quickscan-cta-box {
+    border-radius: var(--home-radius-sm);
+    border: 1px solid var(--home-primary-border);
+}
+
+@media (max-width: 767.98px) {
+    .quickscan-widget-card {
+        padding: 1rem;
+    }
+    .quickscan-input-card,
+    .quickscan-results-card {
+        padding: 1rem;
+    }
+    .quickscan-big-score {
+        font-size: 1.75rem;
+    }
+}
+
+/* ------------------------------------------------------------
    11. ACCESSIBILITY & REDUCED MOTION
    ------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {

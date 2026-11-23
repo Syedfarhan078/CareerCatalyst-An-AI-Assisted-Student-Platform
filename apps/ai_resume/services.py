@@ -208,3 +208,128 @@ def analyze_resume_data(text, target_role, user, resume=None, uploaded_file=None
         )
         
     return analysis
+
+
+def quick_scan_resume(text, target_role="Software Engineer", job_description=""):
+    """
+    Lightweight, real ATS scan using the exact same Layer 1-3 engines as analyze_resume_data.
+    Executes in-memory without saving to database, ideal for unauthenticated public quick-scans.
+    """
+    text = (text or "").strip()
+    if not text:
+        return {
+            "success": False,
+            "error": "Resume text is empty."
+        }
+    
+    target_role = (target_role or "Software Engineer").strip()
+    job_description = (job_description or "").strip()
+    
+    # 1. Structured Section Parsing & Bullets
+    segmented = segment_resume_sections(text)
+    presence = segmented["presence"]
+    bullets = extract_bullet_points(text)
+    
+    # 2. Skill Extraction & Taxonomy Matching
+    skills_data = extract_skills_from_text(text)
+    found_skills_list = skills_data["skills"]
+    found_skills_set = set(s.lower() for s in found_skills_list)
+    
+    role_bench = get_role_benchmark(target_role)
+    required_skills = role_bench.get("required_skills", [])
+    recommended_skills = role_bench.get("recommended_skills", [])
+    role_keywords = role_bench.get("keywords", [])
+    
+    if job_description:
+        jd_skills_data = extract_skills_from_text(job_description)
+        jd_extracted = jd_skills_data.get("skills", [])
+        if jd_extracted:
+            required_skills = jd_extracted
+            
+    matched_req_skills = [s for s in required_skills if s.lower() in found_skills_set]
+    missing_req_skills = [s for s in required_skills if s.lower() not in found_skills_set]
+    total_req = len(required_skills)
+    skill_coverage_score = int(round((len(matched_req_skills) / total_req) * 100)) if total_req > 0 else 70
+    
+    # TF-IDF JD Match Score
+    if job_description:
+        jd_match_score, matching_kws = compute_tfidf_similarity(text, job_description)
+    else:
+        role_doc = f"{target_role}. Core skills: {' '.join(required_skills)}. Recommended: {' '.join(recommended_skills)}. Domain concepts: {' '.join(role_keywords)}"
+        jd_match_score, matching_kws = compute_tfidf_similarity(text, role_doc)
+        
+    benchmark_kws = list(set(role_keywords + matching_kws))
+    matched_kws = [kw for kw in benchmark_kws if kw.lower() in text.lower()]
+    total_kws_count = len(benchmark_kws)
+    keyword_coverage_score = int(round((len(matched_kws) / total_kws_count) * 100)) if total_kws_count > 0 else 65
+    
+    # 3. Completeness & Formatting
+    email_found = bool(re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text))
+    phone_found = bool(re.search(r'(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}', text))
+    links_found = any(k in text.lower() for k in ['linkedin.com', 'github.com', 'portfolio', 'http'])
+    
+    section_pts = sum(15 for sec in ["education", "experience", "projects", "skills", "certifications"] if presence.get(sec, False))
+    contact_pts = (10 if email_found else 0) + (10 if phone_found else 0) + (5 if links_found else 0)
+    completeness_score = min(100, section_pts + contact_pts)
+    
+    # 4. Google XYZ Evaluator
+    xyz_results = evaluate_achievement_strength(bullets)
+    achievement_score = xyz_results["achievement_score"]
+    
+    # Composite Score
+    overall_score = int(round(
+        (jd_match_score * 0.25) +
+        (skill_coverage_score * 0.25) +
+        (keyword_coverage_score * 0.20) +
+        (completeness_score * 0.15) +
+        (achievement_score * 0.15)
+    ))
+    overall_score = max(5, min(100, overall_score))
+    
+    # Generate high-impact recommendations
+    suggestions = []
+    if missing_req_skills:
+        missing_preview = ", ".join([s.title() for s in missing_req_skills[:3]])
+        suggestions.append({
+            "type": "missing_skills",
+            "title": "Missing Core Skills",
+            "text": f"Your target role ({target_role}) prioritizes: {missing_preview}. Demonstrating these will immediately improve your score."
+        })
+    if xyz_results["quantified_bullets_count"] < (xyz_results["total_bullets"] / 2) and xyz_results["total_bullets"] > 0:
+        suggestions.append({
+            "type": "impact",
+            "title": "Quantify Achievements (Google XYZ Formula)",
+            "text": f"Only {xyz_results['quantified_bullets_count']} of {xyz_results['total_bullets']} bullet points use measurable metrics. Reframe as: Accomplished [X], measured by [Y], by doing [Z]."
+        })
+    if not email_found or not phone_found:
+        suggestions.append({
+            "type": "contact",
+            "title": "Contact Header Formatting",
+            "text": "ATS parsers require clear email and phone headers to automatically index candidate profiles."
+        })
+    if not presence.get("projects", False):
+        suggestions.append({
+            "type": "structure",
+            "title": "Add Dedicated Projects Section",
+            "text": "Recruiters and automated screening prioritize resumes with a structured Projects section showcasing hands-on builds."
+        })
+
+    return {
+        "success": True,
+        "target_role": target_role,
+        "overall_score": overall_score,
+        "skill_coverage_score": skill_coverage_score,
+        "jd_match_score": jd_match_score,
+        "keyword_coverage_score": keyword_coverage_score,
+        "completeness_score": completeness_score,
+        "achievement_score": achievement_score,
+        "matched_skills": [s.title() for s in matched_req_skills[:10]],
+        "missing_skills": [s.title() for s in missing_req_skills[:8]],
+        "detected_skills": [s.title() for s in found_skills_list[:12]],
+        "strong_verbs_count": xyz_results["strong_verbs_count"],
+        "quantified_bullets_count": xyz_results["quantified_bullets_count"],
+        "total_bullets_count": xyz_results["total_bullets"],
+        "suggestions": suggestions[:3],
+        "word_count": len(text.split())
+    }
+

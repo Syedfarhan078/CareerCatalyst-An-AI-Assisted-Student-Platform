@@ -1,4 +1,5 @@
 import os
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -6,12 +7,13 @@ from django.views.generic import ListView, DetailView, CreateView
 from django.http import JsonResponse, Http404, FileResponse
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
 
 from .models import ResumeAnalysis, MissingSkill, ImprovementSuggestion
 from .forms import ResumeAnalysisForm
 from .parser import parse_resume_file
-from .services import analyze_resume_data
+from .services import analyze_resume_data, quick_scan_resume
 from .ai_service import enhance_with_ai
 from .pii_sanitizer import sanitize_resume_text
 from apps.resume.models import Resume
@@ -250,3 +252,44 @@ def download_resume_file(request, pk):
             return FileResponse(f, as_attachment=False, filename=filename)
         except (FileNotFoundError, OSError):
             raise Http404("The requested resume file is missing from storage.")
+
+
+@csrf_exempt
+@require_POST
+def public_quick_scan(request):
+    """
+    Public unauthenticated endpoint powering the homepage Try-Before-Signup ATS Quick Scanner.
+    Executes real deterministic NLP extraction, TF-IDF scoring, and XYZ achievement evaluation
+    via quick_scan_resume(). No database persistence required.
+    """
+    try:
+        if request.content_type == 'application/json':
+            body_data = json.loads(request.body.decode('utf-8'))
+            resume_text = body_data.get('resume_text', '')
+            target_role = body_data.get('target_role', 'Software Engineer')
+            job_description = body_data.get('job_description', '')
+        else:
+            resume_text = request.POST.get('resume_text', '')
+            target_role = request.POST.get('target_role', 'Software Engineer')
+            job_description = request.POST.get('job_description', '')
+
+        resume_text = resume_text.strip()
+        if not resume_text:
+            return JsonResponse({'success': False, 'error': 'Please provide resume text to scan.'}, status=400)
+            
+        if len(resume_text) < 30:
+            return JsonResponse({'success': False, 'error': 'Resume text is too short. Please paste at least a section or few bullet points (30+ characters).'}, status=400)
+
+        # Enforce reasonable payload boundary (max 30KB)
+        if len(resume_text) > 30000:
+            resume_text = resume_text[:30000]
+
+        target_role = (target_role or 'Software Engineer')[:80].strip()
+        job_description = (job_description or '')[:10000].strip()
+
+        result = quick_scan_resume(text=resume_text, target_role=target_role, job_description=job_description)
+        return JsonResponse(result)
+
+    except Exception as exc:
+        return JsonResponse({'success': False, 'error': f'Scan error: {str(exc)}'}, status=500)
+
