@@ -110,19 +110,22 @@
             <!-- Username Field -->
             <div class="auth-form-group">
                 <label for="id_username" class="auth-label">Username <span class="text-danger">*</span></label>
-                <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" class="form-control auth-input" required id="id_username" placeholder="Choose a username" value="{{ form.username.value|default:'' }}">
+                <div class="input-icon-wrapper has-leading-icon">
+                    <i class="bi bi-person input-leading-icon"></i>
+                    <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" class="form-control auth-input has-leading-icon" required id="id_username" placeholder="Choose a username" value="{{ form.username.value|default:'' }}">
+                </div>
                 {% if form.username.errors %}
                     <div class="auth-field-error">{{ form.username.errors.0 }}</div>
-                {% endif %}
-                {% if form.username.help_text %}
-                    <div class="auth-field-help">{{ form.username.help_text }}</div>
                 {% endif %}
             </div>
 
             <!-- Email Field -->
             <div class="auth-form-group">
                 <label for="id_email" class="auth-label">Email Address <span class="text-danger">*</span></label>
-                <input type="email" name="email" autocomplete="email" maxlength="320" class="form-control auth-input" required id="id_email" placeholder="name@example.com" value="{{ form.email.value|default:'' }}">
+                <div class="input-icon-wrapper has-leading-icon">
+                    <i class="bi bi-envelope input-leading-icon"></i>
+                    <input type="email" name="email" autocomplete="email" maxlength="320" class="form-control auth-input has-leading-icon" required id="id_email" placeholder="name@example.com" value="{{ form.email.value|default:'' }}">
+                </div>
                 {% if form.email.errors %}
                     <div class="auth-field-error">{{ form.email.errors.0 }}</div>
                 {% endif %}
@@ -131,8 +134,9 @@
             <!-- Password Field -->
             <div class="auth-form-group">
                 <label for="id_password1" class="auth-label">Password <span class="text-danger">*</span></label>
-                <div class="password-toggle-wrapper">
-                    <input type="password" name="password1" autocomplete="new-password" class="form-control auth-input" required id="id_password1" placeholder="Create a strong password">
+                <div class="password-toggle-wrapper has-leading-icon">
+                    <i class="bi bi-lock input-leading-icon"></i>
+                    <input type="password" name="password1" autocomplete="new-password" class="form-control auth-input has-leading-icon" required id="id_password1" placeholder="Create a strong password">
                     <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('id_password1', this)" aria-label="Toggle password visibility">
                         <i class="bi bi-eye"></i>
                     </button>
@@ -140,16 +144,33 @@
                 {% if form.password1.errors %}
                     <div class="auth-field-error">{{ form.password1.errors.0 }}</div>
                 {% endif %}
-                {% if form.password1.help_text %}
-                    <div class="auth-field-help">{{ form.password1.help_text|safe }}</div>
-                {% endif %}
+                
+                <!-- Interactive Segmented Password Strength Bar (Red -> Yellow -> Green) -->
+                <div class="password-strength-container" id="passwordStrengthWrapper" style="display: none;" aria-live="polite">
+                    <div class="password-strength-header">
+                        <span class="password-strength-caption">Password Strength</span>
+                        <span class="password-strength-label" id="passwordStrengthLabel">Too short</span>
+                    </div>
+                    <div class="password-strength-meter" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" id="passwordStrengthMeter">
+                        <div class="strength-segment" data-segment="1"></div>
+                        <div class="strength-segment" data-segment="2"></div>
+                        <div class="strength-segment" data-segment="3"></div>
+                        <div class="strength-segment" data-segment="4"></div>
+                    </div>
+                    <div class="password-criteria-row" id="passwordCriteriaRow">
+                        <span class="criterion-chip" id="crit-length"><i class="bi bi-circle"></i> 8+ characters</span>
+                        <span class="criterion-chip" id="crit-mixed"><i class="bi bi-circle"></i> Letters &amp; numbers</span>
+                        <span class="criterion-chip" id="crit-special"><i class="bi bi-circle"></i> Symbol</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Confirm Password Field -->
             <div class="auth-form-group">
                 <label for="id_password2" class="auth-label">Confirm Password <span class="text-danger">*</span></label>
-                <div class="password-toggle-wrapper">
-                    <input type="password" name="password2" autocomplete="new-password" class="form-control auth-input" required id="id_password2" placeholder="Re-enter your password">
+                <div class="password-toggle-wrapper has-leading-icon">
+                    <i class="bi bi-shield-check input-leading-icon"></i>
+                    <input type="password" name="password2" autocomplete="new-password" class="form-control auth-input has-leading-icon" required id="id_password2" placeholder="Re-enter your password">
                     <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('id_password2', this)" aria-label="Toggle password visibility">
                         <i class="bi bi-eye"></i>
                     </button>
@@ -157,9 +178,7 @@
                 {% if form.password2.errors %}
                     <div class="auth-field-error">{{ form.password2.errors.0 }}</div>
                 {% endif %}
-                {% if form.password2.help_text %}
-                    <div class="auth-field-help">{{ form.password2.help_text|safe }}</div>
-                {% endif %}
+                <div class="password-match-feedback" id="passwordMatchFeedback" style="display: none;"></div>
             </div>
 
             <!-- Primary Action -->
@@ -182,14 +201,20 @@
     background: #ffffff;
     border: 1.5px solid #e2e8f0 !important;
 }
+html[data-theme="dark"] .role-select-card,
 [data-bs-theme="dark"] .role-select-card {
-    background: #1e293b;
-    border-color: #334155 !important;
+    background: #18181E !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 .btn-check:checked + .role-select-card {
     border-color: #2563EB !important;
     background: rgba(37, 99, 235, 0.05) !important;
     box-shadow: 0 0 0 1px #2563EB;
+}
+html[data-theme="dark"] .btn-check:checked + .role-select-card {
+    border-color: #3B82F6 !important;
+    background: rgba(59, 130, 246, 0.12) !important;
+    box-shadow: 0 0 0 1px #3B82F6;
 }
 </style>
 {% endblock %}
@@ -208,6 +233,13 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', updateGoogleBtnRole);
     });
     updateGoogleBtnRole();
+
+    // Initialize interactive password strength bar and match tracker
+    if (typeof window.initPasswordStrengthChecker === 'function') {
+        window.initPasswordStrengthChecker('id_password1', {
+            confirmInputId: 'id_password2'
+        });
+    }
 });
 </script>
 {% endblock %}

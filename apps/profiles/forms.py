@@ -7,7 +7,7 @@ from .models import StudentProfile, StudentProject, StudentCertification
 class StudentProfileForm(forms.ModelForm):
     class Meta:
         model = StudentProfile
-        exclude = ('user',)
+        exclude = ('user', 'current_streak', 'longest_streak', 'last_active_date')
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'bio': forms.Textarea(attrs={'rows': 4, 'class': 'form-control', 'placeholder': 'Tell us a bit about yourself...'}),

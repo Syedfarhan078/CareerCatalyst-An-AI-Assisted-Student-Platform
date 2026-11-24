@@ -1409,9 +1409,9 @@ html[data-theme="dark"] .footer-section .footer-secondary-note {
 .form-select:focus {
     color: var(--text);
     background-color: var(--card-bg, #ffffff);
-    border-color: var(--primary) !important;
+    border-color: #2563EB !important;
     outline: 0 !important;
-    box-shadow: 0 0 0 3px var(--primary-border, rgba(37, 99, 235, 0.15)) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
 }
 
 .form-control:disabled,
@@ -1592,7 +1592,8 @@ html[data-theme="dark"] .form-select:focus {
     background-color: #18181E !important;
     color: #F8FAFC !important;
     border-color: #3B82F6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22) !important;
+    outline: 0 !important;
 }
 
 html[data-theme="dark"] .form-control:disabled,

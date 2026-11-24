@@ -206,9 +206,18 @@ html[data-theme="dark"],
 
 .settings-card .form-control:focus,
 .settings-card .form-select:focus {
-    border-color: var(--settings-primary);
-    box-shadow: 0 0 0 3px var(--settings-primary-subtle);
-    outline: none;
+    border-color: #2563EB !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
+    outline: none !important;
+}
+
+html[data-theme="dark"] .settings-card .form-control:focus,
+html[data-theme="dark"] .settings-card .form-select:focus,
+[data-bs-theme="dark"] .settings-card .form-control:focus,
+[data-bs-theme="dark"] .settings-card .form-select:focus {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22) !important;
+    outline: none !important;
 }
 
 .settings-card .form-control::placeholder {

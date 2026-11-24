@@ -430,4 +430,114 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Global interactive password strength and match checker
+    window.initPasswordStrengthChecker = function(passwordInputId, options) {
+        options = options || {};
+        const passwordInput = document.getElementById(passwordInputId);
+        if (!passwordInput) return;
+
+        const wrapper = document.getElementById(options.wrapperId || 'passwordStrengthWrapper');
+        const label = document.getElementById(options.labelId || 'passwordStrengthLabel');
+        const critLength = document.getElementById(options.critLengthId || 'crit-length');
+        const critMixed = document.getElementById(options.critMixedId || 'crit-mixed');
+        const critSpecial = document.getElementById(options.critSpecialId || 'crit-special');
+        const confirmInput = options.confirmInputId ? document.getElementById(options.confirmInputId) : null;
+        const matchFeedback = options.matchFeedbackId ? document.getElementById(options.matchFeedbackId) : null;
+
+        function evaluateStrength(val) {
+            if (!val || val.length === 0) return 0;
+            let score = 0;
+            
+            const hasLength = val.length >= 8;
+            const hasLower = /[a-z]/.test(val);
+            const hasUpper = /[A-Z]/.test(val);
+            const hasNumber = /[0-9]/.test(val);
+            const hasSpecial = /[^A-Za-z0-9]/.test(val);
+            const hasMixed = (hasLower || hasUpper) && hasNumber;
+
+            // Update criterion chips
+            if (critLength) {
+                critLength.classList.toggle('satisfied', hasLength);
+                const icon = critLength.querySelector('i');
+                if (icon) icon.className = hasLength ? 'bi bi-check-circle-fill text-success' : 'bi bi-circle';
+            }
+            if (critMixed) {
+                critMixed.classList.toggle('satisfied', hasMixed);
+                const icon = critMixed.querySelector('i');
+                if (icon) icon.className = hasMixed ? 'bi bi-check-circle-fill text-success' : 'bi bi-circle';
+            }
+            if (critSpecial) {
+                critSpecial.classList.toggle('satisfied', hasSpecial);
+                const icon = critSpecial.querySelector('i');
+                if (icon) icon.className = hasSpecial ? 'bi bi-check-circle-fill text-success' : 'bi bi-circle';
+            }
+
+            if (val.length < 6) return 1;
+            
+            let varietyCount = 0;
+            if (hasLower) varietyCount++;
+            if (hasUpper) varietyCount++;
+            if (hasNumber) varietyCount++;
+            if (hasSpecial) varietyCount++;
+
+            if (val.length >= 8) score++;
+            if (varietyCount >= 2) score++;
+            if (varietyCount >= 3 && val.length >= 8) score++;
+            if (varietyCount >= 4 || (varietyCount >= 3 && val.length >= 12)) score++;
+
+            return Math.min(Math.max(score, 1), 4);
+        }
+
+        const labels = {
+            0: 'Enter password',
+            1: 'Weak',
+            2: 'Fair',
+            3: 'Good',
+            4: 'Strong ✓'
+        };
+
+        function update() {
+            const val = passwordInput.value;
+            if (!val || val.length === 0) {
+                if (wrapper) wrapper.style.display = 'none';
+                if (matchFeedback) matchFeedback.style.display = 'none';
+                return;
+            }
+
+            if (wrapper) wrapper.style.display = 'block';
+            const score = evaluateStrength(val);
+            if (wrapper) wrapper.setAttribute('data-strength', score);
+            if (label) label.textContent = labels[score];
+
+            checkMatch();
+        }
+
+        function checkMatch() {
+            if (!confirmInput || !matchFeedback) return;
+            const passVal = passwordInput.value;
+            const confirmVal = confirmInput.value;
+
+            if (!confirmVal || confirmVal.length === 0) {
+                matchFeedback.style.display = 'none';
+                return;
+            }
+
+            matchFeedback.style.display = 'flex';
+            if (passVal === confirmVal) {
+                matchFeedback.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Passwords match</span>';
+            } else {
+                matchFeedback.innerHTML = '<span class="text-warning"><i class="bi bi-dash-circle me-1"></i> Passwords don\'t match yet</span>';
+            }
+        }
+
+        passwordInput.addEventListener('input', update);
+        passwordInput.addEventListener('focus', function() {
+            if (passwordInput.value.length > 0 && wrapper) wrapper.style.display = 'block';
+        });
+
+        if (confirmInput) {
+            confirmInput.addEventListener('input', checkMatch);
+        }
+    };
+
 });

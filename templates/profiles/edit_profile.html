@@ -848,7 +848,12 @@
                         <div class="row g-3">
                             <div class="col-12 settings-form-group">
                                 <label class="settings-label" for="{{ password_form.old_password.id_for_label }}">Current Password <span class="text-danger">*</span></label>
-                                <input type="password" name="{{ password_form.old_password.name }}" id="{{ password_form.old_password.id_for_label }}" class="form-control" autocomplete="current-password" required>
+                                <div class="password-toggle-wrapper">
+                                    <input type="password" name="{{ password_form.old_password.name }}" id="{{ password_form.old_password.id_for_label }}" class="form-control" autocomplete="current-password" required>
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('{{ password_form.old_password.id_for_label }}', this)" aria-label="Toggle password visibility">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 {% if password_form.old_password.errors %}
                                     <div class="text-danger small mt-1">{{ password_form.old_password.errors.0 }}</div>
                                 {% endif %}
@@ -856,28 +861,47 @@
 
                             <div class="col-md-6 settings-form-group">
                                 <label class="settings-label" for="{{ password_form.new_password1.id_for_label }}">New Password <span class="text-danger">*</span></label>
-                                <input type="password" name="{{ password_form.new_password1.name }}" id="{{ password_form.new_password1.id_for_label }}" class="form-control" autocomplete="new-password" required>
+                                <div class="password-toggle-wrapper">
+                                    <input type="password" name="{{ password_form.new_password1.name }}" id="{{ password_form.new_password1.id_for_label }}" class="form-control" autocomplete="new-password" required>
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('{{ password_form.new_password1.id_for_label }}', this)" aria-label="Toggle password visibility">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 {% if password_form.new_password1.errors %}
                                     <div class="text-danger small mt-1">{{ password_form.new_password1.errors.0 }}</div>
                                 {% endif %}
+                                <div class="password-strength-container" id="profilePasswordStrengthWrapper" style="display: none;" aria-live="polite">
+                                    <div class="password-strength-header">
+                                        <span class="password-strength-caption">Password Strength</span>
+                                        <span class="password-strength-label" id="profilePasswordStrengthLabel">Too short</span>
+                                    </div>
+                                    <div class="password-strength-meter" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+                                        <div class="strength-segment" data-segment="1"></div>
+                                        <div class="strength-segment" data-segment="2"></div>
+                                        <div class="strength-segment" data-segment="3"></div>
+                                        <div class="strength-segment" data-segment="4"></div>
+                                    </div>
+                                    <div class="password-criteria-row" id="profilePasswordCriteriaRow">
+                                        <span class="criterion-chip" id="profile-crit-length"><i class="bi bi-circle"></i> 8+ characters</span>
+                                        <span class="criterion-chip" id="profile-crit-mixed"><i class="bi bi-circle"></i> Letters &amp; numbers</span>
+                                        <span class="criterion-chip" id="profile-crit-special"><i class="bi bi-circle"></i> Symbol</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="col-md-6 settings-form-group">
                                 <label class="settings-label" for="{{ password_form.new_password2.id_for_label }}">Confirm New Password <span class="text-danger">*</span></label>
-                                <input type="password" name="{{ password_form.new_password2.name }}" id="{{ password_form.new_password2.id_for_label }}" class="form-control" autocomplete="new-password" required>
+                                <div class="password-toggle-wrapper">
+                                    <input type="password" name="{{ password_form.new_password2.name }}" id="{{ password_form.new_password2.id_for_label }}" class="form-control" autocomplete="new-password" required>
+                                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('{{ password_form.new_password2.id_for_label }}', this)" aria-label="Toggle password visibility">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 {% if password_form.new_password2.errors %}
                                     <div class="text-danger small mt-1">{{ password_form.new_password2.errors.0 }}</div>
                                 {% endif %}
+                                <div class="password-match-feedback" id="profilePasswordMatchFeedback" style="display: none;"></div>
                             </div>
-                        </div>
-
-                        <div class="alert alert-light border rounded-3 p-3 mt-3 small text-muted">
-                            <div class="fw-semibold text-secondary mb-1"><i class="bi bi-info-circle me-1 text-primary"></i> Password Guidelines:</div>
-                            <ul class="mb-0 ps-3">
-                                <li>Must be at least 8 characters long.</li>
-                                <li>Cannot be entirely numeric or too similar to your personal information.</li>
-                                <li>Cannot be a commonly used password.</li>
-                            </ul>
                         </div>
 
                         <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top border-subtle">
@@ -1041,12 +1065,24 @@ function previewStudentAvatar(input) {
     }
 }
 
-// 4. Handle initial tab from URL if present
+// 4. Handle initial tab from URL if present & Password Strength Checker
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get('tab');
     if (tab && ['account', 'profile', 'portfolio', 'security', 'danger'].includes(tab)) {
         switchSettingsTab(tab);
+    }
+
+    if (typeof window.initPasswordStrengthChecker === 'function') {
+        window.initPasswordStrengthChecker('{{ password_form.new_password1.id_for_label }}', {
+            wrapperId: 'profilePasswordStrengthWrapper',
+            labelId: 'profilePasswordStrengthLabel',
+            critLengthId: 'profile-crit-length',
+            critMixedId: 'profile-crit-mixed',
+            critSpecialId: 'profile-crit-special',
+            confirmInputId: '{{ password_form.new_password2.id_for_label }}',
+            matchFeedbackId: 'profilePasswordMatchFeedback'
+        });
     }
 });
 </script>
