@@ -150,9 +150,10 @@
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
                                 <span class="guide-badge guide-badge-roadmaps">{{ feat.category }}</span>
-                                <span class="badge bg-light text-secondary border px-2.5 py-1">
-                                    <i class="bi bi-people me-1"></i>{{ feat.target_audience }}
-                                </span>
+                                <div class="guide-audience-pill">
+                                    <i class="bi bi-people"></i>
+                                    <span>{{ feat.target_audience }}</span>
+                                </div>
                             </div>
 
                             <h2 class="featured-title">
@@ -254,9 +255,10 @@
                         <p class="editorial-card-desc">{{ g.excerpt }}</p>
 
                         <div class="mb-3">
-                            <span class="badge bg-light text-secondary border px-2 py-1 small" style="font-size: 0.75rem;">
-                                <i class="bi bi-bullseye me-1 text-primary"></i>{{ g.target_audience }}
-                            </span>
+                            <div class="guide-audience-pill">
+                                <i class="bi bi-bullseye"></i>
+                                <span>{{ g.target_audience }}</span>
+                            </div>
                         </div>
                     </div>
 

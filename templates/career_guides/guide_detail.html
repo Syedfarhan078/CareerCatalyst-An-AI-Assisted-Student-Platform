@@ -128,9 +128,10 @@
                 {% else %}
                     <span class="guide-badge guide-badge-roadmaps">{{ guide.category }}</span>
                 {% endif %}
-                <span class="badge bg-light text-secondary border px-2.5 py-1">
-                    <i class="bi bi-people me-1"></i>{{ guide.target_audience }}
-                </span>
+                <div class="guide-audience-pill">
+                    <i class="bi bi-people"></i>
+                    <span>{{ guide.target_audience }}</span>
+                </div>
             </div>
 
             <h1 class="guide-article-title">{{ guide.h1 }}</h1>
