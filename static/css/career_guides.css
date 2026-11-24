@@ -11,6 +11,8 @@
     background-color: var(--bg);
     color: var(--text);
     min-height: 80vh;
+    overflow-x: hidden;
+    max-width: 100vw;
 }
 
 /* ------------------------------------------------------------
@@ -589,12 +591,16 @@ html[data-theme="dark"] .editorial-standards-card {
     gap: 3rem;
     align-items: start;
     position: relative;
+    max-width: 100%;
+    min-width: 0;
 }
 
 @media (max-width: 991.98px) {
     .guide-layout {
-        grid-template-columns: 1fr;
-        gap: 2rem;
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
 }
 
@@ -700,17 +706,36 @@ html[data-theme="dark"] .toc-link.active {
 /* Long-Form Reading Column */
 .article-reading-container {
     max-width: 740px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .article-body {
     color: var(--text);
     line-height: 1.8;
     font-size: 1.05rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: normal;
+}
+
+@media (max-width: 575.98px) {
+    .article-body {
+        font-size: 0.975rem;
+        line-height: 1.7;
+    }
 }
 
 .article-section {
     margin-bottom: 2.75rem;
     scroll-margin-top: 5.5rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
 .article-h2 {
@@ -721,23 +746,41 @@ html[data-theme="dark"] .toc-link.active {
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border);
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 575.98px) {
+    .article-h2 {
+        font-size: 1.25rem;
+        margin-top: 1.5rem;
+    }
 }
 
 .article-p {
     margin-bottom: 1.25rem;
     color: var(--secondary);
     line-height: 1.8;
+    overflow-wrap: break-word;
 }
 
 .article-list {
     margin-bottom: 1.35rem;
     padding-left: 1.4rem;
     color: var(--secondary);
+    max-width: 100%;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 575.98px) {
+    .article-list {
+        padding-left: 1.15rem;
+    }
 }
 
 .article-list li {
     margin-bottom: 0.55rem;
     line-height: 1.65;
+    overflow-wrap: break-word;
 }
 
 /* Executive Summary / Key Takeaways Box */
@@ -748,6 +791,21 @@ html[data-theme="dark"] .toc-link.active {
     padding: 1.85rem;
     margin: 2rem 0 2.5rem;
     box-shadow: var(--shadow-xs);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 575.98px) {
+    .key-takeaways-card {
+        padding: 1.25rem 1rem;
+        margin: 1.25rem 0 1.75rem;
+    }
+    .takeaways-title {
+        font-size: 1.05rem;
+        margin-bottom: 0.85rem;
+    }
 }
 
 html[data-theme="dark"] .key-takeaways-card {
@@ -776,6 +834,8 @@ html[data-theme="dark"] .takeaways-title {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
 }
 
 .takeaways-list li {
@@ -785,12 +845,22 @@ html[data-theme="dark"] .takeaways-title {
     font-size: 0.95rem;
     color: var(--text);
     line-height: 1.6;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .takeaways-list li i {
     color: var(--primary);
     margin-top: 0.2rem;
     flex-shrink: 0;
+}
+
+.takeaways-list li span {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: normal;
 }
 
 html[data-theme="dark"] .takeaways-list li i {
@@ -803,6 +873,17 @@ html[data-theme="dark"] .takeaways-list li i {
     padding: 1.25rem 1.35rem;
     margin: 1.75rem 0;
     border-left: 4px solid;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 575.98px) {
+    .article-callout {
+        padding: 1rem 1rem;
+        margin: 1.25rem 0;
+    }
 }
 
 .article-callout-info {
@@ -855,6 +936,7 @@ html[data-theme="dark"] .article-callout-warning {
     font-size: 0.925rem;
     line-height: 1.6;
     color: inherit;
+    overflow-wrap: break-word;
 }
 
 /* Code Snippet Wrapper */
@@ -864,6 +946,9 @@ html[data-theme="dark"] .article-callout-warning {
     border-radius: var(--radius-md, 8px);
     overflow: hidden;
     margin: 1.75rem 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .code-header {
@@ -886,14 +971,41 @@ html[data-theme="dark"] .article-callout-warning {
     color: #F8FAFC;
     font-size: 0.875rem;
     overflow-x: auto;
+    max-width: 100%;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 575.98px) {
+    .article-code-wrapper pre {
+        padding: 1rem;
+        font-size: 0.8125rem;
+    }
+}
+
+/* Table Responsive Hardening */
+.article-section .table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 1.25rem 0;
+    border-radius: var(--radius-md, 8px);
 }
 
 /* Related Roadmaps Grid */
 .related-roadmaps-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 1.25rem;
     margin-top: 1.25rem;
+    max-width: 100%;
+}
+
+@media (max-width: 575.98px) {
+    .related-roadmaps-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
 }
 
 .roadmap-mini-card {
@@ -907,6 +1019,8 @@ html[data-theme="dark"] .article-callout-warning {
     flex-direction: column;
     justify-content: space-between;
     transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .roadmap-mini-card:hover {
@@ -942,6 +1056,8 @@ html[data-theme="dark"] .roadmap-mini-card:hover {
     flex-direction: column;
     justify-content: space-between;
     transition: border-color 150ms ease, transform 150ms ease;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .related-guide-box:hover {
@@ -956,6 +1072,16 @@ html[data-theme="dark"] .roadmap-mini-card:hover {
     border-radius: var(--radius-xl, 14px);
     padding: 2.25rem 2rem;
     margin-top: 3.5rem;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+}
+
+@media (max-width: 575.98px) {
+    .roadmap-cta-banner {
+        padding: 1.5rem 1.15rem;
+        margin-top: 2.5rem;
+    }
 }
 
 html[data-theme="dark"] .roadmap-cta-banner {
