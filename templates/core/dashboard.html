@@ -69,7 +69,7 @@
                 <div class="dash-engagement-strip d-flex align-items-center gap-2 flex-wrap">
                     <div class="dash-streak-pill" title="Consecutive days active on CareerCatalyst">
                         <i class="bi bi-fire text-danger"></i>
-                        <span><strong>{{ engagement.streak_days }}-day</strong> streak</span>
+                        <span><strong data-count-up="{{ engagement.streak_days }}">{{ engagement.streak_days }}</strong>-day streak</span>
                     </div>
                     <div class="dash-goal-pill" title="{% if engagement.is_goal_met %}Weekly practice target achieved! You completed {{ engagement.raw_weekly_completed }} practice activities this week.{% else %}Weekly practice target: {{ engagement.weekly_completed }}/{{ engagement.weekly_target }} sessions completed.{% endif %}">
                         <i class="bi bi-bullseye text-primary"></i>
@@ -95,7 +95,7 @@
                         <div class="dash-step-progress-mini" role="progressbar" aria-valuenow="{{ next_step.progress }}" aria-valuemin="0" aria-valuemax="100">
                             <div class="dash-step-progress-fill" style="width: {{ next_step.progress }}%;"></div>
                         </div>
-                        <span>{{ next_step.progress }}%</span>
+                        <span data-count-up="{{ next_step.progress }}" data-suffix="%">{{ next_step.progress }}%</span>
                     </div>
                     {% endif %}
                 </div>
@@ -129,7 +129,7 @@
                     <h3 class="dash-section-title">Your Career Journey</h3>
                     <div class="dash-journey-overall-badge small text-muted">
                         <span>Overall Progress: </span>
-                        <strong class="text-secondary">{{ journey_progress_percent }}%</strong>
+                        <strong class="text-secondary" data-count-up="{{ journey_progress_percent }}" data-suffix="%">{{ journey_progress_percent }}%</strong>
                     </div>
                 </div>
 
@@ -217,7 +217,7 @@
                             <div class="dash-step-progress-bar" role="progressbar" aria-valuenow="{{ roadmap_progress }}" aria-valuemin="0" aria-valuemax="100">
                                 <div class="dash-step-progress-fill" style="width: {{ roadmap_progress }}%;"></div>
                             </div>
-                            <span class="dash-step-progress-label">{{ roadmap_progress }}%</span>
+                            <span class="dash-step-progress-label" data-count-up="{{ roadmap_progress }}" data-suffix="%">{{ roadmap_progress }}%</span>
                         </div>
 
                         <!-- Milestone Box -->
@@ -284,7 +284,7 @@
 
                     {% if readiness_data.has_analysis %}
                         <div class="dash-readiness-score-row">
-                            <span class="dash-readiness-big-score">{{ readiness_data.score }}%</span>
+                            <span class="dash-readiness-big-score" data-count-up="{{ readiness_data.score }}" data-suffix="%">{{ readiness_data.score }}%</span>
                             <span class="dash-readiness-score-unit">overall progress</span>
                         </div>
                     {% else %}

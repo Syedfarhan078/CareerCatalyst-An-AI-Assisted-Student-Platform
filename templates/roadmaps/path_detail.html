@@ -342,41 +342,17 @@
             const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             if (prefersReducedMotion) return;
 
-            if (typeof confetti !== 'function') return;
+            const fn = window.triggerConfetti || window.confetti;
+            if (typeof fn !== 'function') return;
 
             if (isGrandCelebration) {
-                // Grand celebration: multi-angle confetti cannons firing across 2.5s
-                const duration = 2500;
-                const end = Date.now() + duration;
-
-                (function frame() {
-                    confetti({
-                        particleCount: 5,
-                        angle: 60,
-                        spread: 55,
-                        origin: { x: 0, y: 0.7 },
-                        zIndex: 1100
-                    });
-                    confetti({
-                        particleCount: 5,
-                        angle: 120,
-                        spread: 55,
-                        origin: { x: 1, y: 0.7 },
-                        zIndex: 1100
-                    });
-
-                    if (Date.now() < end) {
-                        requestAnimationFrame(frame);
-                    }
-                }());
+                if (window.triggerConfetti && typeof window.triggerConfetti.cannons === 'function') {
+                    window.triggerConfetti.cannons();
+                } else {
+                    fn({ particleCount: 100, spread: 80, origin: { x: 0.5, y: 0.6 } });
+                }
             } else {
-                // Milestone single blast
-                confetti({
-                    particleCount: 75,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    zIndex: 1100
-                });
+                fn({ particleCount: 75, spread: 70, origin: { x: 0.5, y: 0.6 } });
             }
         }
 

@@ -133,7 +133,7 @@
                         
                         <div class="ats-dial-wrap mb-3">
                             <div class="ats-score-circle {% if analysis.overall_score >= 80 %}border-success text-success{% elif analysis.overall_score >= 50 %}border-primary text-primary{% else %}border-warning text-warning{% endif %}">
-                                <span class="ats-score-val">{{ analysis.overall_score }}</span>
+                                <span class="ats-score-val" data-count-up="{{ analysis.overall_score }}">{{ analysis.overall_score }}</span>
                                 <span class="ats-score-lbl">ATS Score</span>
                             </div>
                             <div class="fw-bold fs-6">
@@ -171,7 +171,7 @@
                             <div class="ats-pillar-box">
                                 <div class="ats-pillar-top">
                                     <span><i class="bi bi-cpu text-primary me-1"></i> Skill Taxonomy</span>
-                                    <span class="fw-bold">{{ analysis.skill_coverage_score }}%</span>
+                                    <span class="fw-bold" data-count-up="{{ analysis.skill_coverage_score }}" data-suffix="%">{{ analysis.skill_coverage_score }}%</span>
                                 </div>
                                 <div class="ats-pillar-bar">
                                     <div class="ats-pillar-fill" style="width: {{ analysis.skill_coverage_score }}%;"></div>
@@ -183,7 +183,7 @@
                             <div class="ats-pillar-box">
                                 <div class="ats-pillar-top">
                                     <span><i class="bi bi-tags text-primary me-1"></i> Domain Vocabulary</span>
-                                    <span class="fw-bold">{{ analysis.keyword_coverage_score }}%</span>
+                                    <span class="fw-bold" data-count-up="{{ analysis.keyword_coverage_score }}" data-suffix="%">{{ analysis.keyword_coverage_score }}%</span>
                                 </div>
                                 <div class="ats-pillar-bar">
                                     <div class="ats-pillar-fill" style="width: {{ analysis.keyword_coverage_score }}%;"></div>
@@ -195,7 +195,7 @@
                             <div class="ats-pillar-box">
                                 <div class="ats-pillar-top">
                                     <span><i class="bi bi-graph-up-arrow text-primary me-1"></i> Impact & Metrics (XYZ)</span>
-                                    <span class="fw-bold">{{ analysis.achievement_score }}%</span>
+                                    <span class="fw-bold" data-count-up="{{ analysis.achievement_score }}" data-suffix="%">{{ analysis.achievement_score }}%</span>
                                 </div>
                                 <div class="ats-pillar-bar">
                                     <div class="ats-pillar-fill" style="width: {{ analysis.achievement_score }}%;"></div>
@@ -207,7 +207,7 @@
                             <div class="ats-pillar-box">
                                 <div class="ats-pillar-top">
                                     <span><i class="bi bi-layout-text-sidebar text-primary me-1"></i> Structure & Completeness</span>
-                                    <span class="fw-bold">{{ analysis.completeness_score }}%</span>
+                                    <span class="fw-bold" data-count-up="{{ analysis.completeness_score }}" data-suffix="%">{{ analysis.completeness_score }}%</span>
                                 </div>
                                 <div class="ats-pillar-bar">
                                     <div class="ats-pillar-fill" style="width: {{ analysis.completeness_score }}%;"></div>
@@ -221,7 +221,7 @@
                                 <div class="ats-pillar-box" style="background: rgba(14, 165, 233, 0.04); border-color: rgba(14, 165, 233, 0.2);">
                                     <div class="ats-pillar-top">
                                         <span><i class="bi bi-file-earmark-check text-info me-1"></i> Custom Job Description Overlap</span>
-                                        <span class="fw-bold text-info">{{ analysis.jd_match_score }}%</span>
+                                        <span class="fw-bold text-info" data-count-up="{{ analysis.jd_match_score }}" data-suffix="%">{{ analysis.jd_match_score }}%</span>
                                     </div>
                                     <div class="ats-pillar-bar">
                                         <div class="ats-pillar-fill bg-info" style="width: {{ analysis.jd_match_score }}%;"></div>
@@ -673,6 +673,22 @@ document.addEventListener("DOMContentLoaded", function() {
         };
         overlay.addEventListener("click", closeSidebar);
         if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+    }
+
+    // Milestone celebration for strong ATS score (70%+ milestone delighter)
+    const overallScore = parseInt("{{ analysis.overall_score|default:'0' }}", 10);
+    if (overallScore >= 70 && typeof window.triggerConfetti === 'function') {
+        setTimeout(function() {
+            if (overallScore >= 80 && typeof window.triggerConfetti.cannons === 'function') {
+                window.triggerConfetti.cannons();
+            } else {
+                window.triggerConfetti({
+                    particleCount: 80,
+                    spread: 75,
+                    origin: { x: 0.35, y: 0.55 }
+                });
+            }
+        }, 750);
     }
 });
 </script>

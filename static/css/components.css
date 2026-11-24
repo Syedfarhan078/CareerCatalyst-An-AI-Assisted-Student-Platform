@@ -2511,8 +2511,69 @@ html[data-theme="dark"] .dash-empty-state .dash-empty-icon {
     color: #9CA3AF;
 }
 
+/* =========================================================================
+   Tabular Numerals & Dynamic Metric Odometer Styling
+   Eliminates horizontal layout jitter during count-ups and number changes
+   ========================================================================= */
+.tabular-nums,
+[data-count-up],
+.count-up,
+.stat-number,
+.stat-card-value,
+.ats-score-val,
+.ats-pillar-top span:last-child,
+.dash-streak-pill strong,
+.dash-journey-overall-badge strong,
+.dash-step-progress-pill span,
+.roadmap-progress-labels span:last-child,
+.metric-value,
+.score-value,
+.odometer-number {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.015em;
+    display: inline-block;
+}
+
+/* Canvas Confetti Layer Overlay */
+#cc-confetti-canvas {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    pointer-events: none !important;
+    z-index: 999999 !important;
+}
+
+/* Milestone Celebration Pop Delight */
+@keyframes milestonePop {
+    0% {
+        transform: scale(0.92);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.milestone-celebrate {
+    animation: milestonePop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Accessibility: High-precision reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+    .milestone-celebrate {
+        animation: none !important;
+        transform: none !important;
+    }
+    #cc-confetti-canvas {
+        display: none !important;
+    }
     .skeleton {
         animation: none !important;
         background-image: none !important;

@@ -170,3 +170,20 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 12-Week Roadmap Mastery Celebration Cannon
+    if (typeof window.triggerConfetti === 'function') {
+        setTimeout(() => {
+            if (typeof window.triggerConfetti.cannons === 'function') {
+                window.triggerConfetti.cannons();
+            } else {
+                window.triggerConfetti({ particleCount: 80, spread: 80, origin: { x: 0.5, y: 0.5 } });
+            }
+        }, 450);
+    }
+});
+</script>
+{% endblock %}
