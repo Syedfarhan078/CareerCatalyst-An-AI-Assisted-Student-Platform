@@ -587,7 +587,21 @@ html[data-theme="dark"] .auth-forgot-link:hover {
     text-decoration: none !important;
     cursor: pointer;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-    transition: background-color 150ms ease, border-color 150ms ease !important;
+    transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms ease, border-color 150ms ease !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-auth-primary:active,
+.auth-card-unified .btn-primary-custom:active,
+.auth-card .btn-primary-custom:active,
+.btn-auth-google:active {
+    transform: scale(0.98) !important;
+    transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-auth-primary:disabled:active,
+.btn-auth-primary.is-loading:active {
     transform: none !important;
 }
 
@@ -597,7 +611,7 @@ html[data-theme="dark"] .auth-forgot-link:hover {
     background-color: #1D4ED8 !important;
     border-color: #1D4ED8 !important;
     color: #FFFFFF !important;
-    transform: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
 }
 
 .btn-auth-primary:focus-visible,

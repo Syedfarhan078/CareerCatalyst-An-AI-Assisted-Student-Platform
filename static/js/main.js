@@ -540,4 +540,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Global Skeleton Wireframe Generator for Dynamic Views
+    window.createSkeleton = function(type, count) {
+        count = count || 1;
+        let html = '';
+        for (let i = 0; i < count; i++) {
+            if (type === 'card') {
+                html += `
+                    <div class="skeleton-card mb-3" aria-hidden="true">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="skeleton skeleton-avatar"></div>
+                            <div class="flex-grow-1">
+                                <div class="skeleton skeleton-title" style="width: 50%;"></div>
+                                <div class="skeleton skeleton-text short"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton skeleton-text mt-2"></div>
+                        <div class="skeleton skeleton-text medium"></div>
+                    </div>
+                `;
+            } else if (type === 'row') {
+                html += `
+                    <div class="skeleton-row" aria-hidden="true">
+                        <div class="skeleton skeleton-avatar-sm"></div>
+                        <div class="flex-grow-1">
+                            <div class="skeleton skeleton-text medium" style="margin-bottom: 0.25rem;"></div>
+                            <div class="skeleton skeleton-text short" style="margin-bottom: 0;"></div>
+                        </div>
+                        <div class="skeleton skeleton-pill" style="width: 70px; height: 24px;"></div>
+                    </div>
+                `;
+            } else if (type === 'slots') {
+                html += `
+                    <div class="skeleton-slot-loader py-1" aria-hidden="true">
+                        <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                        <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                        <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                        <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                    </div>
+                `;
+            }
+        }
+        return html;
+    };
+
+    // Tactile Perceived Navigation Progress Indicator
+    let topProgressBar = null;
+    function getTopProgressBar() {
+        if (!topProgressBar) {
+            topProgressBar = document.createElement('div');
+            topProgressBar.className = 'cc-top-progress';
+            topProgressBar.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(topProgressBar);
+        }
+        return topProgressBar;
+    }
+
+    window.startPageProgress = function() {
+        const bar = getTopProgressBar();
+        bar.classList.remove('done');
+        bar.classList.add('active');
+    };
+
+    window.finishPageProgress = function() {
+        if (!topProgressBar) return;
+        topProgressBar.classList.add('done');
+        setTimeout(() => {
+            topProgressBar.classList.remove('active', 'done');
+        }, 400);
+    };
+
+    // Attach instant progress feedback to form submits across the platform
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        if (form && !form.hasAttribute('data-no-progress') && form.checkValidity && form.checkValidity()) {
+            window.startPageProgress();
+        }
+    }, { passive: true });
+
 });

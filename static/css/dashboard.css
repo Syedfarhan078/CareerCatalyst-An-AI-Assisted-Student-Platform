@@ -1251,7 +1251,9 @@ html[data-theme='dark'] .dash-readiness-panel,
     cursor: pointer;
     border: 1px solid transparent;
     box-shadow: var(--dash-shadow-sm);
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+    transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     white-space: nowrap;
 }
 
@@ -1273,7 +1275,13 @@ html[data-theme='dark'] .dash-readiness-panel,
 .dash-btn-success:active,
 .dash-btn-danger:active,
 .dash-btn-ghost:active {
-    transform: translateY(0);
+    transform: scale(0.98) !important;
+    transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dash-btn:disabled:active,
+.dash-btn-primary:disabled:active {
+    transform: none !important;
 }
 
 .dash-btn:focus-visible,

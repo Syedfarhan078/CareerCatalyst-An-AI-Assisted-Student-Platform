@@ -382,7 +382,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             slotsPlaceholder.classList.remove('d-none');
-            slotsPlaceholder.innerHTML = '<div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Loading available slots...';
+            slotsPlaceholder.innerHTML = `
+                <div class="skeleton-slot-loader py-1" aria-hidden="true">
+                    <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                    <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                    <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                    <div class="skeleton skeleton-pill me-2 mb-2" style="width: 135px; height: 32px;"></div>
+                </div>
+            `;
             slotsList.classList.add('d-none');
             slotsList.innerHTML = '';
             slotsError.classList.add('d-none');

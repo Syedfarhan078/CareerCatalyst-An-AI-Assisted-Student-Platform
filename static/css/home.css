@@ -162,7 +162,9 @@ html[data-theme="dark"] body.home-page {
     cursor: pointer;
     border: 1px solid transparent;
     box-shadow: var(--home-shadow-sm);
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     white-space: nowrap;
 }
 
@@ -171,7 +173,8 @@ html[data-theme="dark"] body.home-page {
 }
 
 .btn-cc:active {
-    transform: translateY(0);
+    transform: scale(0.98) !important;
+    transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .btn-cc:focus-visible {
@@ -1469,6 +1472,7 @@ html[data-theme="dark"] .product-window {
     font-weight: 600;
     padding: 1.15rem 1.35rem;
     box-shadow: none !important;
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .faq-accordion-editorial .accordion-button:not(.collapsed) {
@@ -1479,7 +1483,7 @@ html[data-theme="dark"] .product-window {
 
 .faq-accordion-editorial .accordion-button::after {
     filter: none;
-    transition: transform 0.2s ease;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 html[data-theme="dark"] .faq-accordion-editorial .accordion-button::after {

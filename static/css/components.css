@@ -21,11 +21,18 @@
     padding: 0.55rem 1.15rem;
     border-radius: var(--radius-md, 8px);
     border: 1px solid transparent;
-    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease, color 150ms ease;
+    transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     text-decoration: none;
     cursor: pointer;
     vertical-align: middle;
     user-select: none;
+}
+
+.btn:active {
+    transform: scale(0.98) !important;
+    transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .btn:focus-visible {
@@ -34,11 +41,18 @@
 }
 
 .btn:disabled,
-.btn.disabled {
+.btn.disabled,
+.btn.is-loading {
     opacity: 0.6 !important;
     cursor: not-allowed !important;
     pointer-events: none !important;
     box-shadow: none !important;
+    transform: none !important;
+}
+
+.btn:disabled:active,
+.btn.disabled:active,
+.btn.is-loading:active {
     transform: none !important;
 }
 
@@ -88,7 +102,8 @@
 
 .btn-primary:active,
 .btn-primary-custom:active {
-    transform: translateY(0) !important;
+    transform: scale(0.98) !important;
+    transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-shadow: none !important;
 }
 
@@ -116,7 +131,8 @@
 
 .btn-secondary:active,
 .btn-secondary-custom:active {
-    transform: translateY(0) !important;
+    transform: scale(0.98) !important;
+    transition: transform 0.08s cubic-bezier(0.16, 1, 0.3, 1) !important;
     box-shadow: none !important;
 }
 
@@ -856,12 +872,22 @@ html[data-theme="dark"] .btn-back:hover {
     --bs-accordion-bg: var(--card-bg);
 }
 
+/* Smooth Accordions & Collapsibles Physics */
+.collapsing {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
 .accordion-item {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius-md, 8px) !important;
     margin-bottom: 0.75rem;
     overflow: hidden;
+    transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .accordion-button {
@@ -871,7 +897,14 @@ html[data-theme="dark"] .btn-back:hover {
     background-color: var(--card-bg);
     padding: 1rem 1.25rem;
     box-shadow: none;
-    transition: background-color 150ms ease, color 150ms ease;
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.accordion-button::after {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .accordion-button:not(.collapsed) {
@@ -912,6 +945,7 @@ html[data-theme="dark"] .btn-back:hover {
     padding: 1.25rem 0;
     background: transparent;
     box-shadow: none;
+    transition: color 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .faq-accordion .accordion-button:not(.collapsed) {
@@ -925,6 +959,194 @@ html[data-theme="dark"] .btn-back:hover {
     color: var(--text-muted);
     line-height: 1.7;
     background: transparent;
+}
+
+/* Fluid Entrance Physics for Dropdowns */
+.dropdown-menu {
+    border-radius: var(--radius-md, 8px) !important;
+    transform-origin: top right;
+}
+
+.dropdown-menu.show {
+    animation: dropdownEntrance 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dropdownEntrance {
+    0% {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.985);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   SHIMMER SKELETON SCREENS (Anticipatory Wireframe Architecture)
+   ============================================================ */
+@keyframes skeletonShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    vertical-align: middle;
+    background-color: #E2E8F0;
+    background-image: linear-gradient(
+        90deg,
+        rgba(226, 232, 240, 0.85) 0%,
+        rgba(255, 255, 255, 0.95) 50%,
+        rgba(226, 232, 240, 0.85) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    border-radius: var(--radius-sm, 6px);
+    pointer-events: none;
+    user-select: none;
+}
+
+html[data-theme="dark"] .skeleton,
+[data-bs-theme="dark"] .skeleton {
+    background-color: #18181E;
+    background-image: linear-gradient(
+        90deg,
+        rgba(24, 24, 30, 0.95) 0%,
+        rgba(36, 36, 46, 0.95) 50%,
+        rgba(24, 24, 30, 0.95) 100%
+    );
+}
+
+/* Skeleton Wireframe Primitives */
+.skeleton-text {
+    width: 100%;
+    height: 0.875rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+}
+
+.skeleton-text.short {
+    width: 50%;
+}
+
+.skeleton-text.medium {
+    width: 75%;
+}
+
+.skeleton-title {
+    width: 65%;
+    height: 1.35rem;
+    margin-bottom: 0.75rem;
+    border-radius: 6px;
+}
+
+.skeleton-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50% !important;
+    flex-shrink: 0;
+}
+
+.skeleton-avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50% !important;
+    flex-shrink: 0;
+}
+
+.skeleton-pill,
+.skeleton-badge {
+    height: 30px;
+    min-width: 90px;
+    border-radius: 6px;
+}
+
+.skeleton-btn {
+    height: 40px;
+    min-width: 120px;
+    border-radius: var(--radius-md, 8px);
+}
+
+/* Composite Wireframe Containers */
+.skeleton-card {
+    background-color: var(--card-bg, #ffffff);
+    border: 1px solid var(--border, #E2E8F0);
+    border-radius: var(--radius-lg, 12px);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+html[data-theme="dark"] .skeleton-card,
+[data-bs-theme="dark"] .skeleton-card {
+    background-color: #121216;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    width: 100%;
+    border-bottom: 1px solid var(--border, #E2E8F0);
+}
+
+html[data-theme="dark"] .skeleton-row,
+[data-bs-theme="dark"] .skeleton-row {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.skeleton-row:last-child {
+    border-bottom: none;
+}
+
+.skeleton-slot-loader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.skeleton-slot-pill {
+    height: 32px;
+    width: 135px;
+    border-radius: 6px;
+}
+
+/* Top Perceived Performance Progress Bar */
+.cc-top-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2.5px;
+    width: 0%;
+    background: linear-gradient(90deg, #2563EB, #60A5FA, #3B82F6);
+    z-index: 99999;
+    pointer-events: none;
+    opacity: 0;
+    transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.5);
+}
+
+.cc-top-progress.active {
+    opacity: 1;
+    width: 75%;
+}
+
+.cc-top-progress.done {
+    width: 100%;
+    opacity: 0;
+    transition: width 0.15s ease, opacity 0.3s ease 0.1s;
 }
 
 /* ------------------------------------------------------------
@@ -2287,4 +2509,33 @@ html[data-theme="dark"] .dash-empty-state .dash-empty-icon {
     background-color: #151519;
     border-color: var(--border);
     color: #9CA3AF;
+}
+
+/* Accessibility: High-precision reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .skeleton {
+        animation: none !important;
+        background-image: none !important;
+    }
+    .btn:active,
+    .btn-primary:active,
+    .btn-secondary:active,
+    .btn-auth-primary:active,
+    .dash-btn:active,
+    .settings-btn-primary:active,
+    button:active {
+        transform: none !important;
+    }
+    .collapsing {
+        transition: none !important;
+    }
+    .accordion-button::after {
+        transition: none !important;
+    }
+    .dropdown-menu.show {
+        animation: none !important;
+    }
+    .cc-top-progress {
+        display: none !important;
+    }
 }

@@ -528,7 +528,52 @@ function triggerAiEnhancement() {
         });
     };
 
-    setButtons('<span class="spinner-border spinner-border-sm me-1"></span> Enhancing...', true);
+    setButtons('<span class="spinner-border spinner-border-sm me-1"></span> Enhancing with AI...', true);
+    
+    const insightsContainer = document.getElementById('aiInsightsContainer');
+    const rewritesList = document.getElementById('aiRewritesList');
+    const insightElem = document.getElementById('aiRoleInsight');
+
+    if (insightsContainer) {
+        insightsContainer.classList.remove('d-none');
+    }
+    if (insightElem && (!insightElem.innerText || insightElem.innerText.trim() === '')) {
+        insightElem.innerHTML = '<span class="skeleton skeleton-text" style="width: 85%;"></span><span class="skeleton skeleton-text" style="width: 60%;"></span>';
+    }
+    if (rewritesList && rewritesList.children.length === 0) {
+        rewritesList.innerHTML = `
+            <div class="col-12" aria-hidden="true">
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-title" style="width: 35%;"></div>
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 75%;"></div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 90%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12" aria-hidden="true">
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-title" style="width: 30%;"></div>
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text" style="width: 70%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
     
     fetch("{% url 'ai_resume:api_enhance_ai' analysis.pk %}", {
         method: 'POST',
