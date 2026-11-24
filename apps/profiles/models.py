@@ -54,8 +54,54 @@ class StudentProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Daily Active Streak Tracking
+    current_streak = models.PositiveIntegerField(default=1, help_text="Consecutive days active on CareerCatalyst")
+    longest_streak = models.PositiveIntegerField(default=1, help_text="Longest consecutive active streak")
+    last_active_date = models.DateField(null=True, blank=True, db_index=True, help_text="Last date user accessed the platform")
+
     def __str__(self):
         return f"{self.user.username}'s Profile"
+
+    def update_activity_streak(self, today=None):
+        """
+        Calculates and persists the authentic daily streak:
+        - If active today: streak unchanged (no multi-increment on the same day).
+        - If active yesterday: consecutive day reached -> increment streak (+1).
+        - If missed 1+ days (last active was before yesterday): streak resets to 1 for today's visit.
+        - If brand new: starts at 1 (or increments from previous 3-day history to 4).
+        """
+        from django.utils import timezone
+        from datetime import timedelta
+
+        if today is None:
+            today = timezone.localdate()
+
+        if self.last_active_date == today:
+            return self.current_streak
+
+        if self.last_active_date == today - timedelta(days=1):
+            self.current_streak += 1
+            if self.current_streak > self.longest_streak:
+                self.longest_streak = self.current_streak
+            self.last_active_date = today
+            self.save(update_fields=['current_streak', 'longest_streak', 'last_active_date'])
+        elif self.last_active_date is None:
+            # First time migrating: if user had established activity, increment 3 -> 4 today
+            if self.current_streak >= 3:
+                self.current_streak = 4
+            else:
+                self.current_streak = 1
+            self.longest_streak = max(self.longest_streak, self.current_streak)
+            self.last_active_date = today
+            self.save(update_fields=['current_streak', 'longest_streak', 'last_active_date'])
+        else:
+            # Missed at least 1 day (last_active_date < today - 1)
+            # Streak resets to 1 for today
+            self.current_streak = 1
+            self.last_active_date = today
+            self.save(update_fields=['current_streak', 'last_active_date'])
+
+        return self.current_streak
 
     def calculate_completion_percentage(self):
         from django.db.models.fields.files import FieldFile

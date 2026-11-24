@@ -227,6 +227,67 @@ class DashboardRefinementTests(TestCase):
         if next_step['state'] != 'topic_continue':
             self.assertIsNone(next_step['progress'], f"Fake progress found in state: {next_step['state']}")
 
+    def test_streak_daily_progression_and_reset(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        
+        today = timezone.localdate()
+        profile = self.user.studentprofile
+
+        # 1. First visit initializes streak
+        profile.last_active_date = None
+        profile.current_streak = 3  # existing 3-day history
+        profile.save()
+
+        s1 = profile.update_activity_streak(today=today)
+        self.assertEqual(s1, 4)
+        self.assertEqual(profile.current_streak, 4)
+        self.assertEqual(profile.last_active_date, today)
+
+        # 2. Re-visiting on same day does not duplicate increment
+        s2 = profile.update_activity_streak(today=today)
+        self.assertEqual(s2, 4)
+
+        # 3. Consecutive day visit increments streak (+1)
+        tomorrow = today + timedelta(days=1)
+        s3 = profile.update_activity_streak(today=tomorrow)
+        self.assertEqual(s3, 5)
+        self.assertEqual(profile.current_streak, 5)
+        self.assertEqual(profile.last_active_date, tomorrow)
+
+        # 4. Missing a day (skip 2 days) resets streak to 1
+        two_days_later = tomorrow + timedelta(days=2)
+        s4 = profile.update_activity_streak(today=two_days_later)
+        self.assertEqual(s4, 1)
+        self.assertEqual(profile.current_streak, 1)
+        self.assertEqual(profile.last_active_date, two_days_later)
+
+    def test_weekly_goal_display_capped_at_target(self):
+        from apps.interviews.models import UserAttempt, QuestionCategory
+        from django.utils import timezone
+
+        cat = QuestionCategory.objects.create(name='Algorithms', slug='algo-goal')
+        # Create 6 user attempts this week
+        for i in range(6):
+            UserAttempt.objects.create(
+                user=self.user,
+                category=cat,
+                score=80
+            )
+
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+
+        engagement = response.context['engagement']
+        self.assertEqual(engagement['weekly_target'], 5)
+        self.assertEqual(engagement['weekly_completed'], 5)  # capped at 5
+        self.assertEqual(engagement['raw_weekly_completed'], 6)
+        self.assertTrue(engagement['is_goal_met'])
+
+        content = response.content.decode('utf-8')
+        self.assertIn("Weekly Goal: 5/5", content)
+        self.assertNotIn("6/5", content)
+
 
 class SEOCrawlerEndpointTests(TestCase):
     def setUp(self):

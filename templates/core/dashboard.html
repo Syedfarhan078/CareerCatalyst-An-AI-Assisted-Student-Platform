@@ -71,10 +71,14 @@
                         <i class="bi bi-fire text-danger"></i>
                         <span><strong>{{ engagement.streak_days }}-day</strong> streak</span>
                     </div>
-                    <div class="dash-goal-pill" title="Weekly preparation target: 5 sessions">
+                    <div class="dash-goal-pill" title="{% if engagement.is_goal_met %}Weekly practice target achieved! You completed {{ engagement.raw_weekly_completed }} practice activities this week.{% else %}Weekly practice target: {{ engagement.weekly_completed }}/{{ engagement.weekly_target }} sessions completed.{% endif %}">
                         <i class="bi bi-bullseye text-primary"></i>
-                        <span>Goal: <strong>{{ engagement.weekly_completed }}/{{ engagement.weekly_target }}</strong> sessions</span>
-                        <span class="dash-goal-hint d-none d-sm-inline text-muted small">&bull; {{ engagement.goal_hint }}</span>
+                        {% if engagement.is_goal_met %}
+                            <span><strong>Weekly Goal: {{ engagement.weekly_target }}/{{ engagement.weekly_target }}</strong> completed 🎉</span>
+                        {% else %}
+                            <span>Goal: <strong>{{ engagement.weekly_completed }}/{{ engagement.weekly_target }}</strong> sessions</span>
+                            <span class="dash-goal-hint d-none d-sm-inline text-muted small">&bull; {{ engagement.goal_hint }}</span>
+                        {% endif %}
                     </div>
                 </div>
             </section>

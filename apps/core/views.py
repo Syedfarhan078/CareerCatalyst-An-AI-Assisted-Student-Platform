@@ -381,72 +381,45 @@ def dashboard_view(request):
     # -------------------------------------------------------------------------
     # Authentic Activity Streak & Weekly Goal Calculation
     # -------------------------------------------------------------------------
-    start_of_week = today - timezone.timedelta(days=today.weekday())
-    activity_dates = set()
-
-    tp_dates = TopicProgress.objects.filter(
-        user_roadmap__user=request.user,
-        is_completed=True,
-        completed_at__isnull=False
-    ).values_list('completed_at__date', flat=True)
-    activity_dates.update(tp_dates)
-
-    ua_dates = UserAttempt.objects.filter(
-        user=request.user,
-        attempted_at__isnull=False
-    ).values_list('attempted_at__date', flat=True)
-    activity_dates.update(ua_dates)
-
-    ra_dates = ResumeAnalysis.objects.filter(
-        user=request.user
-    ).values_list('created_at__date', flat=True)
-    activity_dates.update(ra_dates)
-
-    ja_dates = JobApplication.objects.filter(
-        user=request.user
-    ).values_list('created_at__date', flat=True)
-    activity_dates.update(ja_dates)
-
-    if request.user.last_login and request.user.last_login.date() == today:
-        activity_dates.add(today)
-    else:
-        activity_dates.add(today)
-
-    streak_days = 0
-    check_day = today
-    if check_day not in activity_dates:
-        check_day = today - timezone.timedelta(days=1)
-
-    while check_day in activity_dates:
-        streak_days += 1
-        check_day -= timezone.timedelta(days=1)
-
-    if streak_days < 3 and (roadmap_completed_count > 0 or interview_attempts_count > 0 or total_apps_count > 0):
-        streak_days = max(3, streak_days)
-    else:
-        streak_days = max(1, streak_days)
+    # Update and persist user's authentic daily visit streak
+    streak_days = profile.update_activity_streak(today=today)
 
     weekly_target = 5
-    week_actions = 0
-    week_actions += TopicProgress.objects.filter(user_roadmap__user=request.user, is_completed=True, completed_at__date__gte=start_of_week).count()
-    week_actions += UserAttempt.objects.filter(user=request.user, attempted_at__date__gte=start_of_week).count()
-    week_actions += ResumeAnalysis.objects.filter(user=request.user, created_at__date__gte=start_of_week).count()
-    week_actions += JobApplication.objects.filter(user=request.user, created_at__date__gte=start_of_week).count()
+    start_of_week = today - timezone.timedelta(days=today.weekday())
 
-    if week_actions == 0:
-        week_actions = min(3, interview_attempts_count) or 3
+    # Count real practice sessions completed this week (Interview practice & Roadmap topic tests)
+    interview_week_count = UserAttempt.objects.filter(user=request.user, attempted_at__date__gte=start_of_week).count()
+    topics_week_count = TopicProgress.objects.filter(user_roadmap__user=request.user, is_completed=True, completed_at__date__gte=start_of_week).count()
+    week_actions = interview_week_count + topics_week_count
 
-    weekly_remaining = max(0, weekly_target - week_actions)
-    weekly_progress_pct = min(100, int(round((week_actions / weekly_target) * 100)))
+    # If user has established practice sessions (e.g. 5 practice sessions in Interview Prep), reflect it cleanly
+    if week_actions == 0 and interview_attempts_count > 0:
+        week_actions = min(weekly_target, interview_attempts_count)
+
+    # Clean display values - never overflow to 6/5 or 7/5!
+    display_completed = min(weekly_target, week_actions)
+    weekly_remaining = max(0, weekly_target - display_completed)
+    is_goal_met = week_actions >= weekly_target
+    weekly_progress_pct = 100 if is_goal_met else int(round((display_completed / weekly_target) * 100))
+
+    if is_goal_met:
+        goal_text = f"Weekly Goal: {weekly_target}/{weekly_target} completed 🎉"
+        goal_hint = "Weekly goal reached! 🎉"
+    else:
+        goal_text = f"Goal: {display_completed}/{weekly_target} sessions"
+        goal_hint = f"Practice {weekly_remaining} more session{'s' if weekly_remaining != 1 else ''} this week"
 
     engagement = {
         'streak_days': streak_days,
-        'weekly_completed': week_actions,
+        'weekly_completed': display_completed,
+        'raw_weekly_completed': week_actions,
         'weekly_target': weekly_target,
         'weekly_remaining': weekly_remaining,
         'weekly_progress_pct': weekly_progress_pct,
+        'is_goal_met': is_goal_met,
         'streak_text': f"{streak_days}-day streak",
-        'goal_hint': f"Practice {weekly_remaining} more session{'s' if weekly_remaining != 1 else ''} this week" if weekly_remaining > 0 else "Weekly goal reached! 🎉"
+        'goal_text': goal_text,
+        'goal_hint': goal_hint,
     }
 
     # -------------------------------------------------------------------------
@@ -572,7 +545,7 @@ def dashboard_view(request):
             'id': 'interview',
             'title': 'Interview Prep',
             'detail': f"{interview_attempts_count} practice session{'s' if interview_attempts_count != 1 else ''}" if has_interview_attempt else 'MCQs & assessments',
-            'metric': f"{interview_attempts_count}/5 sessions ({min(100, int(round(interview_attempts_count / 5.0 * 100)))}%)" if interview_attempts_count else '0/5 sessions',
+            'metric': f"{min(5, interview_attempts_count)}/5 sessions ({min(100, int(round(interview_attempts_count / 5.0 * 100)))}%)" if interview_attempts_count else '0/5 sessions',
             'status': interview_status,
             'status_text': interview_status_text,
             'status_pill_class': interview_pill_class,
