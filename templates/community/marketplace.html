@@ -197,83 +197,93 @@
                     <div class="mentors-grid mb-4">
                         {% for mentor in mentors %}
                         <div class="mentor-card">
-                            <div>
-                                <!-- Top Bar: Match Score & Verified Badge -->
-                                <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="mentor-card-main">
+                                <!-- Top Bar: Identity & Match Score -->
+                                <div class="mentor-card-header">
+                                    <div class="mentor-header-identity">
+                                        <div class="mentor-avatar-wrap">
+                                            {% if mentor.profile_photo %}
+                                                <img src="{{ mentor.profile_photo.url }}" alt="{{ mentor.full_name }}" class="mentor-avatar" onerror="this.onerror=null; this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.classList.remove('d-none');">
+                                                <div class="mentor-avatar-initials d-none">
+                                                    {{ mentor.full_name|slice:":2"|upper }}
+                                                </div>
+                                            {% else %}
+                                                <div class="mentor-avatar-initials">
+                                                    {{ mentor.full_name|slice:":2"|upper }}
+                                                </div>
+                                            {% endif %}
+                                            {% if mentor.verified %}
+                                                <span class="mentor-verified-check" title="Verified Mentor">
+                                                    <i class="bi bi-patch-check-fill"></i>
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mentor-info-block text-truncate">
+                                            <h2 class="mentor-name text-truncate" title="{{ mentor.full_name }}">{{ mentor.full_name }}</h2>
+                                            <div class="mentor-role text-truncate" title="{{ mentor.designation }}">{{ mentor.designation }}</div>
+                                            <div class="mentor-company text-truncate" title="{{ mentor.company }}">
+                                                <i class="bi bi-building me-1"></i>{{ mentor.company }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Top Right Match Chip -->
                                     {% if mentor.match_score is not None %}
-                                    <span class="match-score-badge">
-                                        <i class="bi bi-bullseye"></i> {{ mentor.match_score }}% Match
-                                    </span>
-                                    {% else %}
-                                    <span class="badge bg-secondary-subtle text-muted border px-2.5 py-1" style="font-size: 0.725rem;">
-                                        General Mentor
-                                    </span>
-                                    {% endif %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5" style="font-size: 0.7rem;">
-                                        <i class="bi bi-patch-check-fill me-1"></i> Verified
-                                    </span>
-                                </div>
-
-                                <!-- Avatar & Details -->
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    {% if mentor.profile_photo %}
-                                    <img src="{{ mentor.profile_photo.url }}" alt="{{ mentor.full_name }}" class="mentor-avatar">
-                                    {% else %}
-                                    <div class="mentor-avatar-initials">
-                                        {{ mentor.full_name|slice:":2"|upper }}
+                                    <div class="mentor-match-chip" title="Algorithmic match against your target career path">
+                                        <i class="bi bi-bullseye"></i>
+                                        <span>{{ mentor.match_score }}%</span>
                                     </div>
                                     {% endif %}
-                                    <div>
-                                        <h2 class="h6 fw-bold text-body mb-0">{{ mentor.full_name }}</h2>
-                                        <span class="small text-primary fw-medium d-block">{{ mentor.designation }}</span>
-                                        <span class="small text-muted d-block">{{ mentor.company }}</span>
-                                    </div>
                                 </div>
 
-                                <!-- Rating & Location -->
-                                <div class="d-flex align-items-center gap-3 mb-3 small text-muted">
-                                    <span class="d-flex align-items-center gap-1">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <strong class="text-body">{{ mentor.rating|default:"0.0" }}</strong>
-                                        <span>({{ mentor.total_reviews }})</span>
+                                <!-- Consolidated Metadata Ribbon -->
+                                <div class="mentor-meta-strip">
+                                    <span class="mentor-meta-item" title="{{ mentor.experience_years }} years of professional experience">
+                                        <i class="bi bi-briefcase"></i> {{ mentor.experience_years }}y exp
                                     </span>
-                                    <span>·</span>
-                                    <span class="d-flex align-items-center gap-1">
-                                        <i class="bi bi-geo-alt"></i> {{ mentor.current_location|truncatewords:2 }}
+                                    <span class="meta-dot">&bull;</span>
+                                    <span class="mentor-meta-item" title="{{ mentor.rating|default:'0.0' }} rating from {{ mentor.total_reviews }} reviews">
+                                        <i class="bi bi-star-fill text-warning"></i> {{ mentor.rating|default:"0.0" }}
+                                        <span class="text-muted">({{ mentor.total_reviews }})</span>
+                                    </span>
+                                    <span class="meta-dot">&bull;</span>
+                                    <span class="mentor-meta-item text-truncate" title="{{ mentor.current_location }}">
+                                        <i class="bi bi-geo-alt"></i> {{ mentor.current_location|truncatewords:1 }}
+                                    </span>
+                                    <span class="meta-dot">&bull;</span>
+                                    <span class="mentor-meta-item" title="{{ mentor.mentorship_type }}">
+                                        <i class="bi bi-camera-video"></i> {{ mentor.mentorship_type }}
                                     </span>
                                 </div>
 
-                                <p class="text-muted small mb-3 lh-base">
-                                    {{ mentor.bio|truncatewords:18 }}
+                                <!-- Clamped Bio -->
+                                {% if mentor.bio %}
+                                <p class="mentor-bio-clamp" title="{{ mentor.bio }}">
+                                    {{ mentor.bio }}
                                 </p>
+                                {% endif %}
 
-                                <!-- Domain badges -->
-                                <div class="d-flex gap-1 flex-wrap mb-3">
-                                    {% for dom in mentor.get_domains_list %}
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.725rem;">
-                                        {{ dom }}
-                                    </span>
-                                    {% endfor %}
-                                </div>
-
-                                <!-- Skills -->
-                                <div class="mb-3">
-                                    <div class="d-flex gap-1 flex-wrap">
-                                        {% for skill in mentor.get_skills_list|slice:":4" %}
-                                        <span class="project-tag">{{ skill }}</span>
+                                <!-- Curated Tags Row (Max 3 pills + overflow counter) -->
+                                <div class="mentor-tags-row">
+                                    {% with domains=mentor.get_domains_list skills=mentor.get_skills_list %}
+                                        {% for dom in domains|slice:":1" %}
+                                            <span class="mentor-domain-pill text-truncate" title="{{ dom }}">{{ dom }}</span>
                                         {% endfor %}
-                                    </div>
+                                        {% for skill in skills|slice:":2" %}
+                                            <span class="mentor-skill-pill text-truncate" title="{{ skill }}">{{ skill }}</span>
+                                        {% endfor %}
+                                        {% if domains|length|add:skills|length > 3 %}
+                                            <span class="mentor-overflow-pill" title="More domains &amp; skills">+{{ domains|length|add:skills|length|add:"-3" }}</span>
+                                        {% endif %}
+                                    {% endwith %}
                                 </div>
                             </div>
 
-                            <div>
-                                <div class="d-flex align-items-center justify-content-between pt-2 border-top mb-3 small text-muted">
-                                    <span><i class="bi bi-briefcase me-1"></i>{{ mentor.experience_years }} yrs experience</span>
-                                    <span><i class="bi bi-camera-video me-1"></i>{{ mentor.mentorship_type }}</span>
-                                </div>
-
-                                <a href="{% url 'community:mentor_detail' mentor.id %}" class="dash-btn dash-btn-outline dash-btn-sm w-100 fw-medium">
-                                    View Profile &amp; Book
+                            <!-- Footer CTA -->
+                            <div class="mentor-card-footer">
+                                <a href="{% url 'community:mentor_detail' mentor.id %}" class="mentor-cta-btn">
+                                    <span>View Profile &amp; Book</span>
+                                    <i class="bi bi-arrow-right"></i>
                                 </a>
                             </div>
                         </div>
