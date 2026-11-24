@@ -137,16 +137,19 @@
                             </div>
                         </div>
 
-                        <!-- Meeting link if accepted -->
-                        {% if booking.meeting_link and booking.status == 'Accepted' %}
-                        <div class="alert alert-success py-2 px-3 rounded-3 d-flex align-items-center mb-3 small">
-                            <i class="bi bi-camera-video me-2 fs-5"></i>
-                            <div>
-                                <span>Join Virtual Meeting: </span>
-                                <a href="{{ booking.meeting_link }}" target="_blank" rel="noopener noreferrer" class="fw-bold text-success text-break">
-                                    {{ booking.meeting_link }}
-                                </a>
+                        <!-- Meeting Room Access if accepted -->
+                        {% if booking.status == 'Accepted' %}
+                        <div class="alert alert-success py-2.5 px-3 rounded-3 d-flex align-items-center justify-content-between mb-3 small flex-wrap gap-2">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-camera-video me-2 fs-5 text-success"></i>
+                                <div>
+                                    <div class="fw-bold text-success">Virtual Video Meeting Room</div>
+                                    <span class="text-muted" style="font-size: 0.8rem;">Unlocks 5 mins before session &bull; Time-gated access</span>
+                                </div>
                             </div>
+                            <a href="{% url 'community:mentorship_room' booking.id %}" class="dash-btn dash-btn-primary dash-btn-sm text-white">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Enter Meeting Room
+                            </a>
                         </div>
                         {% endif %}
 
@@ -163,7 +166,10 @@
                         <!-- Action Buttons -->
                         <div class="d-flex align-items-center gap-2 flex-wrap pt-2">
                             {% if booking.status == 'Accepted' %}
-                            <a href="{% url 'community:mentor_chat' booking.mentor.user.id %}" class="dash-btn dash-btn-primary dash-btn-sm">
+                            <a href="{% url 'community:mentorship_room' booking.id %}" class="dash-btn dash-btn-primary dash-btn-sm text-white">
+                                <i class="bi bi-camera-video me-1"></i> Meeting Room
+                            </a>
+                            <a href="{% url 'community:mentor_chat' booking.mentor.user.id %}" class="dash-btn dash-btn-outline dash-btn-sm">
                                 <i class="bi bi-chat-dots me-1"></i> Message Mentor
                             </a>
                             {% endif %}

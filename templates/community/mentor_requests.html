@@ -107,15 +107,18 @@
                         </div>
                         {% endif %}
 
-                        {% if req.meeting_link and req.status == 'Accepted' %}
-                        <div class="alert alert-info py-2 px-3 rounded-3 d-flex align-items-center mb-3 small">
-                            <i class="bi bi-camera-video me-2 fs-5"></i>
-                            <div>
-                                <span>Meeting URL: </span>
-                                <a href="{{ req.meeting_link }}" target="_blank" rel="noopener noreferrer" class="fw-bold text-info text-break">
-                                    {{ req.meeting_link }}
-                                </a>
+                        {% if req.status == 'Accepted' %}
+                        <div class="alert alert-info py-2.5 px-3 rounded-3 d-flex align-items-center justify-content-between mb-3 small flex-wrap gap-2">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-camera-video me-2 fs-5 text-primary"></i>
+                                <div>
+                                    <div class="fw-bold text-primary">Virtual Mentorship Video Room</div>
+                                    <span class="text-muted" style="font-size: 0.8rem;">Unlocks 5 mins before session &bull; 45 mins session</span>
+                                </div>
                             </div>
+                            <a href="{% url 'community:mentorship_room' req.id %}" class="dash-btn dash-btn-primary dash-btn-sm text-white">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Enter Meeting Room
+                            </a>
                         </div>
                         {% endif %}
 
@@ -134,7 +137,10 @@
                                 <i class="bi bi-x-lg me-1"></i> Decline
                             </button>
                             {% elif req.status == 'Accepted' %}
-                            <a href="{% url 'community:mentor_chat' req.student.id %}" class="dash-btn dash-btn-primary dash-btn-sm">
+                            <a href="{% url 'community:mentorship_room' req.id %}" class="dash-btn dash-btn-primary dash-btn-sm text-white">
+                                <i class="bi bi-camera-video me-1"></i> Meeting Room
+                            </a>
+                            <a href="{% url 'community:mentor_chat' req.student.id %}" class="dash-btn dash-btn-outline dash-btn-sm">
                                 <i class="bi bi-chat-dots me-1"></i> Direct Message Candidate
                             </a>
                             <button type="button" class="dash-btn dash-btn-outline dash-btn-sm" data-bs-toggle="modal" data-bs-target="#actionModal"
@@ -181,8 +187,14 @@
                     </div>
 
                     <div class="mb-3 d-none" id="meetingLinkGroup">
-                        <label class="form-label small fw-semibold text-body">Virtual Meeting Link (Google Meet, Zoom, Teams)</label>
-                        <input type="url" class="form-control" name="meeting_link" placeholder="https://meet.google.com/abc-defg-hij">
+                        <label class="form-label small fw-semibold text-body">
+                            Virtual Meeting Link <span class="text-muted fw-normal">(Optional — Google Meet auto-generated if left blank)</span>
+                        </label>
+                        <input type="url" class="form-control" name="meeting_link" placeholder="Leave empty for auto-generated Google Meet (or paste Zoom / Teams)">
+                        <div class="form-text small text-muted">
+                            <i class="bi bi-camera-video text-success me-1"></i>
+                            CareerCatalyst will automatically generate a Google Meet link and email it to the candidate and your Gmail inbox.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top">
@@ -233,9 +245,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (action === 'accept') {
                 modalTitle.textContent = "Accept Mentorship Session";
                 meetingLinkGroup.classList.remove('d-none');
-                if (meetingInput) meetingInput.required = true;
+                if (meetingInput) {
+                    meetingInput.required = false;
+                    meetingInput.value = '';
+                }
                 if (submitBtn) {
-                    submitBtn.textContent = "Confirm Acceptance";
+                    submitBtn.textContent = "Confirm Acceptance & Send Meet Link";
                     submitBtn.className = "dash-btn dash-btn-success dash-btn-sm px-4 fw-medium";
                 }
             } else if (action === 'reject') {

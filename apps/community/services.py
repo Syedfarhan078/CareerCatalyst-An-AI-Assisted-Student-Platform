@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Avg, Count, Q
@@ -13,11 +14,22 @@ from .models import (
     MentorAvailability, MentorMessage, MentorLifecycleEvent
 )
 from .utils import simulate_notification
+from .emails import (
+    generate_google_meet_link,
+    ensure_room_token,
+    get_jitsi_meet_url,
+    get_session_room_gateway_url,
+    send_booking_notification_to_mentor,
+    send_booking_accepted_to_student,
+    send_booking_accepted_to_mentor,
+    send_session_day_reminders,
+)
 from apps.notifications.services import create_notification
 from apps.profiles.models import StudentProfile, StudentProject, StudentCertification
 from apps.roadmaps.models import RoadmapCertificate
 from apps.roadmaps.services import get_user_earned_skills_set
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 # Platform Constants for Mentorship Bookings
@@ -595,6 +607,12 @@ def create_mentorship_request_service(student, mentor, form_cleaned_data):
         message=f"Your request to book a session with {mentor.full_name} has been submitted successfully."
     )
     
+    # Send transactional email to Mentor
+    try:
+        send_booking_notification_to_mentor(request_obj)
+    except Exception as e:
+        logger.warning("Failed to dispatch booking notification email to mentor %s: %s", mentor.full_name, e)
+
     return request_obj
 
 
@@ -696,9 +714,16 @@ def respond_to_request_service(request_obj, action, response_message, meeting_li
         if get_mentor_weekly_booking_count(mentor, now_date) >= mentor.max_sessions_per_week:
             raise ValidationError("Weekly booking capacity reached.")
 
+        # Ensure secure room token exists
+        ensure_room_token(request_obj)
+
+        # Set meeting link: if mentor did not specify a custom link, point to CareerCatalyst Video Gateway
+        if not meeting_link or not str(meeting_link).strip():
+            meeting_link = get_session_room_gateway_url(request_obj)
+
         request_obj.status = 'Accepted'
         request_obj.accepted_at = timezone.now()
-        request_obj.meeting_link = meeting_link or ''
+        request_obj.meeting_link = str(meeting_link).strip()
         request_obj.meeting_date = meeting_date or request_obj.requested_date
         request_obj.meeting_time = meeting_time or request_obj.requested_time
         request_obj.mentor_response = response_message
@@ -740,6 +765,13 @@ def respond_to_request_service(request_obj, action, response_message, meeting_li
         notif_actor = actor or request_obj.mentor.user
         notification_type = 'mentorship_request_accepted'
         target_url = reverse('community:student_bookings')
+
+        # Send session confirmation emails with Google Meet link
+        try:
+            send_booking_accepted_to_student(request_obj)
+            send_booking_accepted_to_mentor(request_obj)
+        except Exception as e:
+            logger.warning("Failed to dispatch mentorship session confirmation emails: %s", e)
 
     elif action == 'reject':
         if request_obj.status != 'Pending':

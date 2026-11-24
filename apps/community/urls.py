@@ -54,6 +54,9 @@ urlpatterns = [
     path('admin/verify/<int:pk>/resume/', views.admin_mentor_resume_download, name='admin_mentor_resume'),
     path('admin/verify/<int:pk>/<str:action>/', views.admin_action_mentor, name='admin_action'),
     
+    # Virtual Mentorship Video Room Gateway (Time-Gated)
+    path('mentorship/room/<int:pk>/', views.mentorship_room_view, name='mentorship_room'),
+
     # Direct Chat Console (Bonus Integration)
     path('mentors/chat/<int:mentor_id>/', views.mentor_chat_view, name='mentor_chat'),
     path('mentors/chat/<int:mentor_id>/send/', views.send_mentor_message, name='send_mentor_message'),

@@ -3648,5 +3648,384 @@ class MentorshipBookingAvailabilityBugRegressionTests(TestCase):
         self.assertFalse(MentorshipRequest.objects.filter(student=self.student, requested_time='03:00:00').exists())
 
 
+class MentorshipEmailAndMeetLinkTests(TestCase):
+    def setUp(self):
+        from django.core import mail
+        mail.outbox = []
+        self.student = User.objects.create_user(
+            username='student_test',
+            email='student_test@example.com',
+            password='password123'
+        )
+        self.mentor_user = User.objects.create_user(
+            username='mentor_test',
+            email='mentor_gmail@gmail.com',
+            password='password123',
+            role='mentor'
+        )
+        self.mentor = MentorProfile.objects.create(
+            user=self.mentor_user,
+            full_name='Dr. Mentor Test',
+            email='mentor_gmail@gmail.com',
+            phone_number='9876543210',
+            company='Google',
+            designation='Principal Engineer',
+            experience_years=10,
+            current_location='Bengaluru',
+            bio='Experienced mentor.',
+            career_domains='Backend, DevOps',
+            skills='Python, Django, AWS, Kubernetes',
+            languages='English',
+            available_days='Monday, Wednesday, Friday, Saturday',
+            available_time_slots='10:00 AM - 12:00 PM',
+            status='Approved',
+            verified=True
+        )
+        # Create availability slot on Saturday
+        self.avail = MentorAvailability.objects.create(
+            mentor=self.mentor,
+            day='Saturday',
+            start_time='10:00:00',
+            end_time='12:00:00',
+            max_sessions=2
+        )
+
+        today = timezone.now().date()
+        days_ahead = (5 - today.weekday() + 7) % 7  # 5 = Saturday
+        if days_ahead == 0:
+            days_ahead = 7
+        self.target_date = today + timedelta(days=days_ahead)
+
+    def test_google_meet_link_generator_structure(self):
+        from apps.community.emails import generate_google_meet_link
+        import re
+        meet_link = generate_google_meet_link()
+        self.assertTrue(meet_link.startswith("https://meet.google.com/"))
+        pattern = r"^https://meet\.google\.com/[a-z]{3}-[a-z]{4}-[a-z]{3}$"
+        self.assertTrue(re.match(pattern, meet_link), f"Generated link {meet_link} did not match expected Google Meet pattern.")
+
+    def test_student_booking_triggers_email_to_mentor(self):
+        from django.core import mail
+        mail.outbox = []
+
+        self.client.force_login(self.student)
+        book_url = reverse('community:book_session', args=[self.mentor.id])
+        res = self.client.post(book_url, {
+            'requested_date': self.target_date.strftime('%Y-%m-%d'),
+            'requested_time': '10:00:00',
+            'purpose': 'Resume Review',
+            'student_message': 'Looking for advice on my distributed systems resume.'
+        })
+        self.assertEqual(res.status_code, 302)
+
+        # Verify MentorshipRequest was created
+        req = MentorshipRequest.objects.get(student=self.student, mentor=self.mentor)
+        self.assertEqual(req.status, 'Pending')
+
+        # Verify email was dispatched to mentor's Gmail
+        self.assertGreaterEqual(len(mail.outbox), 1)
+        mentor_email = mail.outbox[0]
+        self.assertIn('mentor_gmail@gmail.com', mentor_email.to)
+        self.assertIn("New Mentorship Booking Request from", mentor_email.subject)
+        self.assertIn("Resume Review", mentor_email.body)
+        self.assertIn("Looking for advice on my distributed systems resume.", mentor_email.body)
+
+    def test_mentor_accepting_without_link_auto_generates_google_meet_and_emails_both(self):
+        from django.core import mail
+        mail.outbox = []
+
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=self.target_date,
+            requested_time='10:00:00',
+            purpose='Interview Preparation',
+            student_message='Need help with mock system design interview.',
+            status='Pending'
+        )
+
+        self.client.force_login(self.mentor_user)
+        respond_url = reverse('community:respond_request', args=[req.id])
+        
+        # Mentor submits acceptance leaving meeting_link EMPTY
+        res = self.client.post(respond_url, {
+            'action': 'accept',
+            'response_message': 'Happy to help! Let us practice caching and load balancing.',
+            'meeting_link': ''  # empty -> should auto-generate
+        })
+        self.assertEqual(res.status_code, 302)
+
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'Accepted')
+        # Verify CareerCatalyst Video Gateway room link was auto-generated and room token set
+        self.assertTrue(req.meeting_link.endswith(f"/community/mentorship/room/{req.id}/"))
+        self.assertTrue(bool(req.room_token))
+
+        # Verify emails sent to student and mentor
+        # Outbox should have at least 2 emails: one to student and one to mentor
+        recipient_emails = [m.to[0] for m in mail.outbox]
+        self.assertIn(self.student.email, recipient_emails)
+        self.assertIn(self.mentor.email, recipient_emails)
+
+        # Check student email content
+        student_mail = [m for m in mail.outbox if self.student.email in m.to][0]
+        self.assertIn("Mentorship Session Confirmed with Dr. Mentor Test", student_mail.subject)
+        self.assertIn(req.meeting_link, student_mail.body)
+        self.assertIn("Happy to help! Let us practice caching and load balancing.", student_mail.body)
+        self.assertIn("Room Access Rules", student_mail.body)
+
+        # Check mentor email content
+        mentor_mail = [m for m in mail.outbox if self.mentor.email in m.to][0]
+        self.assertIn(req.meeting_link, mentor_mail.body)
+        self.assertIn("Virtual Meeting Room", mentor_mail.body)
+
+    def test_mentor_accepting_with_custom_link_preserves_custom_link(self):
+        from django.core import mail
+        mail.outbox = []
+
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=self.target_date,
+            requested_time='10:00:00',
+            purpose='Project Review',
+            student_message='Review my microservices project.',
+            status='Pending'
+        )
+
+        self.client.force_login(self.mentor_user)
+        respond_url = reverse('community:respond_request', args=[req.id])
+        custom_link = "https://zoom.us/j/987654321"
+
+        res = self.client.post(respond_url, {
+            'action': 'accept',
+            'response_message': 'Connecting via Zoom link.',
+            'meeting_link': custom_link
+        })
+        self.assertEqual(res.status_code, 302)
+
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'Accepted')
+        self.assertEqual(req.meeting_link, custom_link)
+
+        # Verify custom link in student email
+        student_mail = [m for m in mail.outbox if self.student.email in m.to][0]
+        self.assertIn(custom_link, student_mail.body)
+
+
+class MentorshipVirtualRoomAndReminderTests(TestCase):
+    """
+    Test suite verifying:
+    1. Zero-setup secure Jitsi video room generation and time-gating lifecycle:
+       - Waiting room (countdown) before session
+       - Active room (Jitsi embed) during session
+       - Expired room (deactivated) after session
+       - Cancelled room
+    2. Participant authorization (only assigned student, mentor, or staff).
+    3. Day-of-meeting email reminders and duplicate prevention.
+    4. Management command execution.
+    """
+
+    def setUp(self):
+        self.mentor_user = User.objects.create_user(
+            username='room_mentor_user',
+            email='room_mentor@test.com',
+            password='Password123!',
+            role='mentor'
+        )
+        self.mentor = MentorProfile.objects.create(
+            user=self.mentor_user,
+            full_name='Dr. Room Mentor',
+            email='room_mentor@test.com',
+            company='TechCorp',
+            designation='Lead Architect',
+            status='Approved',
+            verified=True,
+            career_domains='Backend',
+            skills='Python, Django',
+            max_sessions_per_week=5
+        )
+        self.student = User.objects.create_user(
+            username='room_student_user',
+            email='room_student@test.com',
+            password='Password123!',
+            role='student'
+        )
+        self.unrelated_user = User.objects.create_user(
+            username='room_stranger_user',
+            email='stranger@test.com',
+            password='Password123!',
+            role='student'
+        )
+        self.staff_user = User.objects.create_user(
+            username='room_staff_user',
+            email='staff@test.com',
+            password='Password123!',
+            is_staff=True
+        )
+
+    def test_anonymous_user_redirected_to_login(self):
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=timezone.now().date(),
+            requested_time='10:00:00',
+            purpose='Code Review',
+            status='Accepted'
+        )
+        url = reverse('community:mentorship_room', args=[req.id])
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 302)
+        self.assertIn('/accounts/login/', res.url)
+
+    def test_unauthorized_user_forbidden(self):
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=timezone.now().date(),
+            requested_time='10:00:00',
+            purpose='Code Review',
+            status='Accepted'
+        )
+        url = reverse('community:mentorship_room', args=[req.id])
+        self.client.force_login(self.unrelated_user)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 403)
+
+    def test_room_waiting_state_when_future(self):
+        # Session scheduled for tomorrow
+        future_date = timezone.now().date() + timedelta(days=2)
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=future_date,
+            requested_time='14:00:00',
+            purpose='Architecture Planning',
+            status='Accepted'
+        )
+        url = reverse('community:mentorship_room', args=[req.id])
+        self.client.force_login(self.student)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context['room_state'], 'waiting')
+        self.assertContains(res, 'Waiting Room')
+        self.assertContains(res, 'The Virtual Meeting Room is Locked')
+        self.assertContains(res, 'countdownContainer')
+
+    def test_room_active_state_during_session_window(self):
+        # Session scheduled for right now
+        now = timezone.now()
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=now.date(),
+            requested_time=now.strftime('%H:%M:%S'),
+            purpose='Live Debugging',
+            status='Accepted'
+        )
+        url = reverse('community:mentorship_room', args=[req.id])
+        self.client.force_login(self.mentor_user)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context['room_state'], 'active')
+        self.assertContains(res, 'Live Session Active')
+        self.assertContains(res, 'jitsi-container')
+        self.assertTrue(bool(res.context['room_name']))
+        self.assertTrue(res.context['jitsi_url'].startswith('https://meet.jit.si/CareerCatalyst-Mentorship-'))
+
+    def test_room_expired_state_after_session_ends(self):
+        # Session scheduled for 3 days ago
+        past_date = timezone.now().date() - timedelta(days=3)
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=past_date,
+            requested_time='10:00:00',
+            purpose='Resume Review',
+            status='Accepted'
+        )
+        url = reverse('community:mentorship_room', args=[req.id])
+        self.client.force_login(self.student)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context['room_state'], 'expired')
+        self.assertContains(res, 'Session Concluded')
+        self.assertContains(res, 'Rate Your Mentorship Session')
+
+    def test_staff_admin_can_access_room(self):
+        now = timezone.now()
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=now.date(),
+            requested_time=now.strftime('%H:%M:%S'),
+            purpose='Staff Oversight',
+            status='Accepted'
+        )
+        url = reverse('community:mentorship_room', args=[req.id])
+        self.client.force_login(self.staff_user)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.context['user_role_label'], 'Staff Admin')
+
+    def test_day_of_session_reminders_and_duplicate_prevention(self):
+        from django.core import mail
+        from apps.community.emails import send_session_day_reminders
+        mail.outbox = []
+
+        today = timezone.now().date()
+        req_today = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=today,
+            requested_time='11:00:00',
+            purpose='Career Transition Coaching',
+            status='Accepted'
+        )
+        req_future = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=today + timedelta(days=5),
+            requested_time='15:00:00',
+            purpose='System Design',
+            status='Accepted'
+        )
+
+        # 1. Dispatch reminders
+        sent_count = send_session_day_reminders(target_date=today)
+        self.assertEqual(sent_count, 1)
+
+        req_today.refresh_from_db()
+        self.assertIsNotNone(req_today.reminder_sent_at)
+        req_future.refresh_from_db()
+        self.assertIsNone(req_future.reminder_sent_at)
+
+        # Verify 2 emails sent (1 to student, 1 to mentor)
+        self.assertEqual(len(mail.outbox), 2)
+        recipients = [m.to[0] for m in mail.outbox]
+        self.assertIn(self.student.email, recipients)
+        self.assertIn(self.mentor.email, recipients)
+
+        student_mail = [m for m in mail.outbox if self.student.email in m.to][0]
+        self.assertIn("Session is TODAY", student_mail.subject)
+        self.assertIn("/community/mentorship/room/", student_mail.body)
+
+        # 2. Second dispatch call on same day should not resend (duplicate prevention)
+        mail.outbox = []
+        sent_again = send_session_day_reminders(target_date=today)
+        self.assertEqual(sent_again, 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_management_command_execution(self):
+        from django.core.management import call_command
+        from io import StringIO
+
+        out = StringIO()
+        call_command('send_mentorship_reminders', stdout=out)
+        self.assertIn('Checking for mentorship sessions', out.getvalue())
+
+
+
+
 
 

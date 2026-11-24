@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.conf import settings
 from django.utils import timezone
 from functools import wraps
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, time, timedelta
 import json
 import os
 
@@ -43,6 +43,13 @@ from .services import (
     reactivate_mentor_service, get_student_profile_for_mentor
 )
 from .utils import calculate_mentor_match_score
+from .emails import (
+    ensure_room_token,
+    get_jitsi_meet_room_name,
+    get_jitsi_meet_url,
+    get_session_room_gateway_url,
+    send_session_day_reminders,
+)
 
 User = get_user_model()
 
@@ -533,6 +540,12 @@ def mentor_dashboard(request):
     filled = sum(1 for f in fields if getattr(mentor, f))
     profile_completion = int((filled / len(fields)) * 100)
 
+    # Auto-dispatch day-of-session reminders if due
+    try:
+        send_session_day_reminders()
+    except Exception as e:
+        logger.warning("Background reminder check in mentor_dashboard failed: %s", e)
+
     return render(request, "community/mentor_dashboard.html", {
         "mentor": mentor,
         "total_sessions": total_sessions,
@@ -984,6 +997,12 @@ def student_bookings_list(request):
 
     bookings = MentorshipRequest.objects.filter(student=request.user).select_related('mentor', 'mentor__user')
     review_form = MentorReviewForm()
+
+    # Auto-dispatch day-of-session reminders if due
+    try:
+        send_session_day_reminders()
+    except Exception as e:
+        logger.warning("Background reminder check in student_bookings_list failed: %s", e)
     
     return render(request, "community/student_bookings.html", {
         "bookings": bookings,
@@ -1183,3 +1202,114 @@ def send_mentor_message(request, mentor_id):
             }
         })
     return JsonResponse({"error": "POST method required"}, status=405)
+
+
+@login_required
+def mentorship_room_view(request, pk):
+    """
+    CareerCatalyst Virtual Mentorship Video Gateway.
+    Enforces participant authorization and strict time-based lifecycle gating:
+    - WAITING: Before session start (with 5-minute pre-session unlock buffer). Shows live countdown.
+    - ACTIVE: From 5 minutes before scheduled start time until session duration (45 mins) + 15 mins grace.
+              Integrates embedded Jitsi Meet HD video call container with prefilled identity.
+    - EXPIRED: After session window concludes. Deactivates room link and directs student to review / rating.
+    - CANCELLED: If the booking was declined or cancelled.
+    """
+    request_obj = get_object_or_404(
+        MentorshipRequest.objects.select_related('student', 'mentor', 'mentor__user'),
+        pk=pk
+    )
+
+    # Authorization Check: only assigned student, mentor, or platform staff
+    is_student = (request.user == request_obj.student)
+    is_mentor = bool(request_obj.mentor and request_obj.mentor.user == request.user)
+    is_staff = bool(request.user.is_staff or request.user.is_superuser)
+
+    if not (is_student or is_mentor or is_staff):
+        return HttpResponseForbidden("You are not authorized to access this mentorship session room.")
+
+    ensure_room_token(request_obj)
+
+    # Time calculations
+    session_date = request_obj.meeting_date or request_obj.requested_date
+    session_time = request_obj.meeting_time or request_obj.requested_time
+
+    # Parse session_time safely
+    parsed_time = session_time
+    if isinstance(session_time, str):
+        for fmt in ('%H:%M:%S', '%H:%M', '%I:%M %p', '%I:%M%p', '%I %p'):
+            try:
+                parsed_time = datetime.strptime(session_time.strip(), fmt).time()
+                break
+            except ValueError:
+                pass
+
+    if not isinstance(parsed_time, time):
+        parsed_time = time(10, 0)
+
+    tz = timezone.get_current_timezone()
+    session_start = timezone.make_aware(datetime.combine(session_date, parsed_time), timezone=tz)
+    
+    EARLY_JOIN_MINUTES = 5
+    SESSION_DURATION_MINUTES = 45
+    GRACE_PERIOD_MINUTES = 15
+
+    unlock_time = session_start - timedelta(minutes=EARLY_JOIN_MINUTES)
+    session_end = session_start + timedelta(minutes=SESSION_DURATION_MINUTES)
+    deactivate_time = session_end + timedelta(minutes=GRACE_PERIOD_MINUTES)
+    now = timezone.now()
+
+    # Determine room state
+    if request_obj.status in ['Cancelled', 'Rejected']:
+        room_state = 'cancelled'
+    elif now < unlock_time:
+        room_state = 'waiting'
+    elif now <= deactivate_time and request_obj.status == 'Accepted':
+        room_state = 'active'
+    else:
+        room_state = 'expired'
+
+    seconds_until_unlock = max(0, int((unlock_time - now).total_seconds()))
+    seconds_remaining = max(0, int((deactivate_time - now).total_seconds()))
+
+    jitsi_room_name = get_jitsi_meet_room_name(request_obj)
+    jitsi_url = get_jitsi_meet_url(request_obj)
+
+    # Determine if there is a custom third-party external link provided by the mentor
+    custom_external_link = None
+    if request_obj.meeting_link and ('meet.google.com' in request_obj.meeting_link or 'zoom.us' in request_obj.meeting_link or 'teams.microsoft.com' in request_obj.meeting_link):
+        custom_external_link = request_obj.meeting_link
+
+    user_role_label = "Mentor" if is_mentor else ("Staff Admin" if is_staff and not is_student else "Candidate")
+    user_display_name = request.user.get_full_name() or request.user.username
+
+    has_reviewed = False
+    if is_student:
+        has_reviewed = MentorReview.objects.filter(student=request.user, mentor=request_obj.mentor).exists()
+
+    review_form = MentorReviewForm() if is_student and not has_reviewed else None
+
+    context = {
+        "request_obj": request_obj,
+        "mentor": request_obj.mentor,
+        "student": request_obj.student,
+        "room_state": room_state,
+        "room_name": jitsi_room_name,
+        "jitsi_url": jitsi_url,
+        "session_start": session_start,
+        "session_end": session_end,
+        "unlock_time": unlock_time,
+        "deactivate_time": deactivate_time,
+        "seconds_until_unlock": seconds_until_unlock,
+        "seconds_remaining": seconds_remaining,
+        "user_role_label": user_role_label,
+        "user_display_name": user_display_name,
+        "is_mentor": is_mentor,
+        "is_student": is_student,
+        "has_reviewed": has_reviewed,
+        "review_form": review_form,
+        "custom_external_link": custom_external_link,
+        **get_user_sidebar_context(request.user)
+    }
+
+    return render(request, "community/mentorship_room.html", context)

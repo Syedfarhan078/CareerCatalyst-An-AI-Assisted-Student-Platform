@@ -1,0 +1,613 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Mentorship Room — {{ mentor.full_name }} &bull; CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
+<link rel="stylesheet" href="{% static 'css/community.css' %}?v=1.0">
+<style>
+    .room-header-badge {
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #22c55e;
+        display: inline-block;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        animation: pulse-green 1.8s infinite;
+    }
+    @keyframes pulse-green {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+    .countdown-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 32px 24px;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+    }
+    .timer-digit-box {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 14px 18px;
+        min-width: 72px;
+        text-align: center;
+        backdrop-filter: blur(4px);
+    }
+    .timer-digit {
+        font-size: 2rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+        color: #38bdf8;
+    }
+    .timer-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+    .jitsi-wrapper {
+        position: relative;
+        width: 100%;
+        height: 720px;
+        max-height: calc(100vh - 220px);
+        min-height: 520px;
+        background: #0b0f17;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #1e293b;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+    .preflight-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    [data-bs-theme="dark"] .preflight-box {
+        background: #1e293b;
+        border-color: #334155;
+    }
+    .device-preview-video {
+        width: 100%;
+        max-width: 320px;
+        height: 200px;
+        border-radius: 10px;
+        background: #0f172a;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{# Override public marketing navbar and chatbot #}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    <!-- Left Navigation Sidebar -->
+    {% include "core/partials/dashboard_sidebar.html" %}
+
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <!-- Mobile Header Bar -->
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <!-- Breadcrumb Navigation -->
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                {% if is_mentor %}
+                <a href="{% url 'community:mentor_requests' %}" class="dash-back-link">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Back to Mentor Requests</span>
+                </a>
+                {% else %}
+                <a href="{% url 'community:student_bookings' %}" class="dash-back-link">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Back to My Bookings</span>
+                </a>
+                {% endif %}
+
+                <div class="d-flex align-items-center gap-2">
+                    {% if room_state == 'active' %}
+                    <span class="room-header-badge bg-success-subtle text-success border border-success-subtle">
+                        <span class="pulse-dot"></span> Live Session
+                    </span>
+                    {% elif room_state == 'waiting' %}
+                    <span class="room-header-badge bg-warning-subtle text-warning border border-warning-subtle">
+                        <i class="bi bi-hourglass-split"></i> Waiting Room
+                    </span>
+                    {% elif room_state == 'expired' %}
+                    <span class="room-header-badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                        <i class="bi bi-check-circle"></i> Concluded
+                    </span>
+                    {% elif room_state == 'cancelled' %}
+                    <span class="room-header-badge bg-danger-subtle text-danger border border-danger-subtle">
+                        <i class="bi bi-x-circle"></i> Cancelled
+                    </span>
+                    {% endif %}
+
+                    <span class="badge bg-body-secondary text-body border px-3 py-1.5 rounded-pill">
+                        Joined as: {{ user_role_label }} ({{ user_display_name }})
+                    </span>
+                </div>
+            </div>
+
+            <!-- Session Overview Top Card -->
+            <div class="community-card p-4 mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1">
+                                {{ request_obj.purpose }}
+                            </span>
+                            <span class="text-muted small">&bull;</span>
+                            <span class="small text-muted">
+                                <i class="bi bi-calendar3 me-1"></i>{{ session_start|date:"l, F d, Y" }}
+                            </span>
+                            <span class="text-muted small">&bull;</span>
+                            <span class="small text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ session_start|date:"g:i A" }} – {{ session_end|date:"g:i A" }} (45 mins)
+                            </span>
+                        </div>
+                        <h1 class="h4 fw-bold text-body mb-1">
+                            1-on-1 Mentorship: {{ mentor.full_name }} &amp; {{ student.get_full_name|default:student.username }}
+                        </h1>
+                        <p class="text-muted small mb-0">
+                            <strong>Mentor:</strong> {{ mentor.full_name }} ({{ mentor.designation }} at {{ mentor.company }}) &bull;
+                            <strong>Candidate:</strong> {{ student.get_full_name|default:student.username }}
+                        </p>
+                    </div>
+
+                    {% if request_obj.mentor_response %}
+                    <div class="text-md-end">
+                        <span class="small text-muted d-block">Mentor's Note:</span>
+                        <span class="small fw-semibold text-body">"{{ request_obj.mentor_response }}"</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- STATE 1: WAITING ROOM (Current Time < Session Start - 5 mins)  -->
+            <!-- ============================================================== -->
+            {% if room_state == 'waiting' %}
+            <div class="countdown-card text-center mb-4">
+                <div class="mb-3">
+                    <span class="badge bg-primary px-3 py-1.5 rounded-pill text-uppercase fw-bold" style="letter-spacing: 0.05em;">
+                        <i class="bi bi-shield-lock me-1"></i> Time-Gated Waiting Room
+                    </span>
+                </div>
+                <h2 class="h3 fw-bold mb-2 text-white">The Virtual Meeting Room is Locked</h2>
+                <p class="text-slate-300 mx-auto mb-4" style="max-width: 580px; color: #cbd5e1; font-size: 0.95rem;">
+                    For privacy and session integrity, this room opens automatically <strong>5 minutes before</strong> your scheduled time (at <strong>{{ unlock_time|date:"g:i A" }}</strong>). 
+                    Please keep this page open; it will unlock automatically.
+                </p>
+
+                <!-- Live Countdown Timer -->
+                <div class="d-flex justify-content-center align-items-center gap-2 gap-md-3 mb-4 flex-wrap" id="countdownContainer" data-seconds="{{ seconds_until_unlock }}">
+                    <div class="timer-digit-box">
+                        <div class="timer-digit" id="timerDays">00</div>
+                        <div class="timer-label">Days</div>
+                    </div>
+                    <div class="timer-digit-box">
+                        <div class="timer-digit" id="timerHours">00</div>
+                        <div class="timer-label">Hours</div>
+                    </div>
+                    <div class="timer-digit-box">
+                        <div class="timer-digit" id="timerMinutes">00</div>
+                        <div class="timer-label">Minutes</div>
+                    </div>
+                    <div class="timer-digit-box">
+                        <div class="timer-digit" id="timerSeconds">00</div>
+                        <div class="timer-label">Seconds</div>
+                    </div>
+                </div>
+
+                <div class="text-slate-400 small" style="color: #94a3b8;">
+                    <i class="bi bi-arrow-repeat me-1"></i> Page will automatically refresh the moment the room opens.
+                </div>
+            </div>
+
+            <!-- Pre-Flight Readiness Checklist & Device Tester -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="preflight-box h-100">
+                        <h3 class="h6 fw-bold text-body mb-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-clipboard-check text-primary fs-5"></i> Session Preparation Checklist
+                        </h3>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2 small text-body">
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                                <span><strong>Punctuality:</strong> Join as soon as the countdown completes to maximize your 45-minute discussion.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                                <span><strong>Resume / Projects:</strong> Have your resume, GitHub repositories, or questions ready in another browser tab.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                                <span><strong>Audio &amp; Quiet Space:</strong> Use headphones if possible to eliminate background echo.</span>
+                            </li>
+                            <li class="d-flex align-items-start gap-2">
+                                <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
+                                <span><strong>Auto-Deactivation:</strong> The room will automatically close after the 45-minute allotted session.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="preflight-box h-100">
+                        <h3 class="h6 fw-bold text-body mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-camera-video text-primary fs-5"></i> Camera &amp; Mic Hardware Test
+                        </h3>
+                        <p class="small text-muted mb-3">Test your local webcam and microphone right now so you're ready when the room unlocks.</p>
+                        
+                        <div class="d-flex flex-column align-items-center">
+                            <video id="devicePreview" class="device-preview-video mb-3 d-none" autoplay playsinline muted></video>
+                            <div id="devicePreviewPlaceholder" class="device-preview-video mb-3 d-flex align-items-center justify-content-center text-muted small p-3 text-center border">
+                                <span>Click below to grant temporary browser camera &amp; mic permission.</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="dash-btn dash-btn-outline dash-btn-sm" id="btnTestDevices">
+                                    <i class="bi bi-play-circle me-1"></i> Start Camera Test
+                                </button>
+                                <button type="button" class="dash-btn dash-btn-danger dash-btn-sm d-none" id="btnStopDevices">
+                                    <i class="bi bi-stop-circle me-1"></i> Stop Test
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- STATE 2: ACTIVE ROOM (Within session window)                   -->
+            <!-- ============================================================== -->
+            {% elif room_state == 'active' %}
+            <div class="community-card p-3 mb-3 bg-body-tertiary border">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1.5 rounded-pill fw-bold">
+                            <span class="pulse-dot me-1"></span> Live Session Active
+                        </span>
+                        <span class="small fw-semibold text-body" id="sessionTicker" data-seconds="{{ seconds_remaining }}">
+                            <i class="bi bi-stopwatch text-primary me-1"></i> Time remaining: <span id="tickerDisplay" class="fw-bold text-primary">--:--</span>
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        {% if custom_external_link %}
+                        <a href="{{ custom_external_link }}" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-primary dash-btn-sm">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> Open External Link
+                        </a>
+                        {% endif %}
+                        <a href="{{ jitsi_url }}" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-outline dash-btn-sm">
+                            <i class="bi bi-arrows-angle-expand me-1"></i> Open in New Tab
+                        </a>
+                        {% if is_mentor %}
+                        <a href="{% url 'community:mentor_requests' %}" class="dash-btn dash-btn-danger dash-btn-sm" onclick="return confirm('Exit this mentorship meeting room?');">
+                            <i class="bi bi-telephone-x me-1"></i> Leave Room
+                        </a>
+                        {% else %}
+                        <a href="{% url 'community:student_bookings' %}" class="dash-btn dash-btn-danger dash-btn-sm" onclick="return confirm('Exit this mentorship meeting room?');">
+                            <i class="bi bi-telephone-x me-1"></i> Leave Room
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if custom_external_link %}
+            <div class="alert alert-info p-4 rounded-3 text-center mb-4">
+                <i class="bi bi-camera-video fs-1 text-primary d-block mb-2"></i>
+                <h3 class="h5 fw-bold mb-2">Mentor-Hosted External Meeting Room</h3>
+                <p class="small text-muted mb-3 mx-auto" style="max-width: 500px;">
+                    Your mentor configured a custom video meeting endpoint. Click below to join directly:
+                </p>
+                <a href="{{ custom_external_link }}" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-primary px-4 py-2">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Enter External Meeting
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Embedded Jitsi Meet Container -->
+            <div class="jitsi-wrapper mb-4" id="jitsi-container">
+                <!-- Jitsi External API iframe injected here -->
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- STATE 3: EXPIRED / DEACTIVATED ROOM (Session Completed)        -->
+            <!-- ============================================================== -->
+            {% elif room_state == 'expired' %}
+            <div class="community-card p-4 p-md-5 text-center mb-4">
+                <div class="mb-3">
+                    <span class="badge bg-secondary px-3 py-1.5 rounded-pill text-uppercase fw-bold" style="letter-spacing: 0.05em;">
+                        <i class="bi bi-clock-history me-1"></i> Session Concluded
+                    </span>
+                </div>
+                <h2 class="h3 fw-bold text-body mb-2">The Virtual Meeting Room has been Closed</h2>
+                <p class="text-muted mx-auto mb-4" style="max-width: 560px;">
+                    This 45-minute 1-on-1 mentorship session ended on <strong>{{ session_start|date:"F d, Y" }}</strong> at <strong>{{ session_end|date:"g:i A" }}</strong>. 
+                    In accordance with our platform access policies, the temporary video room link has been deactivated.
+                </p>
+
+                <!-- Student Rating & Review Form -->
+                {% if is_student %}
+                    {% if has_reviewed %}
+                    <div class="alert alert-success py-3 px-4 rounded-3 d-inline-block text-start mb-4">
+                        <i class="bi bi-star-fill text-warning me-2"></i>
+                        <span>Thank you! You have already submitted your review for this session.</span>
+                    </div>
+                    {% else %}
+                    <div class="card p-4 mx-auto text-start border bg-body-tertiary mb-4" style="max-width: 600px;">
+                        <h3 class="h6 fw-bold text-body mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-star-half text-warning fs-5"></i> Rate Your Mentorship Session
+                        </h3>
+                        <p class="small text-muted mb-3">Help {{ mentor.full_name }} and future mentees by leaving an honest rating and quick feedback.</p>
+                        
+                        <form method="POST" action="{% url 'community:submit_review' mentor.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Rating (1 to 5 Stars)</label>
+                                <select name="rating" class="form-select form-select-sm" required>
+                                    <option value="5" selected>5 Stars - Exceptional Guidance</option>
+                                    <option value="4">4 Stars - Very Helpful</option>
+                                    <option value="3">3 Stars - Good / Met Expectations</option>
+                                    <option value="2">2 Stars - Needs Improvement</option>
+                                    <option value="1">1 Star - Did Not Help</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Your Feedback / Review Note</label>
+                                <textarea name="comment" rows="3" class="form-control form-control-sm" placeholder="What actionable advice did you learn? How did this session help your career?" required></textarea>
+                            </div>
+                            <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm">
+                                <i class="bi bi-send me-1"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                {% endif %}
+
+                <div class="d-flex justify-content-center gap-2">
+                    {% if is_mentor %}
+                    <a href="{% url 'community:mentor_requests' %}" class="dash-btn dash-btn-primary">
+                        <i class="bi bi-arrow-left me-1"></i> Return to Requests
+                    </a>
+                    {% else %}
+                    <a href="{% url 'community:student_bookings' %}" class="dash-btn dash-btn-primary">
+                        <i class="bi bi-arrow-left me-1"></i> View Booking History
+                    </a>
+                    <a href="{% url 'community:mentor_list' %}" class="dash-btn dash-btn-outline">
+                        <i class="bi bi-search me-1"></i> Explore More Mentors
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ============================================================== -->
+            <!-- STATE 4: CANCELLED                                             -->
+            <!-- ============================================================== -->
+            {% elif room_state == 'cancelled' %}
+            <div class="community-card p-4 p-md-5 text-center mb-4">
+                <i class="bi bi-x-circle text-danger fs-1 d-block mb-3"></i>
+                <h2 class="h4 fw-bold text-body mb-2">Mentorship Session Cancelled</h2>
+                <p class="text-muted mx-auto mb-4" style="max-width: 500px;">
+                    This booking was cancelled or declined. The virtual meeting room is not available.
+                </p>
+                {% if is_mentor %}
+                <a href="{% url 'community:mentor_requests' %}" class="dash-btn dash-btn-primary">
+                    Return to Mentor Requests
+                </a>
+                {% else %}
+                <a href="{% url 'community:student_bookings' %}" class="dash-btn dash-btn-primary">
+                    Return to My Bookings
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Jitsi Meet External API (Used for active video calling) -->
+<script src="https://meet.jit.si/external_api.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roomState = "{{ room_state }}";
+
+    // -------------------------------------------------------------
+    // WAITING ROOM COUNTDOWN & AUTO-RELOAD
+    // -------------------------------------------------------------
+    const countdownContainer = document.getElementById('countdownContainer');
+    if (countdownContainer && roomState === 'waiting') {
+        let totalSeconds = parseInt(countdownContainer.getAttribute('data-seconds'), 10) || 0;
+
+        function updateCountdown() {
+            if (totalSeconds <= 0) {
+                document.getElementById('timerDays').textContent = '00';
+                document.getElementById('timerHours').textContent = '00';
+                document.getElementById('timerMinutes').textContent = '00';
+                document.getElementById('timerSeconds').textContent = '00';
+                // Trigger auto-reload when countdown finishes
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+                return;
+            }
+
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            document.getElementById('timerDays').textContent = String(days).padStart(2, '0');
+            document.getElementById('timerHours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('timerMinutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('timerSeconds').textContent = String(seconds).padStart(2, '0');
+
+            totalSeconds--;
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    }
+
+    // -------------------------------------------------------------
+    // LOCAL CAMERA & MIC PRE-FLIGHT TEST
+    // -------------------------------------------------------------
+    const btnTest = document.getElementById('btnTestDevices');
+    const btnStop = document.getElementById('btnStopDevices');
+    const videoPreview = document.getElementById('devicePreview');
+    const previewPlaceholder = document.getElementById('devicePreviewPlaceholder');
+    let localStream = null;
+
+    if (btnTest) {
+        btnTest.addEventListener('click', async function() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                if (videoPreview) {
+                    videoPreview.srcObject = localStream;
+                    videoPreview.classList.remove('d-none');
+                    if (previewPlaceholder) previewPlaceholder.classList.add('d-none');
+                    btnTest.classList.add('d-none');
+                    if (btnStop) btnStop.classList.remove('d-none');
+                }
+            } catch (err) {
+                alert('Could not access camera or microphone: ' + err.message);
+            }
+        });
+    }
+
+    if (btnStop) {
+        btnStop.addEventListener('click', function() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            if (videoPreview) {
+                videoPreview.srcObject = null;
+                videoPreview.classList.add('d-none');
+            }
+            if (previewPlaceholder) previewPlaceholder.classList.remove('d-none');
+            btnTest.classList.remove('d-none');
+            btnStop.classList.add('d-none');
+        });
+    }
+
+    // -------------------------------------------------------------
+    // ACTIVE JITSI EMBED INITIALIZATION & SESSION TICKER
+    // -------------------------------------------------------------
+    const jitsiContainer = document.getElementById('jitsi-container');
+    if (jitsiContainer && roomState === 'active') {
+        const domain = 'meet.jit.si';
+        const roomName = "{{ room_name|escapejs }}";
+        const displayName = "{{ user_display_name|escapejs }} ({{ user_role_label|escapejs }})";
+
+        const options = {
+            roomName: roomName,
+            width: '100%',
+            height: '100%',
+            parentNode: jitsiContainer,
+            userInfo: {
+                displayName: displayName
+            },
+            configOverwrite: {
+                prejoinPageEnabled: false,
+                startWithAudioMuted: false,
+                startWithVideoMuted: false,
+                enableWelcomePage: false,
+                disableDeepLinking: true
+            },
+            interfaceConfigOverwrite: {
+                SHOW_JITSI_WATERMARK: false,
+                SHOW_WATERMARK_FOR_GUESTS: false,
+                SHOW_POWERED_BY: false,
+                TOOLBAR_BUTTONS: [
+                    'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+                    'fodeviceselection', 'hangup', 'chat', 'raisehand',
+                    'videoquality', 'filmstrip', 'tileview'
+                ]
+            }
+        };
+
+        try {
+            const api = new JitsiMeetExternalAPI(domain, options);
+            api.addEventListeners({
+                videoConferenceLeft: function () {
+                    // Optional redirect or feedback
+                }
+            });
+        } catch (e) {
+            console.error("Jitsi Meet External API error:", e);
+        }
+    }
+
+    // Session Remaining Ticker
+    const tickerEl = document.getElementById('sessionTicker');
+    const tickerDisplay = document.getElementById('tickerDisplay');
+    if (tickerEl && tickerDisplay && roomState === 'active') {
+        let remainingSecs = parseInt(tickerEl.getAttribute('data-seconds'), 10) || 0;
+
+        function updateTicker() {
+            if (remainingSecs <= 0) {
+                tickerDisplay.textContent = "00:00 (Concluded)";
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+                return;
+            }
+
+            const mins = Math.floor(remainingSecs / 60);
+            const secs = remainingSecs % 60;
+            tickerDisplay.textContent = String(mins).padStart(2, '0') + ":" + String(secs).padStart(2, '0');
+
+            if (remainingSecs <= 300) {
+                tickerDisplay.className = "fw-bold text-danger";
+            } else if (remainingSecs <= 600) {
+                tickerDisplay.className = "fw-bold text-warning";
+            }
+
+            remainingSecs--;
+        }
+
+        updateTicker();
+        setInterval(updateTicker, 1000);
+    }
+});
+</script>
+{% endblock %}
