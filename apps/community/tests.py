@@ -3911,6 +3911,30 @@ class MentorshipVirtualRoomAndReminderTests(TestCase):
         self.assertContains(res, 'Waiting Room')
         self.assertContains(res, 'The Virtual Meeting Room is Locked')
         self.assertContains(res, 'countdownContainer')
+        # Student sees student sidebar
+        self.assertContains(res, 'My Roadmap')
+        self.assertNotContains(res, 'mentor-sidebar')
+
+    def test_mentor_sees_mentor_sidebar_in_room(self):
+        req = MentorshipRequest.objects.create(
+            student=self.student,
+            mentor=self.mentor,
+            requested_date=timezone.now().date(),
+            requested_time='14:00:00',
+            purpose='Architecture Planning',
+            status='Accepted'
+        )
+        url = reverse('community:mentorship_room', args=[req.id])
+        self.client.force_login(self.mentor_user)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        # Mentor sees mentor sidebar, not student tools
+        self.assertContains(res, 'mentor-sidebar')
+        self.assertContains(res, 'Mentor Overview')
+        self.assertContains(res, 'Incoming Requests')
+        self.assertNotContains(res, 'My Roadmap')
+        self.assertNotContains(res, 'Interview Prep')
+        self.assertNotContains(res, 'Job Tracker')
 
     def test_room_active_state_during_session_window(self):
         # Session scheduled for right now

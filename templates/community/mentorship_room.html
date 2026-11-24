@@ -73,23 +73,164 @@
         border: 1px solid #1e293b;
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
     }
+    
+    /* Preflight Cards System & Dark Mode Hardening */
     .preflight-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 20px;
+        background: var(--dash-surface, #ffffff);
+        border: 1px solid var(--dash-border, #e2e8f0);
+        border-radius: 14px;
+        padding: 24px;
+        color: var(--dash-text, #0f172a);
+        box-shadow: var(--dash-shadow-card, 0 2px 4px rgba(0, 0, 0, 0.05));
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
-    [data-bs-theme="dark"] .preflight-box {
-        background: #1e293b;
-        border-color: #334155;
+    .preflight-box h3,
+    .preflight-box .h6 {
+        color: var(--dash-text, #0f172a);
+    }
+    .preflight-box ul,
+    .preflight-box li,
+    .preflight-box span {
+        color: var(--dash-text, #1e293b);
+    }
+    .preflight-box .text-muted {
+        color: var(--dash-text-subtle, #64748b) !important;
+    }
+
+    .device-preview-placeholder {
+        width: 100%;
+        max-width: 320px;
+        height: 190px;
+        border-radius: 10px;
+        background: var(--dash-surface-muted, #f8fafc);
+        border: 2px dashed var(--dash-border, #cbd5e1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--dash-text-subtle, #64748b);
+        padding: 1rem;
+        text-align: center;
+        font-size: 0.85rem;
     }
     .device-preview-video {
         width: 100%;
         max-width: 320px;
-        height: 200px;
+        height: 190px;
         border-radius: 10px;
         background: #0f172a;
         object-fit: cover;
+    }
+
+    /* Full Explicit Dark Mode Coverage */
+    html[data-theme='dark'] .preflight-box,
+    [data-theme='dark'] .preflight-box,
+    [data-bs-theme='dark'] .preflight-box {
+        background: var(--dash-surface, #111115) !important;
+        border-color: var(--dash-border, #27272a) !important;
+        color: var(--dash-text, #f8fafc) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme='dark'] .preflight-box h3,
+    html[data-theme='dark'] .preflight-box .h6,
+    [data-theme='dark'] .preflight-box h3,
+    [data-theme='dark'] .preflight-box .h6 {
+        color: #f8fafc !important;
+    }
+    html[data-theme='dark'] .preflight-box ul,
+    html[data-theme='dark'] .preflight-box li,
+    html[data-theme='dark'] .preflight-box span,
+    html[data-theme='dark'] .preflight-box p,
+    [data-theme='dark'] .preflight-box ul,
+    [data-theme='dark'] .preflight-box li,
+    [data-theme='dark'] .preflight-box span,
+    [data-theme='dark'] .preflight-box p {
+        color: #e2e8f0 !important;
+    }
+    html[data-theme='dark'] .preflight-box strong,
+    [data-theme='dark'] .preflight-box strong {
+        color: #ffffff !important;
+    }
+    html[data-theme='dark'] .preflight-box .text-muted,
+    [data-theme='dark'] .preflight-box .text-muted {
+        color: #94a3b8 !important;
+    }
+    html[data-theme='dark'] .device-preview-placeholder,
+    [data-theme='dark'] .device-preview-placeholder,
+    [data-bs-theme='dark'] .device-preview-placeholder {
+        background: #09090b !important;
+        border-color: #27272a !important;
+        color: #94a3b8 !important;
+    }
+    html[data-theme='dark'] .preflight-box .dash-btn-outline,
+    [data-theme='dark'] .preflight-box .dash-btn-outline {
+        background-color: rgba(255, 255, 255, 0.06) !important;
+        border-color: #3f3f46 !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme='dark'] .preflight-box .dash-btn-outline:hover,
+    [data-theme='dark'] .preflight-box .dash-btn-outline:hover {
+        background-color: rgba(255, 255, 255, 0.12) !important;
+        border-color: #52525b !important;
+        color: #ffffff !important;
+    }
+
+    /* Dark Mode Coverage for Overview, Active & Expired Cards */
+    html[data-theme='dark'] .community-card,
+    [data-theme='dark'] .community-card,
+    [data-bs-theme='dark'] .community-card {
+        background: var(--dash-surface, #111115) !important;
+        border-color: var(--dash-border, #27272a) !important;
+        color: var(--dash-text, #f8fafc) !important;
+    }
+    html[data-theme='dark'] .community-card h1,
+    html[data-theme='dark'] .community-card h2,
+    html[data-theme='dark'] .community-card h3,
+    html[data-theme='dark'] .community-card .text-body,
+    [data-theme='dark'] .community-card h1,
+    [data-theme='dark'] .community-card h2,
+    [data-theme='dark'] .community-card h3,
+    [data-theme='dark'] .community-card .text-body {
+        color: #f8fafc !important;
+    }
+    html[data-theme='dark'] .community-card .text-muted,
+    [data-theme='dark'] .community-card .text-muted {
+        color: #94a3b8 !important;
+    }
+    html[data-theme='dark'] .bg-body-secondary,
+    [data-theme='dark'] .bg-body-secondary {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+    }
+    html[data-theme='dark'] .bg-body-tertiary,
+    [data-theme='dark'] .bg-body-tertiary {
+        background-color: var(--dash-surface-muted, #18181c) !important;
+    }
+    html[data-theme='dark'] .dash-back-link,
+    [data-theme='dark'] .dash-back-link {
+        color: #94a3b8 !important;
+    }
+    html[data-theme='dark'] .dash-back-link:hover,
+    [data-theme='dark'] .dash-back-link:hover {
+        color: #38bdf8 !important;
+    }
+    html[data-theme='dark'] .card,
+    [data-theme='dark'] .card {
+        background: var(--dash-surface, #111115) !important;
+        border-color: var(--dash-border, #27272a) !important;
+        color: var(--dash-text, #f8fafc) !important;
+    }
+    html[data-theme='dark'] .form-label,
+    [data-theme='dark'] .form-label {
+        color: #f8fafc !important;
+    }
+    html[data-theme='dark'] .form-control,
+    html[data-theme='dark'] .form-select,
+    [data-theme='dark'] .form-control,
+    [data-theme='dark'] .form-select {
+        background-color: #18181c !important;
+        border-color: #27272a !important;
+        color: #f8fafc !important;
     }
 </style>
 {% endblock %}
@@ -101,30 +242,40 @@
 
 {% block main_wrapper %}
 <div class="dash-shell">
-    <!-- Left Navigation Sidebar -->
-    {% include "core/partials/dashboard_sidebar.html" %}
+    <!-- Dynamic Navigation Sidebar: Mentor Sidebar for Mentors, Student Sidebar for Students -->
+    {% if is_mentor or active_workspace == 'mentor' %}
+        {% include "community/partials/mentor_sidebar.html" %}
+    {% else %}
+        {% include "core/partials/dashboard_sidebar.html" %}
+    {% endif %}
 
     <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
     <div class="dash-main">
-        <!-- Mobile Header Bar -->
+        <!-- Top Header Bar on Mobile -->
         <header class="dash-mobile-header" aria-label="Mobile Header">
             <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
                 <i class="bi bi-list"></i>
             </button>
-            <a href="{% url 'dashboard' %}" class="dash-brand">
+            <a href="{% if is_mentor or active_workspace == 'mentor' %}{% url 'community:mentor_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="dash-brand">
                 <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
                 <span>Career<span class="dash-brand-accent">Catalyst</span></span>
             </a>
             <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
-                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+                {% if is_mentor and mentor_profile and mentor_profile.profile_photo %}
+                    <img src="{{ mentor_profile.profile_photo.url }}" alt="{{ user.username }}">
+                {% elif profile and profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="{{ user.username }}">
+                {% else %}
+                    <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+                {% endif %}
             </div>
         </header>
 
         <main class="dash-content">
             <!-- Breadcrumb Navigation -->
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                {% if is_mentor %}
+                {% if is_mentor or active_workspace == 'mentor' %}
                 <a href="{% url 'community:mentor_requests' %}" class="dash-back-link">
                     <i class="bi bi-arrow-left"></i>
                     <span>Back to Mentor Requests</span>
@@ -207,7 +358,7 @@
                     </span>
                 </div>
                 <h2 class="h3 fw-bold mb-2 text-white">The Virtual Meeting Room is Locked</h2>
-                <p class="text-slate-300 mx-auto mb-4" style="max-width: 580px; color: #cbd5e1; font-size: 0.95rem;">
+                <p class="mx-auto mb-4" style="max-width: 580px; color: #cbd5e1; font-size: 0.95rem;">
                     For privacy and session integrity, this room opens automatically <strong>5 minutes before</strong> your scheduled time (at <strong>{{ unlock_time|date:"g:i A" }}</strong>). 
                     Please keep this page open; it will unlock automatically.
                 </p>
@@ -232,7 +383,7 @@
                     </div>
                 </div>
 
-                <div class="text-slate-400 small" style="color: #94a3b8;">
+                <div class="small" style="color: #94a3b8;">
                     <i class="bi bi-arrow-repeat me-1"></i> Page will automatically refresh the moment the room opens.
                 </div>
             </div>
@@ -241,10 +392,10 @@
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
                     <div class="preflight-box h-100">
-                        <h3 class="h6 fw-bold text-body mb-3 d-flex align-items-center gap-2">
+                        <h3 class="h6 fw-bold mb-3 d-flex align-items-center gap-2">
                             <i class="bi bi-clipboard-check text-primary fs-5"></i> Session Preparation Checklist
                         </h3>
-                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2 small text-body">
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2 small">
                             <li class="d-flex align-items-start gap-2">
                                 <i class="bi bi-check-circle-fill text-success mt-0.5"></i>
                                 <span><strong>Punctuality:</strong> Join as soon as the countdown completes to maximize your 45-minute discussion.</span>
@@ -267,15 +418,15 @@
 
                 <div class="col-lg-6">
                     <div class="preflight-box h-100">
-                        <h3 class="h6 fw-bold text-body mb-2 d-flex align-items-center gap-2">
+                        <h3 class="h6 fw-bold mb-2 d-flex align-items-center gap-2">
                             <i class="bi bi-camera-video text-primary fs-5"></i> Camera &amp; Mic Hardware Test
                         </h3>
                         <p class="small text-muted mb-3">Test your local webcam and microphone right now so you're ready when the room unlocks.</p>
                         
                         <div class="d-flex flex-column align-items-center">
                             <video id="devicePreview" class="device-preview-video mb-3 d-none" autoplay playsinline muted></video>
-                            <div id="devicePreviewPlaceholder" class="device-preview-video mb-3 d-flex align-items-center justify-content-center text-muted small p-3 text-center border">
-                                <span>Click below to grant temporary browser camera &amp; mic permission.</span>
+                            <div id="devicePreviewPlaceholder" class="device-preview-placeholder mb-3">
+                                <span><i class="bi bi-camera-video me-1"></i> Click below to grant temporary browser camera &amp; mic permission.</span>
                             </div>
                             <div class="d-flex gap-2">
                                 <button type="button" class="dash-btn dash-btn-outline dash-btn-sm" id="btnTestDevices">
@@ -314,7 +465,7 @@
                         <a href="{{ jitsi_url }}" target="_blank" rel="noopener noreferrer" class="dash-btn dash-btn-outline dash-btn-sm">
                             <i class="bi bi-arrows-angle-expand me-1"></i> Open in New Tab
                         </a>
-                        {% if is_mentor %}
+                        {% if is_mentor or active_workspace == 'mentor' %}
                         <a href="{% url 'community:mentor_requests' %}" class="dash-btn dash-btn-danger dash-btn-sm" onclick="return confirm('Exit this mentorship meeting room?');">
                             <i class="bi bi-telephone-x me-1"></i> Leave Room
                         </a>
@@ -400,7 +551,7 @@
                 {% endif %}
 
                 <div class="d-flex justify-content-center gap-2">
-                    {% if is_mentor %}
+                    {% if is_mentor or active_workspace == 'mentor' %}
                     <a href="{% url 'community:mentor_requests' %}" class="dash-btn dash-btn-primary">
                         <i class="bi bi-arrow-left me-1"></i> Return to Requests
                     </a>
@@ -425,7 +576,7 @@
                 <p class="text-muted mx-auto mb-4" style="max-width: 500px;">
                     This booking was cancelled or declined. The virtual meeting room is not available.
                 </p>
-                {% if is_mentor %}
+                {% if is_mentor or active_workspace == 'mentor' %}
                 <a href="{% url 'community:mentor_requests' %}" class="dash-btn dash-btn-primary">
                     Return to Mentor Requests
                 </a>

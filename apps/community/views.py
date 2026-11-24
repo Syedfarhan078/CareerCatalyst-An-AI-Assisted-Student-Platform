@@ -1228,6 +1228,14 @@ def mentorship_room_view(request, pk):
     if not (is_student or is_mentor or is_staff):
         return HttpResponseForbidden("You are not authorized to access this mentorship session room.")
 
+    if is_mentor:
+        request.session['active_role'] = 'mentor'
+        mentor_profile = getattr(request.user, 'mentor_profile', None) or request_obj.mentor
+        is_approved_mentor = bool(mentor_profile and mentor_profile.status == 'Approved' and mentor_profile.verified)
+    else:
+        mentor_profile = getattr(request.user, 'mentor_profile', None)
+        is_approved_mentor = False
+
     ensure_room_token(request_obj)
 
     # Time calculations
@@ -1306,6 +1314,8 @@ def mentorship_room_view(request, pk):
         "user_display_name": user_display_name,
         "is_mentor": is_mentor,
         "is_student": is_student,
+        "is_approved_mentor": is_approved_mentor,
+        "mentor_profile": mentor_profile,
         "has_reviewed": has_reviewed,
         "review_form": review_form,
         "custom_external_link": custom_external_link,
