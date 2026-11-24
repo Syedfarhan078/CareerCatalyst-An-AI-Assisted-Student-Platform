@@ -774,8 +774,10 @@
         const oldStatus = card ? card.getAttribute('data-status') : null;
 
         if (card && oldStatus !== newStatus) {
+            // Snapshot previous DOM position for graceful rollback
+            const prevSibling = card.nextElementSibling;
             moveCardDom(draggedAppId, oldStatus, newStatus);
-            sendUpdateStatus(draggedAppId, newStatus);
+            sendUpdateStatus(draggedAppId, newStatus, oldStatus, prevSibling, false);
         }
     }
 
@@ -786,9 +788,10 @@
         const card = document.getElementById(`app-card-${appId}`);
         const oldStatus = card ? card.getAttribute('data-status') : null;
         if (card && oldStatus !== newStatus) {
+            const prevSibling = card.nextElementSibling;
             moveCardDom(appId, oldStatus, newStatus);
+            sendUpdateStatus(appId, newStatus, oldStatus, prevSibling, true);
         }
-        sendUpdateStatus(appId, newStatus, true);
     }
 
     function moveCardDom(appId, oldStatus, newStatus) {
@@ -797,40 +800,96 @@
         const oldBody = oldStatus ? document.getElementById(`col-body-${oldStatus}`) : null;
 
         if (card && targetBody) {
-            // Remove empty placeholder from target column if present
-            const placeholder = targetBody.querySelector('.tracker-col-empty');
-            if (placeholder) placeholder.remove();
+            const applyMove = () => {
+                // Remove empty placeholder from target column if present
+                const placeholder = targetBody.querySelector('.tracker-col-empty');
+                if (placeholder) placeholder.remove();
 
-            // Move card to target column
-            targetBody.appendChild(card);
-            card.setAttribute('data-status', newStatus);
+                // Move card to target column in 0ms (optimistic UI)
+                targetBody.appendChild(card);
+                card.setAttribute('data-status', newStatus);
 
-            // Update column count badges
-            if (oldStatus) {
+                // Update column count badges
+                if (oldStatus) {
+                    const oldCountBadge = document.getElementById(`count-${oldStatus}`);
+                    if (oldCountBadge) {
+                        const oldCount = Math.max(0, parseInt(oldCountBadge.innerText || '0', 10) - 1);
+                        oldCountBadge.innerText = oldCount;
+                    }
+                    // Check if old column is now empty
+                    if (oldBody && oldBody.querySelectorAll('.tracker-card').length === 0) {
+                        oldBody.innerHTML = `
+                            <div class="tracker-col-empty">
+                                <i class="bi bi-inbox"></i>
+                                <span>No applications in this stage</span>
+                            </div>`;
+                    }
+                }
+
+                const newCountBadge = document.getElementById(`count-${newStatus}`);
+                if (newCountBadge) {
+                    const newCount = parseInt(newCountBadge.innerText || '0', 10) + 1;
+                    newCountBadge.innerText = newCount;
+                }
+            };
+
+            if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.startViewTransition(applyMove);
+            } else {
+                applyMove();
+            }
+        }
+    }
+
+    function rollbackCardDom(appId, oldStatus, newStatus, prevSibling) {
+        const card = document.getElementById(`app-card-${appId}`);
+        const oldBody = document.getElementById(`col-body-${oldStatus}`);
+        const newBody = document.getElementById(`col-body-${newStatus}`);
+
+        if (card && oldBody) {
+            const applyRollback = () => {
+                const placeholder = oldBody.querySelector('.tracker-col-empty');
+                if (placeholder) placeholder.remove();
+
+                if (prevSibling && prevSibling.parentNode === oldBody) {
+                    oldBody.insertBefore(card, prevSibling);
+                } else {
+                    oldBody.appendChild(card);
+                }
+                card.setAttribute('data-status', oldStatus);
+
+                // Roll back count badges
                 const oldCountBadge = document.getElementById(`count-${oldStatus}`);
                 if (oldCountBadge) {
-                    const oldCount = Math.max(0, parseInt(oldCountBadge.innerText || '0', 10) - 1);
-                    oldCountBadge.innerText = oldCount;
+                    oldCountBadge.innerText = parseInt(oldCountBadge.innerText || '0', 10) + 1;
                 }
-                // Check if old column is now empty
-                if (oldBody && oldBody.querySelectorAll('.tracker-card').length === 0) {
-                    oldBody.innerHTML = `
+                const newCountBadge = document.getElementById(`count-${newStatus}`);
+                if (newCountBadge) {
+                    newCountBadge.innerText = Math.max(0, parseInt(newCountBadge.innerText || '0', 10) - 1);
+                }
+
+                // Restore empty placeholder if new column became empty
+                if (newBody && newBody.querySelectorAll('.tracker-card').length === 0) {
+                    newBody.innerHTML = `
                         <div class="tracker-col-empty">
                             <i class="bi bi-inbox"></i>
                             <span>No applications in this stage</span>
                         </div>`;
                 }
-            }
 
-            const newCountBadge = document.getElementById(`count-${newStatus}`);
-            if (newCountBadge) {
-                const newCount = parseInt(newCountBadge.innerText || '0', 10) + 1;
-                newCountBadge.innerText = newCount;
+                card.classList.add('optimistic-rollback-shake');
+                setTimeout(() => card.classList.remove('optimistic-rollback-shake'), 600);
+            };
+
+            if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.startViewTransition(applyRollback);
+            } else {
+                applyRollback();
             }
         }
     }
 
-    function sendUpdateStatus(appId, newStatus, shouldReloadIfTable = false) {
+    function sendUpdateStatus(appId, newStatus, oldStatus = null, prevSibling = null, shouldReloadIfTable = false) {
         fetch(`/tracker/api/update-status/${appId}/`, {
             method: 'POST',
             headers: {
@@ -839,9 +898,15 @@
             },
             body: JSON.stringify({ status: newStatus })
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        })
         .then(data => {
-            if (data.success && data.is_offer) {
+            if (!data.success) {
+                throw new Error(data.message || 'Server rejected status update');
+            }
+            if (data.is_offer) {
                 // Trigger Confetti Celebration (respecting prefers-reduced-motion)
                 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                 if (!prefersReducedMotion && typeof confetti === 'function') {
@@ -857,7 +922,14 @@
             }
         })
         .catch(err => {
-            console.error('Failed to update status:', err);
+            console.error('Optimistic status update failed:', err);
+            // Gracefully roll back to previous column & position
+            if (oldStatus) {
+                rollbackCardDom(appId, oldStatus, newStatus, prevSibling);
+            }
+            if (typeof window.showToast === 'function') {
+                window.showToast("Network blip: Could not update application stage. Rolled back.", "warning");
+            }
         });
     }
 

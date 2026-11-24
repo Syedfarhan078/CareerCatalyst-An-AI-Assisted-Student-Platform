@@ -1005,4 +1005,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: true });
     })();
 
+    // =========================================================================
+    // Native Browser View Transitions & Morph System
+    // Enables seamless card-to-detail morphs and zero-flash transitions
+    // =========================================================================
+    window.withViewTransition = function(fn) {
+        if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return document.startViewTransition(fn);
+        }
+        return fn();
+    };
+
+    // Dynamically tag clicked cards for seamless cross-page morphing
+    document.addEventListener('click', (e) => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        // Mentor Card -> Mentor Detail Header Morph
+        const mentorTrigger = e.target.closest('.mentor-card a, a[href*="/community/mentor/"]');
+        if (mentorTrigger && !e.ctrlKey && !e.metaKey && !e.shiftKey && mentorTrigger.target !== '_blank') {
+            const card = mentorTrigger.closest('.mentor-card');
+            if (card) {
+                document.querySelectorAll('.mentor-card-active-morph').forEach(el => el.classList.remove('mentor-card-active-morph'));
+                card.classList.add('mentor-card-active-morph');
+            }
+        }
+
+        // Roadmap Card -> Roadmap Detail Header Morph
+        const roadmapTrigger = e.target.closest('.roadmap-catalog-card a, a[href*="/roadmaps/learning/"]');
+        if (roadmapTrigger && !e.ctrlKey && !e.metaKey && !e.shiftKey && roadmapTrigger.target !== '_blank') {
+            const card = roadmapTrigger.closest('.roadmap-catalog-card');
+            if (card) {
+                document.querySelectorAll('.roadmap-card-active-morph').forEach(el => el.classList.remove('roadmap-card-active-morph'));
+                card.classList.add('roadmap-card-active-morph');
+            }
+        }
+    }, { passive: true });
+
 });
