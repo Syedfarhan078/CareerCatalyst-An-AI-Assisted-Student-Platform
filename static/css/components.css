@@ -2565,8 +2565,133 @@ html[data-theme="dark"] .dash-empty-state .dash-empty-icon {
     animation: milestonePop 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* =========================================================================
+   Cursor-Following Ambient Border Beams (The Vercel / Stripe Aesthetic)
+   Precision radial gradient beam tracking user cursor along 1px card boundary
+   ========================================================================= */
+.ambient-beam-card,
+.dash-next-step-card,
+.mentor-card,
+.roadmap-catalog-card,
+.roadmap-detail-header-card,
+.dash-panel-card,
+.ats-report-hero,
+[data-ambient-beam] {
+    --mouse-x: -999px;
+    --mouse-y: -999px;
+    --beam-radius: 280px;
+    --beam-border-color: rgba(37, 99, 235, 0.72);
+    --beam-surface-color: rgba(37, 99, 235, 0.038);
+    position: relative;
+}
+
+/* Ambient surface glow tracking beneath the cursor */
+@media (hover: hover) and (pointer: fine) {
+    .ambient-beam-card,
+    .dash-next-step-card,
+    .mentor-card,
+    .roadmap-catalog-card,
+    .roadmap-detail-header-card,
+    .dash-panel-card,
+    .ats-report-hero,
+    [data-ambient-beam] {
+        background-image: radial-gradient(
+            380px circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
+            var(--beam-surface-color),
+            transparent 75%
+        );
+    }
+}
+
+/* Dark Mode: Luminescent Sky-Blue Beam with Electric Contrast against #121216 */
+html[data-theme='dark'] .ambient-beam-card,
+html[data-theme='dark'] .dash-next-step-card,
+html[data-theme='dark'] .mentor-card,
+html[data-theme='dark'] .roadmap-catalog-card,
+html[data-theme='dark'] .roadmap-detail-header-card,
+html[data-theme='dark'] .dash-panel-card,
+html[data-theme='dark'] .ats-report-hero,
+html[data-theme='dark'] [data-ambient-beam],
+[data-bs-theme='dark'] .ambient-beam-card,
+[data-bs-theme='dark'] .dash-next-step-card,
+[data-bs-theme='dark'] .mentor-card,
+[data-bs-theme='dark'] .roadmap-catalog-card,
+[data-bs-theme='dark'] .roadmap-detail-header-card,
+[data-bs-theme='dark'] .dash-panel-card,
+[data-bs-theme='dark'] .ats-report-hero,
+[data-bs-theme='dark'] [data-ambient-beam] {
+    --beam-border-color: rgba(96, 165, 250, 0.88);
+    --beam-surface-color: rgba(59, 130, 246, 0.065);
+}
+
+/* 1px Border Beam Pseudo-Element: Only on desktop/pointer hardware */
+@media (hover: hover) and (pointer: fine) {
+    .ambient-beam-card::after,
+    .dash-next-step-card::after,
+    .mentor-card::after,
+    .roadmap-catalog-card::after,
+    .roadmap-detail-header-card::after,
+    .dash-panel-card::after,
+    .ats-report-hero::after,
+    [data-ambient-beam]::after {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border-radius: inherit;
+        padding: 1.5px;
+        background: radial-gradient(
+            var(--beam-radius, 280px) circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
+            var(--beam-border-color),
+            transparent 70%
+        );
+        -webkit-mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 2;
+    }
+
+    .ambient-beam-card:hover::after,
+    .dash-next-step-card:hover::after,
+    .mentor-card:hover::after,
+    .roadmap-catalog-card:hover::after,
+    .roadmap-detail-header-card:hover::after,
+    .dash-panel-card:hover::after,
+    .ats-report-hero:hover::after,
+    [data-ambient-beam]:hover::after {
+        opacity: 1;
+    }
+}
+
 /* Accessibility: High-precision reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+    .ambient-beam-card::after,
+    .dash-next-step-card::after,
+    .mentor-card::after,
+    .roadmap-catalog-card::after,
+    .roadmap-detail-header-card::after,
+    .dash-panel-card::after,
+    .ats-report-hero::after,
+    [data-ambient-beam]::after {
+        display: none !important;
+    }
+    .ambient-beam-card,
+    .dash-next-step-card,
+    .mentor-card,
+    .roadmap-catalog-card,
+    .roadmap-detail-header-card,
+    .dash-panel-card,
+    .ats-report-hero,
+    [data-ambient-beam] {
+        background-image: none !important;
+    }
     .milestone-celebrate {
         animation: none !important;
         transform: none !important;

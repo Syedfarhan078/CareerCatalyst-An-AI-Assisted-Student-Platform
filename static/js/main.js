@@ -942,4 +942,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 
+    // =========================================================================
+    // Cursor-Following Ambient Border Beam Pointer Tracker (The Vercel / Stripe Aesthetic)
+    // 60/120fps hardware-accelerated tracking, zero layout reflows, passive listener
+    // =========================================================================
+    (function initAmbientBorderBeams() {
+        // Only run on fine-pointer devices (desktop mice / trackpads)
+        if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        let activeCard = null;
+        let cachedRect = null;
+        let pendingRaf = null;
+        let mouseX = 0;
+        let mouseY = 0;
+
+        const SELECTOR = '.ambient-beam-card, .dash-next-step-card, .mentor-card, .roadmap-catalog-card, .roadmap-detail-header-card, .dash-panel-card, .ats-report-hero, [data-ambient-beam]';
+
+        function updateCoords(e) {
+            if (!activeCard || !cachedRect) return;
+            mouseX = e.clientX - cachedRect.left;
+            mouseY = e.clientY - cachedRect.top;
+
+            if (!pendingRaf) {
+                pendingRaf = requestAnimationFrame(() => {
+                    if (activeCard) {
+                        activeCard.style.setProperty('--mouse-x', `${mouseX}px`);
+                        activeCard.style.setProperty('--mouse-y', `${mouseY}px`);
+                    }
+                    pendingRaf = null;
+                });
+            }
+        }
+
+        document.addEventListener('pointerover', (e) => {
+            const card = e.target.closest(SELECTOR);
+            if (!card) return;
+            if (activeCard !== card) {
+                activeCard = card;
+                cachedRect = card.getBoundingClientRect();
+                updateCoords(e);
+            }
+        }, { passive: true });
+
+        document.addEventListener('pointermove', updateCoords, { passive: true });
+
+        document.addEventListener('pointerout', (e) => {
+            if (activeCard && (!e.relatedTarget || !activeCard.contains(e.relatedTarget))) {
+                activeCard = null;
+                cachedRect = null;
+                if (pendingRaf) {
+                    cancelAnimationFrame(pendingRaf);
+                    pendingRaf = null;
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('scroll', () => {
+            if (activeCard) {
+                cachedRect = activeCard.getBoundingClientRect();
+            }
+        }, { passive: true });
+    })();
+
 });
