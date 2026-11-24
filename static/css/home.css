@@ -48,11 +48,11 @@ html[data-theme="dark"] .home-page,
 html[data-theme="dark"] body.home-page {
     --home-bg:              var(--bg);
     --home-surface:         var(--card-bg);
-    --home-surface-subtle:  #151519;
-    --home-surface-hover:   #18181C;
+    --home-surface-subtle:  #18181E;
+    --home-surface-hover:   #18181E;
     --home-card-bg:         var(--card-bg);
     --home-border:          var(--border);
-    --home-border-subtle:   #18181C;
+    --home-border-subtle:   rgba(255, 255, 255, 0.05);
     --home-border-strong:   var(--border-strong);
     --home-text:            var(--text);
     --home-text-muted:      var(--text-muted);
@@ -66,8 +66,8 @@ html[data-theme="dark"] body.home-page {
     --home-warning:         var(--warning);
     --home-warning-subtle:  rgba(245, 158, 11, 0.15);
     --home-shadow-sm:       0 1px 2px rgba(0, 0, 0, 0.4);
-    --home-shadow-md:       0 4px 16px rgba(0, 0, 0, 0.4);
-    --home-shadow-lg:       0 16px 32px rgba(0, 0, 0, 0.5);
+    --home-shadow-md:       0 1px 0 0 rgba(255, 255, 255, 0.04) inset, 0 4px 16px rgba(0, 0, 0, 0.4);
+    --home-shadow-lg:       0 1px 0 0 rgba(255, 255, 255, 0.06) inset, 0 16px 32px rgba(0, 0, 0, 0.5);
 
     background-color: var(--home-bg) !important;
     color: var(--home-text);

@@ -44,8 +44,10 @@ body.auth-page #chatbot-window {
 }
 
 html[data-theme="dark"] .auth-header {
-    background-color: #111115;
-    border-bottom: 1px solid #27272A;
+    background-color: rgba(18, 18, 22, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .auth-header-container {
@@ -167,9 +169,9 @@ html[data-theme="dark"] .theme-toggle-btn:hover {
 
 html[data-theme="dark"] .auth-card-unified,
 html[data-theme="dark"] .auth-card {
-    background-color: #111115;
-    border-color: #27272A;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+    background-color: #121216;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 8px 30px rgba(0, 0, 0, 0.5);
 }
 
 @media (max-width: 575.98px) {
@@ -236,8 +238,8 @@ html[data-theme="dark"] .auth-brand img {
 }
 
 html[data-theme="dark"] .auth-tabs-nav {
-    background-color: #18181B;
-    border-color: #27272A;
+    background-color: #18181E;
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .auth-tab-btn {
@@ -277,10 +279,10 @@ html[data-theme="dark"] .auth-tab-btn:hover {
 }
 
 html[data-theme="dark"] .auth-tab-btn.active {
-    background-color: #27272A;
+    background-color: #202028;
     color: #F8FAFC;
-    border-color: #3F3F46;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .auth-tab-btn:focus-visible {
@@ -421,15 +423,15 @@ html[data-theme="dark"] .auth-label {
 html[data-theme="dark"] .auth-input,
 html[data-theme="dark"] .auth-card-unified .form-control,
 html[data-theme="dark"] .auth-card .form-control {
-    background-color: #111115;
-    border-color: #27272A;
-    color: #F8FAFC;
+    background-color: #18181E;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #CBD5E1;
 }
 
 html[data-theme="dark"] .auth-input::placeholder,
 html[data-theme="dark"] .auth-card-unified .form-control::placeholder,
 html[data-theme="dark"] .auth-card .form-control::placeholder {
-    color: #6B7280;
+    color: #94A3B8;
 }
 
 html[data-theme="dark"] .auth-input:focus,
@@ -437,7 +439,7 @@ html[data-theme="dark"] .auth-card-unified .form-control:focus,
 html[data-theme="dark"] .auth-card .form-control:focus {
     border-color: #3B82F6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-    background-color: #111115;
+    background-color: #18181E;
     color: #F8FAFC;
 }
 
@@ -751,13 +753,13 @@ html[data-theme="dark"] .auth-divider::after {
 }
 
 html[data-theme="dark"] .btn-auth-google {
-    background-color: #18181b;
-    border-color: #27272a;
-    color: #f3f4f6;
+    background-color: #18181E;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #F8FAFC;
 }
 
 html[data-theme="dark"] .btn-auth-google:hover {
-    background-color: #27272a;
-    border-color: #3f3f46;
-    color: #ffffff;
+    background-color: #202028;
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #FFFFFF;
 }
