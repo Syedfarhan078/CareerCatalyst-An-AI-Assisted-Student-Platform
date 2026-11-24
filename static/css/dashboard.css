@@ -547,13 +547,19 @@ html[data-theme='dark'] .dash-sidebar-overlay {
    -------------------------------------------------------------------------- */
 .dash-next-step-card {
     background-color: var(--dash-surface);
-    border: 1px solid var(--dash-primary-border);
+    border: 1px solid rgba(37, 99, 235, 0.28);
     border-radius: var(--dash-radius-lg);
     padding: 1.6rem 1.75rem;
     margin-bottom: 2rem;
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25), 0 8px 25px -5px rgba(37, 99, 235, 0.12);
     position: relative;
     overflow: hidden;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.dash-next-step-card:hover {
+    border-color: rgba(37, 99, 235, 0.4);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35), 0 12px 30px -4px rgba(37, 99, 235, 0.18);
 }
 
 .dash-next-step-card::before {
@@ -563,7 +569,8 @@ html[data-theme='dark'] .dash-sidebar-overlay {
     left: 0;
     bottom: 0;
     width: 4px;
-    background-color: var(--dash-primary);
+    background: linear-gradient(180deg, #2563EB 0%, #3B82F6 100%);
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
 }
 
 .dash-step-top {
@@ -636,8 +643,14 @@ html[data-theme='dark'] .dash-step-context,
 html[data-theme='dark'] .dash-next-step-card,
 [data-bs-theme='dark'] .dash-next-step-card {
     background-color: #121216;
-    border-color: rgba(59, 130, 246, 0.35);
-    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 8px 24px rgba(0, 0, 0, 0.45);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.28), 0 8px 25px -5px rgba(37, 99, 235, 0.22), 0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+html[data-theme='dark'] .dash-next-step-card:hover,
+[data-bs-theme='dark'] .dash-next-step-card:hover {
+    border-color: rgba(59, 130, 246, 0.55);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.38), 0 12px 32px -4px rgba(37, 99, 235, 0.32), 0 1px 0 0 rgba(255, 255, 255, 0.08) inset;
 }
 
 .dash-step-footer {
@@ -733,6 +746,12 @@ html[data-theme='dark'] .dash-next-step-card,
     box-shadow: var(--dash-shadow-card);
 }
 
+html[data-theme='dark'] .dash-journey-track-wrapper,
+[data-bs-theme='dark'] .dash-journey-track-wrapper {
+    background-color: #121216;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Connected Horizontal Progress Line */
 .dash-journey-line {
     position: absolute;
@@ -766,18 +785,22 @@ html[data-theme='dark'] .dash-next-step-card,
     flex-direction: column;
     align-items: flex-start;
     position: relative;
-    padding: 0.65rem 0.6rem;
+    padding: 0.75rem 0.65rem 0.7rem;
     border-radius: var(--dash-radius-sm);
     text-decoration: none;
     color: inherit;
-    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.2s ease;
     border: 1px solid transparent;
-    background-color: var(--dash-surface);
+    background-color: transparent;
 }
 
 .dash-journey-node:hover {
     background-color: var(--dash-surface-hover);
     border-color: var(--dash-border);
+    transform: translateY(-1px);
 }
 
 .dash-journey-node:focus-visible {
@@ -785,76 +808,178 @@ html[data-theme='dark'] .dash-next-step-card,
     outline-offset: 2px;
 }
 
-/* Focus Node Highlight ("You are here") */
+/* Subtle Breathing Pulse Animation for Current Active Node */
+@keyframes nodeBreathePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
+    }
+    60% {
+        box-shadow: 0 0 0 8px rgba(37, 99, 235, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+    }
+}
+
+@keyframes nodeBreathePulseDark {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    60% {
+        box-shadow: 0 0 0 9px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+/* 1. Current Active Step (Only This Node Illuminates and Pulses) */
 .dash-journey-node.is-focus-step {
-    background-color: var(--dash-primary-subtle);
-    border-color: var(--dash-primary-border) !important;
+    background-color: rgba(37, 99, 235, 0.04);
+    border-color: rgba(37, 99, 235, 0.35) !important;
+    border-radius: var(--dash-radius-md, 8px);
+    box-shadow: 0 4px 18px -2px rgba(37, 99, 235, 0.12);
+    opacity: 1 !important;
+}
+
+html[data-theme='dark'] .dash-journey-node.is-focus-step {
+    background-color: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.45) !important;
+    box-shadow: 0 4px 22px -2px rgba(37, 99, 235, 0.26);
 }
 
 .dash-node-focus-tag {
     position: absolute;
     top: -0.65rem;
     left: 0.55rem;
-    background-color: var(--dash-primary);
+    background-color: #2563EB;
     color: #FFFFFF;
-    font-size: 0.625rem;
+    font-size: 0.6rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0.12rem 0.45rem;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.5rem;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    box-shadow: var(--dash-shadow-sm);
-    z-index: 3;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+    z-index: 5;
+}
+
+html[data-theme='dark'] .dash-node-focus-tag {
+    background-color: #3B82F6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.45);
 }
 
 .dash-node-indicator {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.725rem;
     font-weight: 700;
     margin-bottom: 0.55rem;
     flex-shrink: 0;
-    border: 2px solid transparent;
-    background-color: var(--dash-surface);
+    border: 1.5px solid transparent;
+    background-color: transparent;
     z-index: 2;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* State: Complete */
-.dash-journey-node.complete .dash-node-indicator {
-    background-color: var(--dash-success-subtle);
-    color: var(--dash-success);
-    border-color: var(--dash-success-border);
-}
-
-/* State: In Progress */
-.dash-journey-node.in-progress:not(.is-focus-step) .dash-node-indicator {
-    background-color: var(--dash-surface);
-    color: var(--dash-primary);
-    border-color: var(--dash-primary-border);
-}
-
-/* State: Focus / Current Active Step */
+/* Focus Indicator: Vibrant with Breathing Pulse Ring */
 .dash-journey-node.is-focus-step .dash-node-indicator,
 .dash-journey-node.current .dash-node-indicator {
-    background-color: var(--dash-primary);
+    width: 26px;
+    height: 26px;
+    background-color: #2563EB;
     color: #FFFFFF;
-    box-shadow: 0 0 0 4px var(--dash-primary-subtle);
-    border-color: #FFFFFF;
+    border: 2px solid #FFFFFF;
+    animation: nodeBreathePulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    z-index: 4;
 }
 
-/* State: Upcoming / Not Started */
+html[data-theme='dark'] .dash-journey-node.is-focus-step .dash-node-indicator,
+html[data-theme='dark'] .dash-journey-node.current .dash-node-indicator {
+    background-color: #3B82F6;
+    border-color: #121216;
+    animation: nodeBreathePulseDark 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 2. Completed Nodes: Crisp Subdued Green Checkmarks */
+.dash-journey-node.complete .dash-node-indicator {
+    width: 24px;
+    height: 24px;
+    background-color: rgba(16, 185, 129, 0.08);
+    color: #059669;
+    border: 1.5px solid rgba(16, 185, 129, 0.3);
+    font-size: 0.75rem;
+}
+
+html[data-theme='dark'] .dash-journey-node.complete .dash-node-indicator {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #34D399;
+    border-color: rgba(52, 211, 153, 0.35);
+}
+
+/* 3. In-Progress Non-Focus Nodes: Subdued & Non-Competing */
+.dash-journey-node.in-progress:not(.is-focus-step) {
+    opacity: 0.85;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.dash-journey-node.in-progress:not(.is-focus-step):hover {
+    opacity: 1;
+    background-color: var(--dash-surface-hover);
+    border-color: var(--dash-border);
+}
+
+.dash-journey-node.in-progress:not(.is-focus-step) .dash-node-indicator {
+    width: 24px;
+    height: 24px;
+    background-color: transparent;
+    color: #64748B;
+    border: 1.5px solid #CBD5E1;
+    font-size: 0.7rem;
+}
+
+html[data-theme='dark'] .dash-journey-node.in-progress:not(.is-focus-step) .dash-node-indicator {
+    color: #94A3B8;
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* 4. Upcoming / Not-Started Nodes: Muted & Neutral */
+.dash-journey-node.upcoming,
+.dash-journey-node.not-started {
+    opacity: 0.6;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.dash-journey-node.upcoming:hover,
+.dash-journey-node.not-started:hover {
+    opacity: 0.95;
+    background-color: var(--dash-surface-hover);
+    border-color: var(--dash-border);
+}
+
 .dash-journey-node.upcoming .dash-node-indicator,
 .dash-journey-node.not-started .dash-node-indicator {
-    background-color: var(--dash-surface-muted);
-    color: var(--dash-text-subtle);
-    border-color: var(--dash-border);
+    width: 24px;
+    height: 24px;
+    background-color: transparent;
+    color: #94A3B8;
+    border: 1.5px solid #CBD5E1;
+    font-size: 0.7rem;
+}
+
+html[data-theme='dark'] .dash-journey-node.upcoming .dash-node-indicator,
+html[data-theme='dark'] .dash-journey-node.not-started .dash-node-indicator {
+    color: #64748B;
+    border-color: rgba(255, 255, 255, 0.12);
 }
 
 .dash-node-title {
@@ -890,8 +1015,8 @@ html[data-theme='dark'] .dash-next-step-card,
 .dash-status-pill {
     display: inline-flex;
     align-items: center;
-    font-size: 0.675rem;
-    font-weight: 600;
+    font-size: 0.65rem;
+    font-weight: 500;
     padding: 0.15rem 0.45rem;
     border-radius: 4px;
     margin-top: auto;
@@ -899,28 +1024,52 @@ html[data-theme='dark'] .dash-next-step-card,
 }
 
 .dash-status-pill.pill-complete {
-    background-color: var(--dash-success-subtle);
-    color: var(--dash-success);
-    border: 1px solid var(--dash-success-border);
+    background-color: rgba(16, 185, 129, 0.08);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+html[data-theme='dark'] .dash-status-pill.pill-complete {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: #34D399;
+    border-color: rgba(52, 211, 153, 0.25);
 }
 
 .dash-status-pill.pill-focus {
-    background-color: var(--dash-primary);
+    background-color: #2563EB;
     color: #FFFFFF;
-    border: 1px solid var(--dash-primary);
-    font-weight: 700;
+    border: 1px solid #2563EB;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+}
+
+html[data-theme='dark'] .dash-status-pill.pill-focus {
+    background-color: #3B82F6;
+    border-color: #3B82F6;
+    color: #FFFFFF;
 }
 
 .dash-status-pill.pill-progress {
-    background-color: var(--dash-primary-subtle);
-    color: var(--dash-primary);
-    border: 1px solid var(--dash-primary-border);
+    background-color: rgba(100, 116, 139, 0.08);
+    color: #64748B;
+    border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+html[data-theme='dark'] .dash-status-pill.pill-progress {
+    background-color: rgba(148, 163, 184, 0.08);
+    color: #94A3B8;
+    border-color: rgba(148, 163, 184, 0.16);
 }
 
 .dash-status-pill.pill-upcoming {
-    background-color: var(--dash-surface-muted);
-    color: var(--dash-text-subtle);
-    border: 1px solid var(--dash-border);
+    background-color: transparent;
+    color: #94A3B8;
+    border: 1px solid #E2E8F0;
+}
+
+html[data-theme='dark'] .dash-status-pill.pill-upcoming {
+    color: #64748B;
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Legacy fallback */
