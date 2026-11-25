@@ -1381,9 +1381,13 @@ html[data-theme="dark"] .navbar-custom .btn-primary-custom:hover {
 .navbar-custom .navbar-toggler {
     border: 1px solid #E5E7EB;
     padding: 0.35rem 0.6rem;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 6px;
     background: transparent;
     box-shadow: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .navbar-custom .navbar-toggler:focus {
@@ -2751,6 +2755,58 @@ html[data-theme='dark'] [data-ambient-beam],
     animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Mobile Sidebar Touch & Stacking Safeguards (Guaranteed across all pages) */
+@media (max-width: 991.98px) {
+    .dash-mobile-header {
+        z-index: 1030;
+        touch-action: manipulation;
+    }
+    .dash-mobile-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        position: relative;
+        z-index: 2;
+    }
+    .dash-mobile-toggle i,
+    .dash-sidebar-close i {
+        pointer-events: none;
+    }
+    .dash-sidebar-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        min-height: 40px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .dash-sidebar {
+        z-index: 1050;
+    }
+    .dash-sidebar.open,
+    .dash-sidebar.show,
+    .dash-sidebar.active {
+        transform: translateX(0);
+    }
+    .dash-sidebar-overlay {
+        z-index: 1045;
+        cursor: pointer;
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .dash-sidebar-overlay.active,
+    .dash-sidebar-overlay.show {
+        display: block;
+    }
+}
+
 /* Accessibility: High-precision reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     ::view-transition-old(root),
@@ -2762,6 +2818,7 @@ html[data-theme='dark'] [data-ambient-beam],
     .optimistic-rollback-shake {
         animation: none !important;
     }
+    .milestone-celebrate {
         animation: none !important;
         transform: none !important;
     }

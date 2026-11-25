@@ -315,28 +315,6 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script>
     (function() {
-        // Mobile Sidebar Drawer
-        const toggleBtn = document.getElementById('sidebarToggleBtn');
-        const closeBtn = document.getElementById('sidebarCloseBtn');
-        const sidebar = document.getElementById('dashboardSidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-
-        function openSidebar() {
-            if (sidebar) sidebar.classList.add('open');
-            if (overlay) overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeSidebar() {
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
-        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-        if (overlay) overlay.addEventListener('click', closeSidebar);
-
         // Confetti Celebration with Accessible Reduced Motion Support
         function triggerWeekConfetti(isGrandCelebration) {
             const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

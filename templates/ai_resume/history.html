@@ -155,26 +155,3 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const toggleBtn = document.getElementById("sidebarToggleBtn");
-    const sidebar = document.getElementById("dashboardSidebar");
-    const overlay = document.getElementById("sidebarOverlay");
-    const closeBtn = document.getElementById("sidebarCloseBtn");
-
-    if (toggleBtn && sidebar && overlay) {
-        toggleBtn.addEventListener("click", function() {
-            sidebar.classList.add("active");
-            overlay.classList.add("active");
-        });
-        const closeSidebar = function() {
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
-        };
-        overlay.addEventListener("click", closeSidebar);
-        if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
-    }
-});
-</script>
-{% endblock %}

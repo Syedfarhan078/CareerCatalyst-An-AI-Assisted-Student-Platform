@@ -46,6 +46,106 @@
             var savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
+
+        // Unified Mobile Sidebar Drawer Controller (Immediate Delegated Binding)
+        (function initGlobalSidebarDrawer() {
+            if (window.__ccSidebarDrawerInit) return;
+            window.__ccSidebarDrawerInit = true;
+
+            function getDrawerEls() {
+                return {
+                    sidebar: document.getElementById('dashboardSidebar') || document.querySelector('.dash-sidebar'),
+                    overlay: document.getElementById('sidebarOverlay') || document.querySelector('.dash-sidebar-overlay'),
+                    toggleBtn: document.getElementById('sidebarToggleBtn') || document.querySelector('.dash-mobile-toggle')
+                };
+            }
+
+            function isSidebarOpen(sidebar) {
+                return Boolean(sidebar && (
+                    sidebar.classList.contains('open') ||
+                    sidebar.classList.contains('show') ||
+                    sidebar.classList.contains('active')
+                ));
+            }
+
+            window.ccOpenSidebar = function() {
+                var els = getDrawerEls();
+                if (!els.sidebar) return;
+                els.sidebar.classList.add('open');
+                els.sidebar.classList.remove('show', 'active');
+                if (els.overlay) {
+                    els.overlay.classList.add('active');
+                    els.overlay.classList.remove('show');
+                }
+                if (els.toggleBtn) els.toggleBtn.setAttribute('aria-expanded', 'true');
+                if (document.body) document.body.style.overflow = 'hidden';
+            };
+
+            window.ccCloseSidebar = function() {
+                var els = getDrawerEls();
+                if (els.sidebar) els.sidebar.classList.remove('open', 'show', 'active');
+                if (els.overlay) els.overlay.classList.remove('active', 'show');
+                if (els.toggleBtn) els.toggleBtn.setAttribute('aria-expanded', 'false');
+                if (document.body) document.body.style.overflow = '';
+            };
+
+            window.ccToggleSidebar = function() {
+                var els = getDrawerEls();
+                if (isSidebarOpen(els.sidebar)) {
+                    window.ccCloseSidebar();
+                } else {
+                    window.ccOpenSidebar();
+                }
+            };
+
+            document.addEventListener('click', function(e) {
+                var target = e.target;
+                if (!target || typeof target.closest !== 'function') return;
+
+                if (target.closest('#sidebarToggleBtn, .dash-mobile-toggle')) {
+                    e.preventDefault();
+                    window.ccToggleSidebar();
+                    return;
+                }
+
+                if (target.closest('#sidebarCloseBtn, .dash-sidebar-close, #sidebarOverlay, .dash-sidebar-overlay')) {
+                    e.preventDefault();
+                    window.ccCloseSidebar();
+                    return;
+                }
+
+                if (window.innerWidth < 992 && target.closest('.dash-sidebar a.dash-nav-link, .dash-sidebar a.dash-brand')) {
+                    window.ccCloseSidebar();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    var els = getDrawerEls();
+                    if (isSidebarOpen(els.sidebar)) {
+                        window.ccCloseSidebar();
+                    }
+                }
+            });
+
+            window.addEventListener('pageshow', function() {
+                if (window.innerWidth < 992) {
+                    window.ccCloseSidebar();
+                }
+            });
+
+            if (window.matchMedia) {
+                var desktopMq = window.matchMedia('(min-width: 992px)');
+                var onBreakpoint = function(ev) {
+                    if (ev.matches) window.ccCloseSidebar();
+                };
+                if (typeof desktopMq.addEventListener === 'function') {
+                    desktopMq.addEventListener('change', onBreakpoint);
+                } else if (typeof desktopMq.addListener === 'function') {
+                    desktopMq.addListener(onBreakpoint);
+                }
+            }
+        })();
     </script>
 
     
@@ -112,7 +212,7 @@
     <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
     <!-- Native system typography: Poppins replaced with platform system UI stack -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}?v=2.4">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=2.4">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=2.5">
     <link rel="stylesheet" href="{% static 'css/chatbot.css' %}?v=2.4">
     <link rel="stylesheet" href="{% static 'css/pages.css' %}?v=1.0">
     {% block extra_css %}{% endblock %}
@@ -212,7 +312,7 @@
 {% endblock %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{% static 'js/main.js' %}?v=2.2"></script>
+<script src="{% static 'js/main.js' %}?v=2.3"></script>
 <script src="{% static 'js/chatbot.js' %}?v=3.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script>
 {% block extra_js %}{% endblock %}

@@ -425,7 +425,8 @@ html[data-theme='dark'] .dash-logout-mobile-btn:active,
     justify-content: space-between;
     position: sticky;
     top: 0;
-    z-index: 1010;
+    z-index: 1030;
+    touch-action: manipulation;
 }
 
 html[data-theme='dark'] .dash-mobile-header,
@@ -440,11 +441,28 @@ html[data-theme='dark'] .dash-mobile-header,
     background: transparent;
     border: none;
     color: var(--dash-text);
-    font-size: 1.4rem;
-    padding: 0.25rem;
-    display: flex;
+    font-size: 1.45rem;
+    min-width: 44px;
+    min-height: 44px;
+    margin-left: -0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dash-mobile-toggle i,
+.dash-sidebar-close i {
+    pointer-events: none;
 }
 
 .dash-sidebar-overlay {
@@ -456,7 +474,10 @@ html[data-theme='dark'] .dash-mobile-header,
     bottom: 0;
     background-color: rgba(15, 23, 42, 0.45);
     backdrop-filter: none;
-    z-index: 1015;
+    z-index: 1045;
+    cursor: pointer;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html[data-theme='dark'] .dash-sidebar-overlay {
@@ -1799,18 +1820,30 @@ html[data-theme='dark'] .dash-shell .btn-outline-danger:hover {
         transform: translateX(-100%);
         z-index: 1050;
         box-shadow: none;
+        will-change: transform;
     }
     
-    .dash-sidebar.open {
+    .dash-sidebar.open,
+    .dash-sidebar.show,
+    .dash-sidebar.active {
         transform: translateX(0);
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35);
     }
     
     .dash-sidebar-close {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        min-height: 40px;
+        margin-right: -0.35rem;
+        border-radius: 8px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
     
-    .dash-sidebar-overlay.active {
+    .dash-sidebar-overlay.active,
+    .dash-sidebar-overlay.show {
         display: block;
     }
 

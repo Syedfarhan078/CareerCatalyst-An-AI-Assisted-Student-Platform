@@ -147,29 +147,7 @@
 {% block extra_js %}
 <script>
 (function() {
-    // 1. Mobile Sidebar Toggle
-    const toggleBtn = document.getElementById('sidebarToggleBtn');
-    const closeBtn = document.getElementById('sidebarCloseBtn');
-    const sidebar = document.getElementById('dashboardSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    function openSidebar() {
-        if (sidebar) sidebar.classList.add('open');
-        if (overlay) overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeSidebar() {
-        if (sidebar) sidebar.classList.remove('open');
-        if (overlay) overlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
-    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-    if (overlay) overlay.addEventListener('click', closeSidebar);
-
-    // 2. Delete Confirmation Button Unlock
+    // Delete Confirmation Button Unlock
     const expectedUsername = "{{ user.username|escapejs }}";
     const input = document.getElementById('confirm_username');
     const deleteBtn = document.getElementById('deleteSubmitBtn');
