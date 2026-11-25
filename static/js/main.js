@@ -636,311 +636,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, { passive: true });
 
-    // =========================================================================
-    // Dynamic Rolling Number Odometers & Fluid Count-Up System
-    // Deceleration Easing: cubic-bezier(0.16, 1, 0.3, 1) — Apple / Linear curve
-    // =========================================================================
-    function solveCubicBezier(x1, y1, x2, y2) {
-        return function(t) {
-            if (t <= 0) return 0;
-            if (t >= 1) return 1;
-            let s = t;
-            for (let i = 0; i < 6; i++) {
-                const currentX = 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s;
-                const dx = 3 * (1 - s) * (1 - s) * x1 + 6 * (1 - s) * s * (x2 - x1) + 3 * s * s * (1 - x2);
-                if (Math.abs(currentX - t) < 1e-5) break;
-                if (Math.abs(dx) < 1e-6) break;
-                s -= (currentX - t) / dx;
-            }
-            s = Math.max(0, Math.min(1, s));
-            return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s;
-        };
+    // Initialize declarative count-up elements once DOMContentLoaded runs (or immediately if ready)
+    if (typeof window.initCountUpElements === 'function') {
+        window.initCountUpElements();
     }
-
-    const easeFluidDecelerate = solveCubicBezier(0.16, 1, 0.3, 1);
-
-    window.animateCountUp = function(el, endVal, options) {
-        if (!el) return;
-        if (typeof el === 'string') el = document.querySelector(el);
-        if (!el) return;
-
-        options = options || {};
-        const duration = options.duration !== undefined ? options.duration : 1200;
-        const prefix = options.prefix || el.getAttribute('data-prefix') || '';
-        const suffix = options.suffix || el.getAttribute('data-suffix') || '';
-
-        // Extract raw number value if not passed
-        if (endVal === undefined || endVal === null) {
-            const rawAttr = el.getAttribute('data-count-up') || el.getAttribute('data-target');
-            if (rawAttr !== null) {
-                endVal = parseFloat(rawAttr);
-            } else {
-                const textOnly = el.textContent.replace(/[^\d.-]/g, '');
-                endVal = textOnly ? parseFloat(textOnly) : 0;
-            }
-        }
-        if (isNaN(endVal)) return;
-
-        const decimals = options.decimals !== undefined ? options.decimals : (String(endVal).includes('.') ? String(endVal).split('.')[1].length : 0);
-
-        // Parse start value
-        let startVal = options.startVal !== undefined ? options.startVal : parseFloat(el.getAttribute('data-start') || 0);
-        if (isNaN(startVal)) startVal = 0;
-
-        // Accessibility check: instantly snap to target if user prefers reduced motion
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReducedMotion || duration <= 0) {
-            const formatted = decimals > 0 ? endVal.toFixed(decimals) : Math.round(endVal);
-            el.textContent = `${prefix}${formatted}${suffix}`;
-            if (typeof options.onComplete === 'function') options.onComplete();
-            return;
-        }
-
-        if (el._ccCountUpActive) {
-            cancelAnimationFrame(el._ccCountUpActive);
-        }
-
-        const startTime = performance.now();
-        const diff = endVal - startVal;
-
-        function frame(now) {
-            const elapsed = now - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const easedProgress = easeFluidDecelerate(progress);
-            const currentVal = startVal + diff * easedProgress;
-
-            const formatted = decimals > 0 ? currentVal.toFixed(decimals) : Math.round(currentVal);
-            el.textContent = `${prefix}${formatted}${suffix}`;
-
-            if (typeof options.onUpdate === 'function') {
-                options.onUpdate(currentVal, easedProgress);
-            }
-
-            if (progress < 1) {
-                el._ccCountUpActive = requestAnimationFrame(frame);
-            } else {
-                el._ccCountUpActive = null;
-                const finalFormatted = decimals > 0 ? endVal.toFixed(decimals) : Math.round(endVal);
-                el.textContent = `${prefix}${finalFormatted}${suffix}`;
-                if (typeof options.onComplete === 'function') {
-                    options.onComplete();
-                }
-            }
-        }
-
-        el._ccCountUpActive = requestAnimationFrame(frame);
-    };
-
-    // Auto-initialize [data-count-up] elements using IntersectionObserver
-    window.initCountUpElements = function() {
-        const targets = document.querySelectorAll('[data-count-up]:not([data-counted])');
-        if (!targets.length) return;
-
-        if (!('IntersectionObserver' in window)) {
-            targets.forEach(el => {
-                el.setAttribute('data-counted', 'true');
-                window.animateCountUp(el);
-            });
-            return;
-        }
-
-        const observer = new IntersectionObserver((entries, obs) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const el = entry.target;
-                    obs.unobserve(el);
-                    el.setAttribute('data-counted', 'true');
-                    const targetVal = parseFloat(el.getAttribute('data-count-up'));
-                    window.animateCountUp(el, targetVal);
-                }
-            });
-        }, { threshold: 0.15 });
-
-        targets.forEach(el => observer.observe(el));
-    };
-
-    window.initCountUpElements();
-
-    // =========================================================================
-    // Native Zero-Dependency Canvas Confetti Engine
-    // Physics: 3D Tumbling Rotation, Air Resistance Drag, Gravity & Alpha Decay
-    // =========================================================================
-    (function() {
-        let canvas = null;
-        let ctx = null;
-        let particles = [];
-        let animationFrameId = null;
-        let width = 0;
-        let height = 0;
-
-        const PALETTE = [
-            '#2563EB', // Primary Royal Blue
-            '#3B82F6', // Electric Blue
-            '#10B981', // Emerald Success
-            '#06B6D4', // Modern Cyan
-            '#F59E0B', // Amber Milestone
-            '#8B5CF6', // Purple Highlight
-            '#EC4899'  // Pink Accent
-        ];
-
-        function getCanvas() {
-            if (!canvas) {
-                canvas = document.createElement('canvas');
-                canvas.id = 'cc-confetti-canvas';
-                canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:999999;display:none;';
-                document.body.appendChild(canvas);
-                ctx = canvas.getContext('2d');
-                resize();
-                window.addEventListener('resize', resize, { passive: true });
-            }
-            return canvas;
-        }
-
-        function resize() {
-            if (!canvas) return;
-            const dpr = window.devicePixelRatio || 1;
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
-            if (ctx) ctx.scale(dpr, dpr);
-        }
-
-        function createParticle(origin, options) {
-            const spread = (options.spread || 70) * (Math.PI / 180);
-            const angle = ((options.angle !== undefined ? options.angle : 90)) * (Math.PI / 180);
-            const velocity = (options.startVelocity || 38) * (0.8 + Math.random() * 0.4);
-            const randomAngle = angle + (Math.random() - 0.5) * spread;
-
-            const colors = options.colors || PALETTE;
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const shape = Math.random() > 0.45 ? 'rect' : 'circle';
-            const size = (options.scalar || 1) * (6.5 + Math.random() * 4);
-
-            return {
-                x: origin.x * width,
-                y: origin.y * height,
-                vx: Math.cos(randomAngle) * velocity,
-                vy: -Math.sin(randomAngle) * velocity,
-                gravity: options.gravity !== undefined ? options.gravity : 0.68,
-                decay: options.decay || 0.925,
-                tilt: Math.random() * 10,
-                tiltAngle: Math.random() * Math.PI,
-                tiltAngleIncrement: 0.06 + Math.random() * 0.08,
-                shape: shape,
-                size: size,
-                color: color,
-                opacity: 1,
-                life: 0,
-                maxLife: (options.ticks || 160) + Math.random() * 50
-            };
-        }
-
-        function updateParticles() {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += p.gravity;
-                p.vx *= p.decay;
-                p.vy *= p.decay;
-                p.tiltAngle += p.tiltAngleIncrement;
-                p.tilt = Math.sin(p.tiltAngle) * 12;
-                p.life++;
-
-                if (p.life > p.maxLife * 0.72) {
-                    p.opacity = Math.max(0, 1 - (p.life - p.maxLife * 0.72) / (p.maxLife * 0.28));
-                }
-
-                if (p.opacity <= 0 || p.y > height + 40) {
-                    particles.splice(i, 1);
-                }
-            }
-        }
-
-        function drawParticles() {
-            if (!ctx) return;
-            ctx.clearRect(0, 0, width, height);
-
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
-                ctx.save();
-                ctx.globalAlpha = p.opacity;
-                ctx.fillStyle = p.color;
-                ctx.translate(p.x, p.y);
-                ctx.rotate(p.tiltAngle);
-
-                if (p.shape === 'circle') {
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, p.size / 2, Math.max(0.5, Math.abs(Math.sin(p.tiltAngle)) * (p.size / 2)), 0, 0, Math.PI * 2);
-                    ctx.fill();
-                } else {
-                    const w = p.size;
-                    const h = p.size * 0.55;
-                    ctx.scale(Math.cos(p.tiltAngle), 1);
-                    ctx.fillRect(-w / 2, -h / 2, w, h);
-                }
-                ctx.restore();
-            }
-        }
-
-        function loop() {
-            updateParticles();
-            drawParticles();
-
-            if (particles.length > 0) {
-                animationFrameId = requestAnimationFrame(loop);
-            } else {
-                animationFrameId = null;
-                if (canvas) canvas.style.display = 'none';
-            }
-        }
-
-        window.triggerConfetti = function(options) {
-            options = options || {};
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                return;
-            }
-
-            const cvs = getCanvas();
-            cvs.style.display = 'block';
-
-            const origin = options.origin || { x: 0.5, y: 0.6 };
-            const count = options.particleCount || 75;
-
-            for (let i = 0; i < count; i++) {
-                particles.push(createParticle(origin, options));
-            }
-
-            if (!animationFrameId) {
-                animationFrameId = requestAnimationFrame(loop);
-            }
-        };
-
-        // Milestone Cannons Preset: Dual corner cannons for major achievements
-        window.triggerConfetti.cannons = function() {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            window.triggerConfetti({
-                particleCount: 50,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0.05, y: 0.85 }
-            });
-            setTimeout(() => {
-                window.triggerConfetti({
-                    particleCount: 50,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 0.95, y: 0.85 }
-                });
-            }, 160);
-        };
-
-        // Fallback alias so anywhere calling confetti(...) in the platform works seamlessly
-        if (typeof window.confetti !== 'function') {
-            window.confetti = window.triggerConfetti;
-        }
-    })();
 
     // =========================================================================
     // Cursor-Following Ambient Border Beam Pointer Tracker (The Vercel / Stripe Aesthetic)
@@ -1042,3 +741,374 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
 });
+
+// =========================================================================
+// Top-Level Immediate Exports: Dynamic Rolling Number Odometers & Confetti
+// Registered synchronously before extra_js / DOMContentLoaded callbacks run
+// =========================================================================
+(function() {
+    function solveCubicBezier(x1, y1, x2, y2) {
+        return function(t) {
+            if (t <= 0) return 0;
+            if (t >= 1) return 1;
+            let s = t;
+            for (let i = 0; i < 6; i++) {
+                const currentX = 3 * (1 - s) * (1 - s) * s * x1 + 3 * (1 - s) * s * s * x2 + s * s * s;
+                const dx = 3 * (1 - s) * (1 - s) * x1 + 6 * (1 - s) * s * (x2 - x1) + 3 * s * s * (1 - x2);
+                if (Math.abs(currentX - t) < 1e-5) break;
+                if (Math.abs(dx) < 1e-6) break;
+                s -= (currentX - t) / dx;
+            }
+            s = Math.max(0, Math.min(1, s));
+            return 3 * (1 - s) * (1 - s) * s * y1 + 3 * (1 - s) * s * s * y2 + s * s * s;
+        };
+    }
+
+    const easeFluidDecelerate = solveCubicBezier(0.16, 1, 0.3, 1);
+
+    window.animateCountUp = function(el, endVal, options) {
+        if (!el) return;
+        if (typeof el === 'string') el = document.querySelector(el);
+        if (!el) return;
+
+        options = options || {};
+        const duration = options.duration !== undefined ? options.duration : 1500;
+        const prefix = options.prefix || el.getAttribute('data-prefix') || '';
+        const suffix = options.suffix || el.getAttribute('data-suffix') || '';
+
+        if (endVal === undefined || endVal === null) {
+            const rawAttr = el.getAttribute('data-count-up') || el.getAttribute('data-target');
+            if (rawAttr !== null && rawAttr !== '') {
+                endVal = parseFloat(rawAttr);
+            } else {
+                const textOnly = el.textContent.replace(/[^\d.-]/g, '');
+                endVal = textOnly ? parseFloat(textOnly) : 0;
+            }
+        }
+        if (isNaN(endVal)) return;
+
+        const decimals = options.decimals !== undefined ? options.decimals : (String(endVal).includes('.') ? String(endVal).split('.')[1].length : 0);
+
+        let startVal = options.startVal !== undefined ? options.startVal : parseFloat(el.getAttribute('data-start') || 0);
+        if (isNaN(startVal)) startVal = 0;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion || duration <= 0 || startVal === endVal) {
+            const formatted = decimals > 0 ? endVal.toFixed(decimals) : Math.round(endVal);
+            el.textContent = `${prefix}${formatted}${suffix}`;
+            if (typeof options.onComplete === 'function') options.onComplete();
+            return;
+        }
+
+        if (el._ccCountUpActive) {
+            cancelAnimationFrame(el._ccCountUpActive);
+        }
+
+        // Set initial display cleanly at startVal before first frame
+        const initialFormatted = decimals > 0 ? startVal.toFixed(decimals) : Math.round(startVal);
+        el.textContent = `${prefix}${initialFormatted}${suffix}`;
+
+        const startTime = performance.now();
+        const diff = endVal - startVal;
+
+        function frame(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeFluidDecelerate(progress);
+            const currentVal = startVal + diff * easedProgress;
+
+            const formatted = decimals > 0 ? currentVal.toFixed(decimals) : Math.round(currentVal);
+            el.textContent = `${prefix}${formatted}${suffix}`;
+
+            if (typeof options.onUpdate === 'function') {
+                options.onUpdate(currentVal, easedProgress);
+            }
+
+            if (progress < 1) {
+                el._ccCountUpActive = requestAnimationFrame(frame);
+            } else {
+                el._ccCountUpActive = null;
+                const finalFormatted = decimals > 0 ? endVal.toFixed(decimals) : Math.round(endVal);
+                el.textContent = `${prefix}${finalFormatted}${suffix}`;
+                if (typeof options.onComplete === 'function') {
+                    options.onComplete();
+                }
+            }
+        }
+
+        el._ccCountUpActive = requestAnimationFrame(frame);
+    };
+
+    window.initCountUpElements = function(forceReplay) {
+        if (forceReplay) {
+            document.querySelectorAll('[data-count-up]').forEach(el => {
+                el.removeAttribute('data-counted');
+                el.removeAttribute('data-count-init');
+            });
+        }
+        const targets = document.querySelectorAll('[data-count-up]:not([data-count-init])');
+        if (!targets.length) return;
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            targets.forEach(el => {
+                el.setAttribute('data-count-init', 'true');
+                el.setAttribute('data-counted', 'true');
+                window.animateCountUp(el, parseFloat(el.getAttribute('data-count-up')), { duration: 0 });
+            });
+            return;
+        }
+
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const aboveFold = [];
+        const belowFold = [];
+
+        targets.forEach(el => {
+            el.setAttribute('data-count-init', 'true');
+            const prefix = el.getAttribute('data-prefix') || '';
+            const suffix = el.getAttribute('data-suffix') || '';
+            const startAttr = el.getAttribute('data-start') || '0';
+            const endVal = parseFloat(el.getAttribute('data-count-up'));
+            // Pre-zero immediately before the animation begins so desktop doesn't miss the roll-up
+            if (!isNaN(endVal) && endVal !== parseFloat(startAttr)) {
+                el.textContent = `${prefix}${startAttr}${suffix}`;
+            }
+
+            const rect = el.getBoundingClientRect();
+            const inViewport = rect.width > 0 && rect.height > 0 && rect.top < vh && rect.bottom > 0;
+            if (inViewport) {
+                aboveFold.push(el);
+            } else {
+                belowFold.push(el);
+            }
+        });
+
+        // Allow view-transition / initial paint (220ms) to settle before rolling above-the-fold numbers
+        if (aboveFold.length > 0) {
+            setTimeout(() => {
+                aboveFold.forEach((el, idx) => {
+                    if (el.getAttribute('data-counted') === 'true') return;
+                    el.setAttribute('data-counted', 'true');
+                    const targetVal = parseFloat(el.getAttribute('data-count-up'));
+                    setTimeout(() => {
+                        window.animateCountUp(el, targetVal, { duration: 1500 });
+                    }, idx * 45);
+                });
+            }, 220);
+        }
+
+        if (belowFold.length > 0) {
+            if (!('IntersectionObserver' in window)) {
+                belowFold.forEach(el => {
+                    el.setAttribute('data-counted', 'true');
+                    window.animateCountUp(el, parseFloat(el.getAttribute('data-count-up')), { duration: 1500 });
+                });
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        obs.unobserve(el);
+                        if (el.getAttribute('data-counted') === 'true') return;
+                        el.setAttribute('data-counted', 'true');
+                        const targetVal = parseFloat(el.getAttribute('data-count-up'));
+                        window.animateCountUp(el, targetVal, { duration: 1500 });
+                    }
+                });
+            }, { threshold: 0.01 });
+
+            belowFold.forEach(el => observer.observe(el));
+        }
+    };
+
+    // Re-trigger count-ups gracefully if restored from BFCache
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted && typeof window.initCountUpElements === 'function') {
+            window.initCountUpElements(true);
+        }
+    });
+
+    // If script executes after DOMContentLoaded already fired (e.g. cached/dynamic)
+    if (document.readyState !== 'loading') {
+        window.initCountUpElements();
+    }
+
+    // =========================================================================
+    // Native Zero-Dependency Canvas Confetti Engine
+    // =========================================================================
+    let canvas = null;
+    let ctx = null;
+    let particles = [];
+    let animationFrameId = null;
+    let width = 0;
+    let height = 0;
+
+    const PALETTE = [
+        '#2563EB', // Primary Royal Blue
+        '#3B82F6', // Electric Blue
+        '#10B981', // Emerald Success
+        '#06B6D4', // Modern Cyan
+        '#F59E0B', // Amber Milestone
+        '#8B5CF6', // Purple Highlight
+        '#EC4899'  // Pink Accent
+    ];
+
+    function getCanvas() {
+        if (!canvas) {
+            canvas = document.createElement('canvas');
+            canvas.id = 'cc-confetti-canvas';
+            canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:999999;display:none;';
+            document.body.appendChild(canvas);
+            ctx = canvas.getContext('2d');
+            resize();
+            window.addEventListener('resize', resize, { passive: true });
+        }
+        return canvas;
+    }
+
+    function resize() {
+        if (!canvas) return;
+        const dpr = window.devicePixelRatio || 1;
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function createParticle(origin, options) {
+        const spread = (options.spread || 70) * (Math.PI / 180);
+        const angle = ((options.angle !== undefined ? options.angle : 90)) * (Math.PI / 180);
+        const velocity = (options.startVelocity || 38) * (0.8 + Math.random() * 0.4);
+        const randomAngle = angle + (Math.random() - 0.5) * spread;
+
+        const colors = options.colors || PALETTE;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const shape = Math.random() > 0.45 ? 'rect' : 'circle';
+        const size = (options.scalar || 1) * (6.5 + Math.random() * 4);
+
+        return {
+            x: origin.x * width,
+            y: origin.y * height,
+            vx: Math.cos(randomAngle) * velocity,
+            vy: -Math.sin(randomAngle) * velocity,
+            gravity: options.gravity !== undefined ? options.gravity : 0.68,
+            decay: options.decay || 0.925,
+            tilt: Math.random() * 10,
+            tiltAngle: Math.random() * Math.PI,
+            tiltAngleIncrement: 0.06 + Math.random() * 0.08,
+            shape: shape,
+            size: size,
+            color: color,
+            opacity: 1,
+            life: 0,
+            maxLife: (options.ticks || 160) + Math.random() * 50
+        };
+    }
+
+    function updateParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= p.decay;
+            p.vy *= p.decay;
+            p.tiltAngle += p.tiltAngleIncrement;
+            p.tilt = Math.sin(p.tiltAngle) * 12;
+            p.life++;
+
+            if (p.life > p.maxLife * 0.72) {
+                p.opacity = Math.max(0, 1 - (p.life - p.maxLife * 0.72) / (p.maxLife * 0.28));
+            }
+
+            if (p.opacity <= 0 || p.y > height + 40) {
+                particles.splice(i, 1);
+            }
+        }
+    }
+
+    function drawParticles() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.save();
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.tiltAngle);
+
+            if (p.shape === 'circle') {
+                ctx.beginPath();
+                ctx.ellipse(0, 0, p.size / 2, Math.max(0.5, Math.abs(Math.sin(p.tiltAngle)) * (p.size / 2)), 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                const w = p.size;
+                const h = p.size * 0.55;
+                ctx.scale(Math.cos(p.tiltAngle), 1);
+                ctx.fillRect(-w / 2, -h / 2, w, h);
+            }
+            ctx.restore();
+        }
+    }
+
+    function loop() {
+        updateParticles();
+        drawParticles();
+
+        if (particles.length > 0) {
+            animationFrameId = requestAnimationFrame(loop);
+        } else {
+            animationFrameId = null;
+            if (canvas) canvas.style.display = 'none';
+        }
+    }
+
+    window.triggerConfetti = function(options) {
+        options = options || {};
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            return;
+        }
+
+        const cvs = getCanvas();
+        cvs.style.display = 'block';
+        resize();
+
+        const origin = options.origin || { x: 0.5, y: 0.6 };
+        const count = options.particleCount || 75;
+
+        for (let i = 0; i < count; i++) {
+            particles.push(createParticle(origin, options));
+        }
+
+        if (!animationFrameId) {
+            animationFrameId = requestAnimationFrame(loop);
+        }
+    };
+
+    window.triggerConfetti.cannons = function() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        window.triggerConfetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0.05, y: 0.85 }
+        });
+        setTimeout(() => {
+            window.triggerConfetti({
+                particleCount: 50,
+                angle: 120,
+                spread: 55,
+                origin: { x: 0.95, y: 0.85 }
+            });
+        }, 160);
+    };
+
+    if (typeof window.confetti !== 'function') {
+        window.confetti = window.triggerConfetti;
+    }
+})();
