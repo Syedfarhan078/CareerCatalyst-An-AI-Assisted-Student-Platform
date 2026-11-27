@@ -129,6 +129,10 @@ def generate_certificate_id():
 
 
 class RoadmapCertificate(models.Model):
+    CREDENTIAL_TIER_CHOICES = [
+        ('LEGACY_CURRICULUM', 'Legacy Curriculum Completion'),
+        ('CAREER_READINESS', 'Career Readiness Assessment Verified'),
+    ]
     certificate_id = models.CharField(
         max_length=64,
         unique=True,
@@ -153,6 +157,27 @@ class RoadmapCertificate(models.Model):
         null=True,
         blank=True,
         related_name='certificates'
+    )
+    credential_tier = models.CharField(
+        max_length=30,
+        choices=CREDENTIAL_TIER_CHOICES,
+        default='LEGACY_CURRICULUM',
+        db_index=True,
+        help_text="Distinguishes grandfathered curriculum certificates from assessment-verified certificates."
+    )
+    assessment_session = models.ForeignKey(
+        'interviews.AssessmentSession',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='issued_certificates',
+        help_text="Passed Certification AssessmentSession backing this credential (null for legacy certificates)."
+    )
+    blueprint_version = models.CharField(
+        max_length=32,
+        blank=True,
+        default='',
+        help_text="Version of the assessment blueprint passed when credential_tier is CAREER_READINESS."
     )
     issued_at = models.DateTimeField(default=timezone.now)
     total_topics_completed = models.PositiveIntegerField(

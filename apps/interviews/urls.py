@@ -1,10 +1,17 @@
 from django.urls import path
 from . import views
+from . import views_readiness
 
 app_name = 'interviews'
 
 urlpatterns = [
     path('', views.InterviewHubView.as_view(), name='hub'),
+
+    # AI-Era Career Readiness Hub Shell (Feature-flagged behind ENABLE_READINESS_ASSESSMENT)
+    path('readiness/roles/', views_readiness.CareerSelectorView.as_view(), name='readiness_roles'),
+    path('readiness/role/<slug:slug>/', views_readiness.RolePracticeOverviewView.as_view(), name='readiness_role_overview'),
+    path('readiness/role/<slug:slug>/policy/', views_readiness.readiness_policy_view, name='readiness_policy'),
+    path('readiness/history/', views_readiness.PracticeHistoryView.as_view(), name='readiness_history'),
     
     # Quiz routes
     path('quiz/<slug:slug>/start/', views.start_quiz, name='start_quiz'),

@@ -1,5 +1,6 @@
 import json
 import logging
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -47,10 +48,20 @@ def get_user_sidebar_context(user):
 class InterviewHubView(TemplateView):
     template_name = "interviews/hub.html"
 
+    def get_template_names(self):
+        if getattr(settings, 'ENABLE_READINESS_ASSESSMENT', False):
+            return ["interviews/readiness_hub.html"]
+        return [self.template_name]
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
+
+        if getattr(settings, 'ENABLE_READINESS_ASSESSMENT', False):
+            from .views_readiness import build_readiness_hub_context
+            context.update(build_readiness_hub_context(user))
+            return context
+
         # Sidebar context
         context.update(get_user_sidebar_context(user))
 

@@ -1,0 +1,373 @@
+{
+  "role_slug": "software-engineer",
+  "blueprint_version": "se-bp-2026.1",
+  "task_bank_version": "se-bank-2026.1",
+  "archetype": "ENGINEERING",
+  "calibration_status": "PILOT",
+  "is_active": true,
+  "is_pilot": true,
+  "passing_score": 70.0,
+  "borderline_low": 67.0,
+  "borderline_high": 73.0,
+  "stage_weights": {
+    "1": 0.35,
+    "2": 0.35,
+    "3": 0.30
+  },
+  "stage_durations": {
+    "1": 900,
+    "2": 900,
+    "3": 720
+  },
+  "practice_durations": {
+    "STAGE_1": 600,
+    "STAGE_2": 600,
+    "STAGE_3": 420,
+    "FULL": 2520
+  },
+  "timing_policy": {
+    "accessibility_multiplier": 1.25,
+    "reconnect_grace_seconds": 120,
+    "max_reconnect_graces_per_stage": 1,
+    "late_submit_clock_drift_seconds": 30
+  },
+  "stopping_rules": {
+    "min_turns": 3,
+    "max_turns": 4,
+    "allow_early_stop_certification": false,
+    "allow_early_stop_practice": true,
+    "require_all_target_competencies_covered": true,
+    "min_ai_confidence": 0.85
+  },
+  "calibration_metadata": {
+    "pilot_cohort_target": 25,
+    "required_human_agreement": 0.90,
+    "max_mae_points": 7.0,
+    "max_length_bias_delta": 6.0,
+    "calibrated_on_golden_set": false
+  },
+  "ai_policy_disclosure": {
+    "stage_1": "Independent Diagnosis: Review the AI-generated engineering artifact directly. Do not paste external LLM fixes.",
+    "stage_2": "Independent Architectural Reasoning: Solve the baseline design and requirement pivot using your own engineering judgment.",
+    "stage_3": "Live Ownership Defense: Defend your Stage 1 and Stage 2 choices with concise, evidence-grounded reasoning."
+  },
+  "competency_definitions": [
+    {
+      "code": "se_diagnosis",
+      "name": "Code & Defect Diagnosis",
+      "weight": 0.25,
+      "is_critical": true,
+      "critical_floor": 60.0,
+      "rubric_bands": {
+        "0": "Fails to locate core algorithmic, validation, or concurrency bugs or proposes changes that break correctness.",
+        "25": "Names surface syntax issues without identifying runtime complexity, DB contention, or silent failure mechanisms.",
+        "50": "Locates 2 of 4 defects accurately but misses concurrency/complexity root cause or leaves subtle regression in patch.",
+        "75": "Locates >=3 of 4 defects with accurate causal explanation and supplies structurally sound AST-verified fix.",
+        "100": "Locates all defects precisely, explains worst-case runtime/DB mechanics, and produces clean, defensive fix."
+      },
+      "remediation_topic_refs": [
+        {"week_number": 1, "title": "Functions & Modules"},
+        {"week_number": 2, "title": "Arrays, Stacks & Queues"},
+        {"week_number": 6, "title": "PostgreSQL Deep Dive"}
+      ]
+    },
+    {
+      "code": "se_architecture",
+      "name": "Architecture & Trade-offs",
+      "weight": 0.25,
+      "is_critical": false,
+      "critical_floor": null,
+      "rubric_bands": {
+        "0": "Proposes incompatible components or ignores Stage 2 constraints and Part B requirement shift.",
+        "25": "Lists generic stack buzzwords (Kafka/Redis/microservices) without linking them to bottleneck or SLA.",
+        "50": "Solves Part A reasonably but fails to adapt schema/caching/rollback coherently under Part B twist.",
+        "75": "Selects cohesive API, DB indexing/transaction, and scaling primitives and adapts clearly to Part B twist with >=1 explicit trade-off.",
+        "100": "Demonstrates end-to-end bottleneck analysis, quantifies consistency/cost trade-offs, and designs clean zero-downtime/canary mitigation."
+      },
+      "remediation_topic_refs": [
+        {"week_number": 5, "title": "REST API Design"},
+        {"week_number": 10, "title": "Scalability Concepts"},
+        {"week_number": 10, "title": "Design Patterns"}
+      ]
+    },
+    {
+      "code": "se_testing",
+      "name": "Testing & Edge-Case Rigor",
+      "weight": 0.20,
+      "is_critical": true,
+      "critical_floor": 60.0,
+      "rubric_bands": {
+        "0": "Proposes no test verification or tests only happy-path inputs.",
+        "25": "Mentions 'write unit tests' generically without specifying inputs, assertions, or failure cases.",
+        "50": "Identifies 1-2 basic boundary cases (e.g. empty list) but misses concurrency, timeout, or integration boundaries.",
+        "75": "Specifies concrete unit + integration test cases covering null/empty inputs, invalid payloads, and duplicate/error paths.",
+        "100": "Designs comprehensive pytest/integration matrix isolating deterministic logic, race/retry idempotency, and CI/CD regression gates."
+      },
+      "remediation_topic_refs": [
+        {"week_number": 8, "title": "Unit Testing"},
+        {"week_number": 8, "title": "Integration Testing"}
+      ]
+    },
+    {
+      "code": "se_ai_critique",
+      "name": "AI Output Verification",
+      "weight": 0.15,
+      "is_critical": false,
+      "critical_floor": null,
+      "rubric_bands": {
+        "0": "Accepts flawed AI code/assumptions as production-ready without skepticism.",
+        "25": "Critiques formatting/comments rather than hidden correctness, security, or performance flaws.",
+        "50": "Questions AI snippet superficially without identifying why the AI pattern fails under production data or load.",
+        "75": "Pinpoints misleading AI assumptions (e.g. hidden O(N^2), swallowed exceptions, unsafe concurrency) and explains verification checks.",
+        "100": "Systematically separates valid AI scaffolding from subtle failure modes and defines repeatable review guardrails."
+      },
+      "remediation_topic_refs": [
+        {"week_number": 8, "title": "Code Quality Tools"},
+        {"week_number": 5, "title": "Authentication & Authorization"}
+      ]
+    },
+    {
+      "code": "se_ownership",
+      "name": "Engineering Ownership & Defense",
+      "weight": 0.15,
+      "is_critical": false,
+      "critical_floor": null,
+      "rubric_bands": {
+        "0": "Evades Stage 3 follow-up questions, contradicts prior answers, or refuses to address failure modes.",
+        "25": "Repeats prior statements verbatim without engaging the interviewer's constraint or counter-example.",
+        "50": "Responds to challenge defensively or partially updates design without tracing downstream impact.",
+        "75": "Engages follow-ups directly with Stage 1-2 evidence, acknowledges oversight cleanly if shown a bug, and states operational impact.",
+        "100": "Demonstrates high-agency ownership: defends valid trade-offs under pressure, revises weak spots decisively, and covers monitoring/rollback."
+      },
+      "remediation_topic_refs": [
+        {"week_number": 11, "title": "Deployment Strategies"},
+        {"week_number": 11, "title": "Monitoring & Logging"}
+      ]
+    }
+  ],
+  "task_bundles": [
+    {
+      "bundle_id": "se-2026-1-bundle-a",
+      "title": "Order Deduplication & Inventory Service Review",
+      "difficulty_tier": "Intermediate",
+      "competencies_covered": [
+        "se_diagnosis",
+        "se_architecture",
+        "se_testing",
+        "se_ai_critique",
+        "se_ownership"
+      ],
+      "stage_1": {
+        "task_id": "se-b1-s1",
+        "prompt": "An AI coding assistant drafted this Python service helper to deduplicate incoming order batches and decrement cached/DB stock. Review the artifact, localize all 4 defects, submit a safe Python patch, and list concrete pytest cases.",
+        "language": "python",
+        "artifact_code": "def process_order_batch(orders, catalog_items, repo):\n    processed = []\n    for order in orders:\n        if any(p['order_id'] == order['order_id'] for p in processed):\n            continue\n        for item in catalog_items:\n            if item['sku'] == order['sku']:\n                if item['stock'] >= order['qty']:\n                    try:\n                        repo.decrement_stock(order['sku'], order['qty'])\n                        processed.append(order)\n                    except Exception:\n                        pass\n    return processed\n",
+        "planted_defects": [
+          {
+            "id": "def_1_on2",
+            "line_range": "4-7",
+            "category": "PERFORMANCE_COMPLEXITY",
+            "label": "O(N^2) linear scan over processed orders and catalog_items inside nested loop"
+          },
+          {
+            "id": "def_2_validation",
+            "line_range": "1-8",
+            "category": "BOUNDARY_VALIDATION",
+            "label": "Missing validation for None inputs, negative/zero qty, or missing dict keys"
+          },
+          {
+            "id": "def_3_silent_except",
+            "line_range": "11-12",
+            "category": "ERROR_HANDLING",
+            "label": "Bare Exception swallowed with pass hides DB/stock failures silently"
+          },
+          {
+            "id": "def_4_stale_race",
+            "line_range": "8-10",
+            "category": "CONCURRENCY_INTEGRITY",
+            "label": "Check-then-act stock check on stale in-memory item dict risks overselling under concurrent requests"
+          }
+        ],
+        "ast_invariants": [
+          {"rule": "no_bare_except_pass", "description": "Must not swallow exceptions silently with except ...: pass"},
+          {"rule": "require_explicit_guard", "description": "Must include explicit input/quantity validation guard"},
+          {"rule": "avoid_nested_linear_membership", "description": "Deduplicate using set/dict index rather than O(N^2) any(...) scan"}
+        ]
+      },
+      "stage_2": {
+        "task_id": "se-b1-s2",
+        "part_a": {
+          "title": "Flash-Sale Checkout API Design",
+          "prompt": "You are building the REST API & PostgreSQL checkout pipeline behind `process_order_batch` for 50 req/sec steady traffic. Specify your DB transaction/locking choice, API idempotency contract, and deployment strategy.",
+          "required_fields": ["db_concurrency_plan", "api_idempotency_plan", "tradeoff_rationale"]
+        },
+        "part_b_twist": {
+          "title": "Requirement Pivot: 10x Flash Spike & Duplicate Webhooks",
+          "prompt": "Constraint Shift: Flash-sale traffic jumps to 500 req/sec, p95 checkout latency must stay <= 100ms, and the payment gateway now retries webhooks up to 4 times out of order. Update your architecture without overselling inventory.",
+          "required_fields": ["revised_architecture", "dropped_or_adjusted_tradeoff", "rollback_and_monitoring"]
+        },
+        "expected_adaptation_signals": [
+          "Uses atomic conditional UPDATE or select_for_update / Redis atomic reservation + DB reconciliation",
+          "Enforces unique idempotency key constraint for webhook retries",
+          "Defines p95 latency / lock-contention alerts and canary/rollback switch"
+        ]
+      },
+      "stage_3": {
+        "task_id": "se-b1-s3",
+        "focus_competencies": ["se_diagnosis", "se_architecture", "se_testing", "se_ownership"],
+        "twist_pool": [
+          "What happens in your Stage 2 solution if Redis reservation succeeds but PostgreSQL commit times out 100ms later?",
+          "Your Stage 1 fix still mutates catalog_items in memory or skips concurrency test cases — design one deterministic test proving zero double-deduction."
+        ]
+      }
+    },
+    {
+      "bundle_id": "se-2026-1-bundle-b",
+      "title": "Tenant Export Worker & Query Pipeline Review",
+      "difficulty_tier": "Intermediate",
+      "competencies_covered": [
+        "se_diagnosis",
+        "se_architecture",
+        "se_testing",
+        "se_ai_critique",
+        "se_ownership"
+      ],
+      "stage_1": {
+        "task_id": "se-b2-s1",
+        "prompt": "An AI assistant generated this Python background worker function to compile per-tenant CSV billing summaries from ORM repositories. Identify all 4 defects, submit a safe structural Python fix, and specify test cases.",
+        "language": "python",
+        "artifact_code": "def build_tenant_exports(tenant_ids, db):\n    all_rows = []\n    for tid in tenant_ids:\n        tenant = db.get_tenant(tid)\n        invoices = db.get_invoices_for_tenant(tid)\n        total = 0\n        for inv in invoices:\n            total += inv['amount']\n        all_rows.append({'name': tenant['name'], 'total': total})\n    return all_rows\n",
+        "planted_defects": [
+          {
+            "id": "def_1_n_plus_one",
+            "line_range": "3-5",
+            "category": "PERFORMANCE_COMPLEXITY",
+            "label": "N+1 repository queries per tenant inside loop instead of batched/aggregated query"
+          },
+          {
+            "id": "def_2_null_guard",
+            "line_range": "4-9",
+            "category": "BOUNDARY_VALIDATION",
+            "label": "Missing None check when db.get_tenant(tid) or inv['amount'] is missing/null"
+          },
+          {
+            "id": "def_3_unbounded_mem",
+            "line_range": "2-10",
+            "category": "SCALABILITY_RESOURCE",
+            "label": "Accumulates unbounded in-memory all_rows list without chunking/streaming pagination"
+          },
+          {
+            "id": "def_4_float_precision",
+            "line_range": "6-8",
+            "category": "DATA_CORRECTNESS",
+            "label": "Uses integer/float zero sum on financial amounts without Decimal/currency validation or empty guard"
+          }
+        ],
+        "ast_invariants": [
+          {"rule": "require_explicit_guard", "description": "Must guard missing tenant/None or invalid tenant_ids input"},
+          {"rule": "require_batched_or_streaming_pattern", "description": "Avoid unbounded per-tenant N+1 loop accumulation without batching/yield"}
+        ]
+      },
+      "stage_2": {
+        "task_id": "se-b2-s2",
+        "part_a": {
+          "title": "Async Export API & PostgreSQL Indexing",
+          "prompt": "Design the API and worker pipeline allowing enterprise tenants with 200k invoices to trigger CSV exports cleanly without blocking web Gunicorn workers.",
+          "required_fields": ["db_concurrency_plan", "api_idempotency_plan", "tradeoff_rationale"]
+        },
+        "part_b_twist": {
+          "title": "Requirement Pivot: Poison-Pill Tenant & 15s Freshness SLA",
+          "prompt": "Constraint Shift: Corrupted UTF-16 invoice rows from one tenant crash shared worker retries repeatedly, while small tenants demand <15s export turnaround during billing close.",
+          "required_fields": ["revised_architecture", "dropped_or_adjusted_tradeoff", "rollback_and_monitoring"]
+        },
+        "expected_adaptation_signals": [
+          "Separates fast-lane small exports from large queued exports (priority queues/streaming)",
+          "Isolates poison-pill payloads via dead-letter queue + per-row validation error reporting",
+          "Adds PostgreSQL composite index (tenant_id, created_at) and worker memory/failure metrics"
+        ]
+      },
+      "stage_3": {
+        "task_id": "se-b2-s3",
+        "focus_competencies": ["se_diagnosis", "se_architecture", "se_testing", "se_ownership"],
+        "twist_pool": [
+          "If a worker dies halfway through writing a 200k-row export to S3/Cloudinary, how do you prevent partial corrupted downloads?",
+          "Walk through an integration test that catches both N+1 query regression and a null tenant record."
+        ]
+      }
+    },
+    {
+      "bundle_id": "se-2026-1-bundle-c",
+      "title": "API Token Auth & Rate-Limiter Middleware Review",
+      "difficulty_tier": "Intermediate",
+      "competencies_covered": [
+        "se_diagnosis",
+        "se_architecture",
+        "se_testing",
+        "se_ai_critique",
+        "se_ownership"
+      ],
+      "stage_1": {
+        "task_id": "se-b3-s1",
+        "prompt": "An AI assistant generated this Python request guard handling bearer token verification and per-user rate limiting. Diagnose all 4 defects, patch the logic structurally, and write critical security/edge tests.",
+        "language": "python",
+        "artifact_code": "def authorize_request(headers, token_store, rate_cache, now_ts):\n    token = headers.get('Authorization', '').replace('Bearer ', '')\n    try:\n        record = token_store.get(token)\n        if record and record['secret'] == token:\n            hits = rate_cache.get(token, 0)\n            if hits < 100:\n                rate_cache[token] = hits + 1\n                return True\n    except Exception:\n        return True\n    return False\n",
+        "planted_defects": [
+          {
+            "id": "def_1_fail_open",
+            "line_range": "10-11",
+            "category": "SECURITY_FAIL_OPEN",
+            "label": "except Exception returns True (fail-open bypasses all authentication on cache/store error)"
+          },
+          {
+            "id": "def_2_expiry_timing",
+            "line_range": "5",
+            "category": "AUTH_INTEGRITY",
+            "label": "Ignores now_ts token expiration check and uses non-constant-time == comparison"
+          },
+          {
+            "id": "def_3_header_parse",
+            "line_range": "2",
+            "category": "BOUNDARY_VALIDATION",
+            "label": "Naive .replace('Bearer ', '') accepts empty/missing scheme or case/whitespace bypasses"
+          },
+          {
+            "id": "def_4_rate_race",
+            "line_range": "6-8",
+            "category": "CONCURRENCY_INTEGRITY",
+            "label": "Non-atomic read-then-write rate counter allows concurrent burst bypass and never expires window"
+          }
+        ],
+        "ast_invariants": [
+          {"rule": "no_fail_open_return_true", "description": "Exception handlers in auth logic must never return True"},
+          {"rule": "require_explicit_guard", "description": "Must validate Bearer scheme, token emptiness, and expiry against now_ts"}
+        ]
+      },
+      "stage_2": {
+        "task_id": "se-b3-s2",
+        "part_a": {
+          "title": "Multi-Worker Auth & Rate Limiting Architecture",
+          "prompt": "Deploy this auth/rate-limiting layer across 8 Gunicorn web workers behind Nginx with PostgreSQL token revocation support.",
+          "required_fields": ["db_concurrency_plan", "api_idempotency_plan", "tradeoff_rationale"]
+        },
+        "part_b_twist": {
+          "title": "Requirement Pivot: Cache Store Outage & Latency Budget",
+          "prompt": "Constraint Shift: Shared Redis rate-limit cache experiences a 3-minute partition while external SSO validation spikes to 2.5s. Keep unauthorized access strictly zero while preserving legitimate traffic.",
+          "required_fields": ["revised_architecture", "dropped_or_adjusted_tradeoff", "rollback_and_monitoring"]
+        },
+        "expected_adaptation_signals": [
+          "Fails closed for authentication while applying bounded circuit-breaker/local fallback for rate limiting",
+          "Never trusts per-worker LocMemCache as authoritative revocation state",
+          "Monitors 401/429/503 surges and defines short-lived signed token vs. revocation list trade-off"
+        ]
+      },
+      "stage_3": {
+        "task_id": "se-b3-s3",
+        "focus_competencies": ["se_diagnosis", "se_architecture", "se_testing", "se_ownership"],
+        "twist_pool": [
+          "Explain the trade-off between failing open vs. failing closed on rate limiting versus authentication during a cache outage.",
+          "Write assertions for a test suite verifying expired tokens, malformed headers, and simulated store exceptions."
+        ]
+      }
+    }
+  ]
+}

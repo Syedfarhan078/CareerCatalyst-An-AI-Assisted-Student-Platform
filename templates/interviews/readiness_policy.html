@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assessment Policy &amp; Accessibility — {{ career_path.name }} — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.0">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="readiness-header">
+                <div>
+                    <nav class="interview-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'interviews:hub' %}">Career Readiness</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <a href="{% url 'interviews:readiness_role_overview' career_path.slug %}">{{ career_path.name }}</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span aria-current="page">Policy &amp; Preferences</span>
+                    </nav>
+                    <h1 class="interview-page-title">Assessment Rules, Consent &amp; Accessibility</h1>
+                    <p class="interview-page-subtitle">
+                        Review how AI-era assessments operate, what integrity telemetry is recorded, and set optional timing accommodations.
+                    </p>
+                </div>
+                <a href="{% url 'interviews:readiness_role_overview' career_path.slug %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to Overview
+                </a>
+            </div>
+
+            {% if confirmed %}
+            <div class="alert alert-success rounded-3 border d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4" role="status">
+                <div>
+                    <strong>Preferences and policy consent saved</strong> for {{ career_path.name }} ({{ blueprint.version }} · {{ durations_preview.multiplier_label }}).
+                    <div class="small mt-1">
+                        Interactive Stage 1–3 practice workbenches are scheduled for the next implementation sprints and are not active yet.
+                    </div>
+                </div>
+                <a href="{% url 'interviews:hub' %}" class="dash-btn dash-btn-outline dash-btn-sm">Return to Hub</a>
+            </div>
+            {% endif %}
+
+            {% if error_message %}
+            <div class="alert alert-danger rounded-3 border mb-4" role="alert">
+                <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i> {{ error_message }}
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-lg-7">
+                    <div class="readiness-surface-card mb-3">
+                        <h2 class="h6 fw-bold mb-3">1. Assessment Format &amp; AI Involvement</h2>
+                        <ul class="readiness-policy-list">
+                            <li><strong>Three Stages:</strong> Applied Diagnosis (Stage 1), Scenario &amp; Constraint Pivot (Stage 2), and Bounded Adaptive Technical Defense (Stage 3).</li>
+                            <li><strong>AI-Era Evaluation Policy:</strong> Stage 1 presents flawed AI-generated engineering artifacts for your independent diagnosis. You are evaluated on defect judgment and reasoning, not copying external AI output.</li>
+                            <li><strong>Candidate Code Safety:</strong> Submitted code patches are inspected structurally without running untrusted code on platform servers.</li>
+                            <li><strong>Provider Resilience:</strong> If AI services fail during an assessment, your saved work pauses cleanly without failure penalties or cooldowns.</li>
+                        </ul>
+                    </div>
+
+                    <div class="readiness-surface-card">
+                        <h2 class="h6 fw-bold mb-3">2. Integrity Telemetry &amp; Privacy</h2>
+                        <ul class="readiness-policy-list mb-0">
+                            <li><strong>No Webcam Surveillance:</strong> New Career Readiness sessions do not require camera monitoring or biometric tracking.</li>
+                            <li><strong>Lightweight Audit Telemetry:</strong> Sessions record stage lock timestamps, tab-blur counts, and large paste bursts solely to flag severe anomalies for audit—never to auto-fail a candidate.</li>
+                            <li><strong>Private Records:</strong> Drafts, stage transcripts, scores, and AI usage logs remain strictly private to you and authorized platform review.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <form method="POST" action="{% url 'interviews:readiness_policy' career_path.slug %}" class="readiness-surface-card">
+                        {% csrf_token %}
+                        <input type="hidden" name="scope" value="{{ requested_scope }}">
+
+                        <h2 class="h6 fw-bold mb-3">Timing &amp; Explicit Consent</h2>
+
+                        <div class="readiness-meta-box mb-3">
+                            <div class="small text-muted mb-1">Certification Reference Timing ({{ durations_preview.multiplier_label }})</div>
+                            <div class="small fw-semibold tabular-nums">
+                                Stage 1: {{ durations_preview.stage_1_min }}m · Stage 2: {{ durations_preview.stage_2_min }}m · Stage 3: {{ durations_preview.stage_3_min }}m
+                            </div>
+                        </div>
+
+                        <div class="form-check p-3 rounded-3 border mb-3" style="border-color: var(--dash-border) !important;">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" id="extendedTimeCheck" name="extended_time" {% if draft_extended_time %}checked{% endif %}>
+                            <label class="form-check-label small" for="extendedTimeCheck">
+                                <strong class="d-block">Enable +25% Extended-Time Accessibility</strong>
+                                <span class="text-muted">Applies a 1.25x timing multiplier across assessment stages and persists across future sessions.</span>
+                            </label>
+                        </div>
+
+                        <div class="form-check p-3 rounded-3 border mb-4" style="border-color: var(--dash-border) !important;">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" id="acceptPolicyCheck" name="accept_policy" required>
+                            <label class="form-check-label small" for="acceptPolicyCheck">
+                                <strong class="d-block">I have read and accept the Assessment Policy</strong>
+                                <span class="text-muted">Consent is explicit and never assumed automatically.</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="dash-btn dash-btn-primary w-100 justify-content-center py-2">
+                            Save Consent &amp; Preferences
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

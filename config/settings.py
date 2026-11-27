@@ -360,6 +360,15 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'verification@careercatalys
 GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
+# AI-Era Career Readiness Assessment System (Pilot Feature Flags & Safety Controls)
+ENABLE_READINESS_ASSESSMENT = os.getenv('ENABLE_READINESS_ASSESSMENT', 'False') == 'True'
+ALLOW_HOST_CODE_EXECUTION = (
+    (os.getenv('ALLOW_HOST_CODE_EXECUTION', 'False') == 'True' or IS_TESTING)
+    and not IS_RENDER
+)
+READINESS_PRACTICE_DAILY_AI_LIMIT = int(os.getenv('READINESS_PRACTICE_DAILY_AI_LIMIT', 8))
+READINESS_CERT_COOLDOWN_HOURS = int(os.getenv('READINESS_CERT_COOLDOWN_HOURS', 24))
+
 
 
 # Google OAuth 2.0 / OpenID Connect Configuration

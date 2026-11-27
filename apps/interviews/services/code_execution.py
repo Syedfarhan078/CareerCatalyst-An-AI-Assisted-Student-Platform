@@ -317,8 +317,26 @@ class CodeExecutionService:
         docker_available = cls.is_docker_available()
         if docker_available:
             return cls._execute_docker(code_str, test_cases, timeout_seconds, memory_limit_mb)
-        else:
-            return cls._execute_hardened_subprocess(code_str, test_cases, timeout_seconds)
+
+        # Strict Production Security Control: never run untrusted candidate code unsandboxed on production host
+        from django.conf import settings
+        if getattr(settings, 'IS_RENDER', False) or not getattr(settings, 'ALLOW_HOST_CODE_EXECUTION', False):
+            return {
+                "status": STATUS_SANDBOX_ERROR,
+                "success": False,
+                "passed_tests": 0,
+                "total_tests": len(test_cases) if test_cases else 0,
+                "execution_time_ms": 0.0,
+                "memory_used_kb": None,
+                "stdout": "",
+                "stderr": "Host code execution is disabled in production without container isolation.",
+                "error": "Host code execution is disabled in production without container isolation.",
+                "results": [],
+                "execution_mode": "DISABLED_IN_PRODUCTION",
+                "is_sandbox_isolated": False,
+            }
+
+        return cls._execute_hardened_subprocess(code_str, test_cases, timeout_seconds)
 
     @classmethod
     def _execute_docker(

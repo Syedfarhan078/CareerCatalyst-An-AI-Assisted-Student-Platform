@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Career Readiness Hub — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.0">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <!-- Header -->
+            <div class="readiness-header">
+                <div>
+                    <nav class="interview-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'dashboard' %}">Workspace</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span aria-current="page">Career Readiness</span>
+                    </nav>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h1 class="interview-page-title mb-0">Career Readiness &amp; Practice</h1>
+                        <span class="readiness-pill readiness-pill-pilot">Pilot Release · Software Engineer</span>
+                    </div>
+                    <p class="interview-page-subtitle">
+                        Evaluate real-world engineering judgment through code diagnosis, constraint pivots, and structured defense.
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a href="{% url 'interviews:readiness_history' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                        <i class="bi bi-clock-history me-1" aria-hidden="true"></i> Practice History
+                    </a>
+                    <a href="{% url 'interviews:readiness_roles' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                        <i class="bi bi-grid me-1" aria-hidden="true"></i> All {{ total_catalog_roles }} Career Tracks
+                    </a>
+                </div>
+            </div>
+
+            <!-- Dual-Mode Primary Workspace Grid -->
+            <section class="row g-3 mb-4" aria-label="Assessment Tracks">
+                <!-- Left: Practice Mode Primary Track -->
+                <div class="col-lg-8">
+                    <div class="readiness-surface-card readiness-hero-card h-100">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                            <span class="readiness-eyebrow">Practice Sandbox · Open Access</span>
+                            {% if pilot_blueprint %}
+                            <span class="readiness-mono-tag">{{ pilot_blueprint.version }}</span>
+                            {% endif %}
+                        </div>
+
+                        <h2 class="readiness-card-heading">
+                            Software Engineer Practice Track
+                        </h2>
+                        <p class="readiness-card-copy mb-3">
+                            Practice focused 7–10 minute engineering diagnostics or rehearse full multi-stage trade-off reasoning without affecting certification attempts. Stage workbenches are rolling out incrementally behind this pilot hub.
+                        </p>
+
+                        <div class="readiness-stage-strip mb-4">
+                            <div class="readiness-stage-chip">
+                                <span class="readiness-stage-num">01</span>
+                                <div>
+                                    <div class="readiness-stage-name">Code &amp; AI Artifact Review</div>
+                                    <div class="readiness-stage-meta">Deterministic AST &amp; defect diagnosis</div>
+                                </div>
+                            </div>
+                            <div class="readiness-stage-chip">
+                                <span class="readiness-stage-num">02</span>
+                                <div>
+                                    <div class="readiness-stage-name">Scenario &amp; Constraint Pivot</div>
+                                    <div class="readiness-stage-meta">Architecture under changing SLAs</div>
+                                </div>
+                            </div>
+                            <div class="readiness-stage-chip">
+                                <span class="readiness-stage-num">03</span>
+                                <div>
+                                    <div class="readiness-stage-name">Adaptive Technical Defense</div>
+                                    <div class="readiness-stage-meta">Bounded 4-turn ownership probe</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2 pt-2 border-top" style="border-color: var(--dash-border) !important;">
+                            {% if pilot_available %}
+                            <a href="{% url 'interviews:readiness_role_overview' pilot_path.slug %}" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                                Explore Software Engineer Practice
+                                <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                            </a>
+                            <a href="{% url 'interviews:readiness_policy' pilot_path.slug %}" class="dash-btn dash-btn-outline dash-btn-sm px-3">
+                                Review Policy &amp; Accessibility
+                            </a>
+                            {% else %}
+                            <span class="text-muted small">Pilot blueprint not synced yet. Run blueprint sync.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Certification Track (Explicitly Locked in Sprint 2) -->
+                <div class="col-lg-4">
+                    <div class="readiness-surface-card readiness-cert-locked-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                                <span class="readiness-eyebrow">Certification Mode</span>
+                                <span class="readiness-pill readiness-pill-locked">
+                                    <i class="bi bi-lock-fill me-1" aria-hidden="true"></i> Unavailable in Pilot Shell
+                                </span>
+                            </div>
+                            <h2 class="readiness-card-heading h5">Career Readiness Certificate</h2>
+                            <p class="readiness-card-copy small mb-3">
+                                Certification examinations unlock only after completing 100% of the Software Engineer roadmap and enabling scoring &amp; gating in later pilot sprints.
+                            </p>
+
+                            <div class="readiness-meta-box mb-3">
+                                <div class="d-flex justify-content-between align-items-center small mb-1">
+                                    <span class="text-muted">Software Engineer Roadmap</span>
+                                    <span class="fw-semibold tabular-nums">
+                                        {% if roadmap_summary.total > 0 %}
+                                            {{ roadmap_summary.completed }} / {{ roadmap_summary.total }} lessons ({{ roadmap_summary.pct }}%)
+                                        {% else %}
+                                            Not enrolled
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="readiness-progress-track" role="progressbar" aria-valuenow="{{ roadmap_summary.pct }}" aria-valuemin="0" aria-valuemax="100" aria-label="Software Engineer roadmap completion">
+                                    <div class="readiness-progress-bar" style="width: {{ roadmap_summary.pct }}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="small text-muted pt-2 border-top" style="border-color: var(--dash-border) !important;">
+                            {% if pilot_cert %}
+                                <i class="bi bi-patch-check text-success me-1" aria-hidden="true"></i>
+                                Existing valid certificate preserved (<code>{{ pilot_cert.certificate_id }}</code>).
+                            {% else %}
+                                Practice Mode does not issue certificates and never triggers retake cooldowns.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Metrics Strip: Strictly Real Database Counts & Quota -->
+            <section class="row g-3 mb-4" aria-label="Usage and Practice Telemetry">
+                <div class="col-md-4">
+                    <div class="readiness-surface-card">
+                        <div class="readiness-stat-label">Daily AI Practice Quota (24h)</div>
+                        <div class="readiness-stat-value tabular-nums">
+                            {{ quota.remaining }} <span class="readiness-stat-unit">/ {{ quota.limit }} left</span>
+                        </div>
+                        <div class="small text-muted mt-1">
+                            {% if quota.allowed %}
+                                {{ quota.used }} AI-assisted drill{{ quota.used|pluralize }} used. Deterministic code audits remain unlimited.
+                            {% else %}
+                                AI quota reached for 24h. Deterministic Stage 1 audits stay available.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="readiness-surface-card">
+                        <div class="readiness-stat-label">Readiness Practice Sessions</div>
+                        <div class="readiness-stat-value tabular-nums">{{ practice_total }}</div>
+                        <div class="small text-muted mt-1">
+                            {% if practice_evaluated_count > 0 and practice_avg_score is not None %}
+                                Evaluated Avg: <strong class="tabular-nums">{{ practice_avg_score|floatformat:1 }}%</strong> ({{ practice_evaluated_count }} completed)
+                            {% else %}
+                                No evaluated practice runs recorded yet.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="readiness-surface-card">
+                        <div class="readiness-stat-label">Accessibility &amp; Consent</div>
+                        <div class="readiness-stat-value" style="font-size: 1.15rem;">
+                            {% if readiness_pref and readiness_pref.extended_time_enabled %}
+                                +25% Extended Time On
+                            {% else %}
+                                Standard Timing
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted mt-1">
+                            {% if readiness_pref and readiness_pref.last_consented_at %}
+                                Policy v{{ readiness_pref.last_consent_version }} reviewed {{ readiness_pref.last_consented_at|date:"M d, Y" }}.
+                            {% else %}
+                                Explicit policy review required before launching exercises.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Practice History + Legacy Preservation Link -->
+            <section class="row g-3" aria-label="Practice History">
+                <div class="col-lg-8">
+                    <div class="readiness-surface-card">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h2 class="h6 fw-bold mb-0">Recent Readiness Practice</h2>
+                            <a href="{% url 'interviews:readiness_history' %}" class="small text-decoration-none">View Full History</a>
+                        </div>
+                        {% if recent_practice %}
+                        <div class="table-responsive">
+                            <table class="interview-table">
+                                <thead>
+                                    <tr>
+                                        <th>Role</th>
+                                        <th>Scope</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in recent_practice %}
+                                    <tr>
+                                        <td class="fw-medium">{{ item.career_path.name }}</td>
+                                        <td class="text-muted">{{ item.get_practice_scope_display }}</td>
+                                        <td><span class="readiness-pill readiness-pill-neutral">{{ item.get_status_display }}</span></td>
+                                        <td class="text-end tabular-nums">
+                                            {% if item.overall_score is not None %}
+                                                {{ item.overall_score }}%
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="readiness-empty-box">
+                            <p class="fw-medium mb-1">No readiness practice sessions yet</p>
+                            <p class="small text-muted mb-0">
+                                Inspect the <a href="{% url 'interviews:readiness_role_overview' 'software-engineer' %}">Software Engineer practice overview</a> or browse all <a href="{% url 'interviews:readiness_roles' %}">15 career paths</a>.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="readiness-surface-card">
+                        <h2 class="h6 fw-bold mb-2">Legacy Practice Archive</h2>
+                        <p class="small text-muted mb-3">
+                            Your previous MCQ, Python coding, STAR, and mock interview tools remain accessible without disruption during rollout.
+                        </p>
+                        <div class="d-flex flex-column gap-2">
+                            <a href="{% url 'interviews:reports' %}" class="dash-btn dash-btn-outline dash-btn-sm justify-content-between">
+                                <span>Legacy Reports ({{ legacy_attempts_count }})</span>
+                                <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                            <a href="{% url 'interviews:coding_list' %}" class="dash-btn dash-btn-outline dash-btn-sm justify-content-between">
+                                <span>Legacy Coding Challenges</span>
+                                <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                            <a href="{% url 'interviews:mock_list' %}" class="dash-btn dash-btn-outline dash-btn-sm justify-content-between">
+                                <span>Legacy Mock Simulator</span>
+                                <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

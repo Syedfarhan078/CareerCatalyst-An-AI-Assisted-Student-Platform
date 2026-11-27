@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Practice History &amp; AI Quota — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.0">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="readiness-header">
+                <div>
+                    <nav class="interview-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'interviews:hub' %}">Career Readiness</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span aria-current="page">Practice History &amp; Quota</span>
+                    </nav>
+                    <h1 class="interview-page-title">Practice History &amp; AI Quota</h1>
+                    <p class="interview-page-subtitle">
+                        Real attempt history from the new assessment schema, separated cleanly from certification records and legacy quiz archives.
+                    </p>
+                </div>
+                <a href="{% url 'interviews:hub' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to Hub
+                </a>
+            </div>
+
+            <!-- Daily Quota Banner -->
+            <section class="readiness-surface-card mb-4" aria-label="Daily Practice AI Quota">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="readiness-eyebrow d-block mb-1">24-Hour Practice AI Budget</span>
+                        <h2 class="h5 fw-bold mb-1 tabular-nums">
+                            {{ quota.remaining }} of {{ quota.limit }} AI-assisted practice runs remaining
+                        </h2>
+                        <p class="small text-muted mb-0">
+                            {% if quota.allowed %}
+                                {{ quota.used }} AI-assisted drill{{ quota.used|pluralize }} logged in the past 24 hours. Deterministic Stage 1 code-audit exercises do not consume this quota.
+                            {% else %}
+                                Daily AI limit reached ({{ quota.used }}/{{ quota.limit }}). Deterministic Stage 1 structural diagnosis drills remain accessible with no AI quota cap.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <span class="readiness-pill {% if quota.allowed %}readiness-pill-active{% else %}readiness-pill-warn{% endif %} tabular-nums">
+                        Used: {{ quota.used }} / {{ quota.limit }}
+                    </span>
+                </div>
+            </section>
+
+            <!-- Separate Practice vs Certification History -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-7">
+                    <div class="readiness-surface-card h-100">
+                        <h2 class="h6 fw-bold mb-3">Practice Sessions</h2>
+                        {% if practice_sessions %}
+                        <div class="table-responsive">
+                            <table class="interview-table">
+                                <thead>
+                                    <tr>
+                                        <th>Role</th>
+                                        <th>Scope</th>
+                                        <th>Version</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in practice_sessions %}
+                                    <tr>
+                                        <td class="fw-medium">{{ s.career_path.name }}</td>
+                                        <td class="small text-muted">{{ s.get_practice_scope_display }}</td>
+                                        <td><span class="readiness-mono-tag">{{ s.blueprint_version }}</span></td>
+                                        <td><span class="readiness-pill readiness-pill-neutral">{{ s.get_status_display }}</span></td>
+                                        <td class="text-end tabular-nums">
+                                            {% if s.overall_score is not None %}{{ s.overall_score }}%{% else %}—{% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="readiness-empty-box">
+                            <p class="fw-medium mb-1">No practice assessments recorded yet</p>
+                            <p class="small text-muted mb-0">Practice scores and feedback appear here once Stage 1–3 drills are completed.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="readiness-surface-card h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h2 class="h6 fw-bold mb-0">Certification Attempts</h2>
+                            <span class="readiness-pill readiness-pill-locked">Locked in Pilot Shell</span>
+                        </div>
+                        {% if certification_sessions %}
+                        <div class="table-responsive">
+                            <table class="interview-table">
+                                <thead>
+                                    <tr>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cs in certification_sessions %}
+                                    <tr>
+                                        <td class="fw-medium">{{ cs.career_path.name }}</td>
+                                        <td><span class="readiness-pill readiness-pill-neutral">{{ cs.get_status_display }}</span></td>
+                                        <td class="text-end tabular-nums">
+                                            {% if cs.passed is True %}Passed{% elif cs.passed is False %}Not Passed{% else %}Pending{% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="readiness-empty-box">
+                            <p class="fw-medium mb-1">No certification attempts recorded</p>
+                            <p class="small text-muted mb-0">Certification records are stored separately from Practice Mode runs.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="readiness-surface-card d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="small text-muted">
+                    Looking for older MCQ quizzes, coding challenges, or mock interviews? ({{ legacy_attempts_count }} legacy attempt{{ legacy_attempts_count|pluralize }})
+                </div>
+                <a href="{% url 'interviews:reports' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                    Open Legacy Reports
+                </a>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ career_path.name }} Practice Overview — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.0">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="readiness-header">
+                <div>
+                    <nav class="interview-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'dashboard' %}">Workspace</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <a href="{% url 'interviews:hub' %}">Career Readiness</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span aria-current="page">{{ career_path.name }}</span>
+                    </nav>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h1 class="interview-page-title mb-0">{{ career_path.name }} Assessment Overview</h1>
+                        <span class="readiness-pill readiness-pill-active">Active Pilot</span>
+                        <span class="readiness-mono-tag">{{ blueprint.version }}</span>
+                    </div>
+                    <p class="interview-page-subtitle">
+                        Practical readiness evaluation built for the AI era: verify code, navigate changing constraints, and defend decisions.
+                    </p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'interviews:readiness_policy' career_path.slug %}" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                        Policy &amp; Preferences
+                    </a>
+                    <a href="{% url 'interviews:readiness_roles' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                        All Roles
+                    </a>
+                </div>
+            </div>
+
+            <!-- Mode Distinction Notice -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-7">
+                    <div class="readiness-surface-card h-100">
+                        <span class="readiness-eyebrow d-block mb-2">Practice Mode · Unlimited Learning Loop</span>
+                        <h2 class="h5 fw-bold mb-2">What Practice Exercises Evaluate</h2>
+                        <p class="small text-muted mb-3">
+                            Instead of testing trivia recall, Practice Mode builds fluency across three 7–10 minute applied drills. Practice attempts never affect certification cooldowns and never mint certificates.
+                        </p>
+                        <div class="d-flex flex-wrap gap-3 small">
+                            <div>
+                                <span class="text-muted">Daily AI Quota (24h):</span>
+                                <strong class="tabular-nums">{{ quota.remaining }} / {{ quota.limit }} left</strong>
+                            </div>
+                            <div>
+                                <span class="text-muted">Timing Preference:</span>
+                                <strong>{% if readiness_pref and readiness_pref.extended_time_enabled %}+25% Extended{% else %}Standard (15 / 15 / 12 min cert){% endif %}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="readiness-surface-card readiness-cert-locked-card h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="readiness-eyebrow">Certification Mode</span>
+                            <span class="readiness-pill readiness-pill-locked">
+                                <i class="bi bi-lock-fill me-1" aria-hidden="true"></i> Locked
+                            </span>
+                        </div>
+                        <h2 class="h6 fw-bold mb-1">CareerCatalyst Career Readiness Certificate</h2>
+                        <p class="small text-muted mb-2">
+                            {{ cert_locked_reason }}
+                        </p>
+                        <div class="small text-muted tabular-nums">
+                            Prerequisites: 100% Roadmap ({{ roadmap_summary.completed }}/{{ roadmap_summary.total }}) · Passing Score {{ blueprint.passing_score }}% · Critical Gates
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 Planned Practice Exercise Types -->
+            <section class="mb-4" aria-labelledby="practice-formats-heading">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h2 id="practice-formats-heading" class="h6 fw-bold mb-0">Planned Practice Exercise Formats</h2>
+                    <span class="small text-muted">Stage workbenches activate in upcoming Sprint 3–5</span>
+                </div>
+                <div class="row g-3">
+                    {% for fmt in practice_formats %}
+                    <div class="col-md-4">
+                        <div class="readiness-surface-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                    <span class="readiness-eyebrow">{{ fmt.stage_label }}</span>
+                                    <span class="readiness-mono-tag tabular-nums">~{{ fmt.duration_min }} min</span>
+                                </div>
+                                <h3 class="h6 fw-bold mb-2">{{ fmt.title }}</h3>
+                                <p class="small text-muted mb-3">{{ fmt.evaluates }}</p>
+                            </div>
+                            <div class="pt-2 border-top d-flex align-items-center justify-content-between" style="border-color: var(--dash-border) !important;">
+                                <span class="small text-muted">
+                                    {% if fmt.requires_ai %}Uses AI quota{% else %}No AI quota needed{% endif %}
+                                </span>
+                                <a href="{% url 'interviews:readiness_policy' career_path.slug %}?scope={{ fmt.scope }}" class="small fw-semibold text-decoration-none">
+                                    Review Policy <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Competency Rubric Matrix -->
+            <section class="readiness-surface-card" aria-labelledby="competency-rubric-heading">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <h2 id="competency-rubric-heading" class="h6 fw-bold mb-0">Evaluated Competencies &amp; Critical Gates</h2>
+                    <span class="small text-muted">Certification passes require &ge;{{ blueprint.passing_score }}% overall AND passing all Critical Gates</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="interview-table">
+                        <thead>
+                            <tr>
+                                <th>Competency</th>
+                                <th>Weight</th>
+                                <th>Gate Floor</th>
+                                <th>Standard for Competence (75+ Band)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comp in competencies %}
+                            <tr>
+                                <td class="fw-semibold">{{ comp.name }}</td>
+                                <td class="tabular-nums">{% widthratio comp.weight 1 100 %}%</td>
+                                <td>
+                                    {% if comp.is_critical %}
+                                        <span class="readiness-pill readiness-pill-warn tabular-nums">Critical &ge; {{ comp.critical_floor|floatformat:0 }}%</span>
+                                    {% else %}
+                                        <span class="text-muted small">Weighted</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ comp.rubric_bands.75 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

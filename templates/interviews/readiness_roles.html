@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Career Track Selector — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.0">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="readiness-header">
+                <div>
+                    <nav class="interview-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'dashboard' %}">Workspace</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <a href="{% url 'interviews:hub' %}">Career Readiness</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span aria-current="page">Career Selector</span>
+                    </nav>
+                    <h1 class="interview-page-title">Career Assessment Tracks ({{ total_role_count }})</h1>
+                    <p class="interview-page-subtitle">
+                        Software Engineer is open as the initial pilot track. Remaining roles will unlock cleanly role by role after pilot validation.
+                    </p>
+                </div>
+                <a href="{% url 'interviews:hub' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to Hub
+                </a>
+            </div>
+
+            <!-- Archetype Filter Tabs -->
+            <div class="interview-tabs flex-wrap" role="navigation" aria-label="Filter career tracks by assessment archetype">
+                <a href="?archetype=ALL" class="interview-tab-btn {% if selected_archetype == 'ALL' %}active{% endif %}" {% if selected_archetype == 'ALL' %}aria-current="page"{% endif %}>
+                    All Roles ({{ total_role_count }})
+                </a>
+                <a href="?archetype=ENGINEERING" class="interview-tab-btn {% if selected_archetype == 'ENGINEERING' %}active{% endif %}" {% if selected_archetype == 'ENGINEERING' %}aria-current="page"{% endif %}>
+                    Engineering &amp; Code Review
+                </a>
+                <a href="?archetype=DATA_ML" class="interview-tab-btn {% if selected_archetype == 'DATA_ML' %}active{% endif %}" {% if selected_archetype == 'DATA_ML' %}aria-current="page"{% endif %}>
+                    Data, ML &amp; AI Lab
+                </a>
+                <a href="?archetype=CLOUD_SEC" class="interview-tab-btn {% if selected_archetype == 'CLOUD_SEC' %}active{% endif %}" {% if selected_archetype == 'CLOUD_SEC' %}aria-current="page"{% endif %}>
+                    Cloud &amp; Security
+                </a>
+                <a href="?archetype=PRODUCT_DESIGN" class="interview-tab-btn {% if selected_archetype == 'PRODUCT_DESIGN' %}active{% endif %}" {% if selected_archetype == 'PRODUCT_DESIGN' %}aria-current="page"{% endif %}>
+                    Product &amp; Design
+                </a>
+            </div>
+
+            <!-- Role Grid -->
+            <div class="row g-3">
+                {% for item in role_cards %}
+                <div class="col-md-6 col-xl-4">
+                    <article class="readiness-surface-card readiness-role-card h-100 d-flex flex-column justify-content-between {% if item.is_active_pilot %}is-pilot{% else %}is-coming-soon{% endif %}">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                <span class="readiness-eyebrow">{{ item.archetype_label }}</span>
+                                {% if item.is_active_pilot %}
+                                    <span class="readiness-pill readiness-pill-active">Active Pilot</span>
+                                {% else %}
+                                    <span class="readiness-pill readiness-pill-neutral">Coming Soon</span>
+                                {% endif %}
+                            </div>
+
+                            <h2 class="h5 fw-bold mb-1" style="color: var(--dash-text);">
+                                {{ item.career_path.name }}
+                            </h2>
+                            <div class="small text-muted mb-2">
+                                {{ item.career_path.difficulty }} · {{ item.career_path.estimated_weeks }}-week roadmap
+                            </div>
+                            <p class="small mb-3" style="color: var(--dash-text-muted); line-height: 1.5;">
+                                {{ item.focus }}
+                            </p>
+                        </div>
+
+                        <div class="pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: var(--dash-border) !important;">
+                            {% if item.is_active_pilot %}
+                                <span class="small fw-medium text-success">Practice Overview Open</span>
+                                <a href="{% url 'interviews:readiness_role_overview' item.career_path.slug %}" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                                    Open Track
+                                </a>
+                            {% else %}
+                                <span class="small text-muted">Roadmap available</span>
+                                <button type="button" class="dash-btn dash-btn-outline dash-btn-sm px-3" disabled aria-disabled="true">
+                                    Coming Soon
+                                </button>
+                            {% endif %}
+                        </div>
+                    </article>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="readiness-surface-card readiness-empty-box">
+                        <p class="mb-0">No career roles match this archetype filter.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
