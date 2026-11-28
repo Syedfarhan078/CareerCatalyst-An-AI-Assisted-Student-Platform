@@ -281,10 +281,18 @@ class BlueprintRegistryService:
         if stage_number == 3:
             s3 = bundle['stage_3']
             return {
-                'task_id': f"{bundle['bundle_id']}-s3",
+                'task_id': s3.get('task_id', f"{bundle['bundle_id']}-s3"),
                 'bundle_id': bundle['bundle_id'],
+                'title': s3.get('title', bundle.get('title', 'Adaptive Ownership Defense')),
+                'scenario_context': s3.get('scenario_context', ''),
+                'system_constraints': list(s3.get('system_constraints', [])),
+                'competency_targets': list(s3.get('competency_targets', [])),
+                'initial_question': s3.get('initial_question', ''),
+                'initial_probe_type': s3.get('initial_probe_type', 'FAILURE_HANDLING'),
+                'initial_target_competency': s3.get('initial_target_competency', 'se_ownership'),
                 'focus_competencies': s3['focus_competencies'],
                 'twist_pool': s3['twist_pool'],
+                'grading_meta': s3.get('grading_meta', {}),
             }
         raise ValueError(f"Unsupported stage_number: {stage_number}")
 
@@ -306,6 +314,13 @@ class BlueprintRegistryService:
             if not part_a_locked:
                 # Never reveal the constraint pivot before candidate submits Phase A
                 snap.pop('part_b_twist', None)
+            return snap
+
+        if getattr(stage_response, 'stage_number', 1) == 3:
+            # Strip server-only probe pools and rubric anchors before UI rendering
+            snap.pop('twist_pool', None)
+            snap.pop('initial_probe_type', None)
+            snap.pop('initial_target_competency', None)
             return snap
 
         code = snap.get('artifact_code', '')

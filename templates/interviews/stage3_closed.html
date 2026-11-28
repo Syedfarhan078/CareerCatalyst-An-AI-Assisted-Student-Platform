@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stage 3 Unavailable — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.3">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="readiness-surface-card mx-auto" style="max-width: 640px;">
+                <span class="readiness-pill readiness-pill-warn mb-3">
+                    {% if closed_reason == 'QUOTA_EXHAUSTED' %}24h AI Quota Reached{% elif closed_reason == 'EXPIRED' %}Timer Expired{% else %}Defense Closed{% endif %}
+                </span>
+                <h1 class="h4 fw-bold mb-2">
+                    {% if closed_reason == 'QUOTA_EXHAUSTED' %}
+                        Daily AI-Assisted Practice Quota Reached ({{ quota.used }}/{{ quota.limit }})
+                    {% elif closed_reason == 'EXPIRED' %}
+                        This Stage 3 Defense Window Expired
+                    {% else %}
+                        Stage 3 Defense Session Closed
+                    {% endif %}
+                </h1>
+                <p class="small text-muted mb-4">
+                    {% if closed_reason == 'QUOTA_EXHAUSTED' %}
+                        You have used all {{ quota.limit }} AI-assisted Stage 3 sessions in the past 24 hours. Deterministic Stage 1 (Code Review) and Stage 2 (Scenario Pivot) drills remain unlimited anytime.
+                    {% else %}
+                        Practice runs never affect certification status or trigger retake cooldowns. You can start another Stage 3 Ownership Defense drill whenever daily AI quota permits.
+                    {% endif %}
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    {% if closed_reason == 'QUOTA_EXHAUSTED' %}
+                    <form method="POST" action="{% url 'interviews:stage1_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                            Practice Stage 1 (No Quota)
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'interviews:stage2_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-outline dash-btn-sm px-3">
+                            Practice Stage 2 (No Quota)
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{% url 'interviews:stage3_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                            Start New Stage 3 Defense
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'interviews:readiness_history' %}" class="dash-btn dash-btn-outline dash-btn-sm px-3">
+                        Practice History
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

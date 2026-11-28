@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stage 3 Feedback — {{ career_path.name }} — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.3">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="readiness-header">
+                <div>
+                    <nav class="interview-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'interviews:hub' %}">Career Readiness</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <a href="{% url 'interviews:readiness_history' %}">Practice History</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span aria-current="page">Stage 3 Evaluation</span>
+                    </nav>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h1 class="interview-page-title mb-0">{{ career_path.name }} · Stage 3 Feedback</h1>
+                        <span class="readiness-pill readiness-pill-pilot">Practice Mode · Hybrid Defense</span>
+                    </div>
+                    <p class="interview-page-subtitle">{{ candidate_task.title }} · {{ session.task_bundle_id }}</p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    {% if quota.allowed %}
+                    <form method="POST" action="{% url 'interviews:stage3_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                            Practice Another Defense
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="{% url 'interviews:readiness_history' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                        View History
+                    </a>
+                </div>
+            </div>
+
+            <!-- Overall Score & Guardrails -->
+            <section class="readiness-surface-card mb-4" aria-label="Evaluation Summary">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <div class="readiness-stat-label">Hybrid Stage 3 Defense Score</div>
+                        <div class="readiness-stat-value tabular-nums">{{ evaluation.weighted_total }}%</div>
+                        <div class="small text-muted mt-1">
+                            Practice benchmark: 70.0% + Testing gate &ge; 60%
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="readiness-stat-label">Critical Gate &amp; Defense Depth</div>
+                        <div class="mt-1">
+                            {% if evaluation.critical_gates_passed %}
+                                <span class="readiness-pill readiness-pill-active">Critical Competency Gate Passed</span>
+                            {% else %}
+                                <span class="readiness-pill readiness-pill-warn">Critical Floor Missed</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted mt-2">
+                            Completed {{ evidence.answered_turns|default:turns|length }} defense turn(s) · Remaining quota: {{ quota.remaining }}/{{ quota.limit }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="readiness-meta-box small text-muted">
+                            <strong class="d-block text-body mb-1">Evidence-Grounded Summary</strong>
+                            {{ evidence.overall_summary }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Competency Breakdown Cards -->
+            <section class="readiness-surface-card mb-4" aria-labelledby="stage3-comp-heading">
+                <h2 id="stage3-comp-heading" class="h6 fw-bold mb-3">Competency Breakdown &amp; Roadmap Remediation</h2>
+                <div class="row g-3">
+                    {% for item in competency_cards %}
+                    <div class="col-md-6">
+                        <div class="stage1-finding-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                    <span class="fw-bold small">{{ item.obj.competency_name }}</span>
+                                    <span class="readiness-pill {% if item.obj.gate_passed and item.obj.score >= 70 %}readiness-pill-active{% else %}readiness-pill-warn{% endif %} tabular-nums">
+                                        {{ item.obj.score }}%
+                                    </span>
+                                </div>
+                                <div class="small text-muted mb-2 tabular-nums">
+                                    Weight {% widthratio item.obj.weight 1 100 %}% · Det {{ item.obj.deterministic_score }}% · AI {{ item.obj.ai_score }}%
+                                    {% if item.obj.is_critical %} · Critical Floor {{ item.obj.critical_floor|floatformat:0 }}%{% endif %}
+                                </div>
+                                <p class="small mb-2" style="color: var(--dash-text-muted);">{{ item.obj.reasoning }}</p>
+                                {% if item.obj.evidence_quotes %}
+                                <ul class="stage1-compact-list mb-2">
+                                    {% for q in item.obj.evidence_quotes %}
+                                    <li><em>"{{ q }}"</em></li>
+                                    {% endfor %}
+                                </ul>
+                                {% endif %}
+                            </div>
+                            {% if item.topics and item.obj.score < 70 or item.topics and not item.obj.gate_passed %}
+                            <div class="pt-2 border-top" style="border-color: var(--dash-border) !important;">
+                                <div class="readiness-eyebrow mb-1">Recommended Roadmap Topics</div>
+                                <ul class="stage1-compact-list mb-0">
+                                    {% for t in item.topics %}
+                                    <li>
+                                        <a href="{% url 'roadmaps:learning_detail' career_path.slug %}#milestone-week-{{ t.milestone.week_number }}" class="text-decoration-none">
+                                            W{{ t.milestone.week_number }}: {{ t.title }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Qualitative Defense Signals -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="readiness-surface-card h-100">
+                        <h2 class="h6 fw-bold mb-3">Verified Ownership Strengths</h2>
+                        {% if evidence.strengths %}
+                        <ul class="stage1-compact-list mb-0">
+                            {% for s in evidence.strengths %}
+                            <li>{{ s }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="small text-muted mb-0">No specific ownership strengths recorded.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="readiness-surface-card h-100">
+                        <h2 class="h6 fw-bold mb-3">Unanswered Areas &amp; Contradictions</h2>
+                        {% if evidence.weak_areas or evidence.contradictions_detected %}
+                        <ul class="stage1-compact-list mb-0">
+                            {% for w in evidence.weak_areas %}
+                            <li>{{ w }}</li>
+                            {% endfor %}
+                            {% for c in evidence.contradictions_detected %}
+                            <li><strong>Contradiction:</strong> {{ c }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="small text-success mb-0">Consistent technical defense with zero cross-turn contradictions.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Defense Transcript Review -->
+            <section class="readiness-surface-card" aria-label="Completed Defense Transcript">
+                <h2 class="h6 fw-bold mb-3">Completed Defense Transcript ({{ turns|length }} Turns)</h2>
+                <div class="d-flex flex-column gap-3">
+                    {% for t in turns %}
+                    <div class="stage3-turn-card is-locked">
+                        <div class="readiness-eyebrow mb-1">Turn {{ t.turn_number }} · {{ t.probe_type_label }}</div>
+                        <p class="small fw-semibold mb-2">{{ t.interviewer_prompt }}</p>
+                        <div class="stage3-locked-answer small text-muted stage2-readonly-copy">{{ t.candidate_reply }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+{% endblock %}

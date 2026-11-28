@@ -219,3 +219,12 @@ def validate_blueprint_spec(spec: Dict[str, Any]) -> None:
         s3 = bundle.get('stage_3', {})
         if not s3.get('focus_competencies') or not s3.get('twist_pool'):
             raise BlueprintValidationError(f"Bundle '{bid}' Stage 3 must define focus_competencies and twist_pool.")
+        if not s3.get('scenario_context') or not s3.get('initial_question'):
+            raise BlueprintValidationError(
+                f"Bundle '{bid}' Stage 3 must define scenario_context and initial_question."
+            )
+        s3_meta = s3.get('grading_meta', {})
+        if not s3_meta.get('rubric_anchors'):
+            raise BlueprintValidationError(
+                f"Bundle '{bid}' Stage 3 grading_meta must define rubric_anchors."
+            )

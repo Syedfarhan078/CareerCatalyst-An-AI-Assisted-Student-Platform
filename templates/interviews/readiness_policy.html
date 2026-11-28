@@ -56,11 +56,18 @@
                 <div>
                     <strong>Preferences and policy consent saved</strong> for {{ career_path.name }} ({{ blueprint.version }} · {{ durations_preview.multiplier_label }}).
                     <div class="small mt-1">
-                        Stages 1 &amp; 2 Practice drills are active for Software Engineer; Stage 3 adaptive defense opens next.
+                        Stages 1–3 Practice drills are active for Software Engineer; Certification Mode activates after calibration.
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    {% if requested_scope == 'STAGE_2' %}
+                    {% if requested_scope == 'STAGE_3' %}
+                    <form method="POST" action="{% url 'interviews:stage3_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                            Start Stage 3 Defense Drill
+                        </button>
+                    </form>
+                    {% elif requested_scope == 'STAGE_2' %}
                     <form method="POST" action="{% url 'interviews:stage2_practice_start' career_path.slug %}">
                         {% csrf_token %}
                         <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
@@ -78,6 +85,12 @@
                         {% csrf_token %}
                         <button type="submit" class="dash-btn dash-btn-outline dash-btn-sm px-3">
                             Start Stage 2 Drill
+                        </button>
+                    </form>
+                    <form method="POST" action="{% url 'interviews:stage3_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-outline dash-btn-sm px-3">
+                            Start Stage 3 Defense
                         </button>
                     </form>
                     {% endif %}

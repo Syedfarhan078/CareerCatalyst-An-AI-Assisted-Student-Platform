@@ -465,11 +465,45 @@
       },
       "stage_3": {
         "task_id": "se-b1-s3",
+        "title": "Checkout Reservation & Webhook Reliability Defense",
         "focus_competencies": ["se_diagnosis", "se_architecture", "se_testing", "se_ownership"],
+        "competency_targets": [
+          "Engineering Ownership & Defense",
+          "Architecture & Trade-offs",
+          "Testing & Edge-Case Rigor",
+          "Code & Defect Diagnosis"
+        ],
+        "scenario_context": "You designed and shipped the high-throughput flash-sale checkout service combining PostgreSQL order ledgers, inventory reservations, and asynchronous payment confirmation webhooks handling 500 req/sec spikes and duplicate webhook retries.",
+        "system_constraints": [
+          "PostgreSQL primary enforces inventory integrity across concurrent workers",
+          "Payment gateway delivers at-least-once webhooks out of order and may time out",
+          "p95 checkout API latency budget is <= 100ms"
+        ],
+        "initial_question": "In your checkout & stock-reservation architecture, why is checking inventory inside a synchronous database transaction around an external payment call fragile at scale—and what happens operationally if a reservation succeeds right before PostgreSQL commits fail or time out?",
+        "initial_probe_type": "FAILURE_HANDLING",
+        "initial_target_competency": "se_ownership",
         "twist_pool": [
           "What happens in your Stage 2 solution if Redis reservation succeeds but PostgreSQL commit times out 100ms later?",
           "Your Stage 1 fix still mutates catalog_items in memory or skips concurrency test cases — design one deterministic test proving zero double-deduction."
-        ]
+        ],
+        "grading_meta": {
+          "engine_version": "stage3-eval-2026.1",
+          "competency_weights": {
+            "se_ownership": 0.35,
+            "se_architecture": 0.30,
+            "se_testing": 0.20,
+            "se_diagnosis": 0.15
+          },
+          "rubric_anchors": [
+            "Separates slow external payment I/O from database row locks cleanly",
+            "Explains atomic conditional stock update or short-TTL reservation + reconciliation reaper",
+            "Handles duplicate and out-of-order webhooks via idempotency keys and monotonic state transitions",
+            "Identifies monitoring signals (p95, lock wait, orphan rate), honest limitations, and concurrency/fault tests"
+          ],
+          "technical_red_flags": [
+            "fail open", "ignore duplicates", "trust client stock", "hold lock during payment", "sleep in production"
+          ]
+        }
       }
     },
     {
@@ -762,11 +796,45 @@
       },
       "stage_3": {
         "task_id": "se-b2-s3",
+        "title": "Multi-Tenant Export Worker & SLA Isolation Defense",
         "focus_competencies": ["se_diagnosis", "se_architecture", "se_testing", "se_ownership"],
+        "competency_targets": [
+          "Engineering Ownership & Defense",
+          "Architecture & Trade-offs",
+          "Testing & Edge-Case Rigor",
+          "Code & Defect Diagnosis"
+        ],
+        "scenario_context": "You own the multi-tenant billing CSV export pipeline running behind 512MB RAM workers, supporting both 200k-invoice enterprise exports and <15s SLA turnarounds for small tenants under malformed input risks.",
+        "system_constraints": [
+          "Workers are strictly capped at 512MB RSS memory",
+          "Enterprise tenants may trigger malformed UTF-16/null payloads",
+          "Strict tenant data isolation and Decimal currency accuracy are mandatory"
+        ],
+        "initial_question": "Your export pipeline uploads 200,000-row CSVs to cloud object storage inside bounded-RAM workers. Walk through what breaks if a worker dies mid-upload or receives malformed UTF-16 invoice notes—and how your design prevents customers from ever downloading corrupted files or starving small tenants.",
+        "initial_probe_type": "FAILURE_HANDLING",
+        "initial_target_competency": "se_ownership",
         "twist_pool": [
           "If a worker dies halfway through writing a 200k-row export to S3/Cloudinary, how do you prevent partial corrupted downloads?",
           "Walk through an integration test that catches both N+1 query regression and a null tenant record."
-        ]
+        ],
+        "grading_meta": {
+          "engine_version": "stage3-eval-2026.1",
+          "competency_weights": {
+            "se_ownership": 0.35,
+            "se_architecture": 0.30,
+            "se_testing": 0.20,
+            "se_diagnosis": 0.15
+          },
+          "rubric_anchors": [
+            "Isolates small SLA lane vs bulk worker queues to eliminate head-of-line blocking",
+            "Streams keyset/cursor chunks cleanly within 512MB RAM cap",
+            "Uses bounded retries + dead-letter queue (DLQ) and atomic object finalization before marking READY",
+            "Verifies N+1 query ceiling, OOM safety, and malformed poison-pill handling via concrete integration tests"
+          ],
+          "technical_red_flags": [
+            "unlimited retries", "load all rows in list", "float money", "expose partial upload"
+          ]
+        }
       }
     },
     {
@@ -1067,11 +1135,45 @@
       },
       "stage_3": {
         "task_id": "se-b3-s3",
+        "title": "Auth Security & Cache Partition Resilience Defense",
         "focus_competencies": ["se_diagnosis", "se_architecture", "se_testing", "se_ownership"],
+        "competency_targets": [
+          "Engineering Ownership & Defense",
+          "Architecture & Trade-offs",
+          "Testing & Edge-Case Rigor",
+          "Code & Defect Diagnosis"
+        ],
+        "scenario_context": "You own the token authentication and 100 req/60s rate-limiting middleware running across 8 Gunicorn worker processes backed by PostgreSQL revocation state, shared Redis, and an external SSO validator.",
+        "system_constraints": [
+          "Zero unauthorized access is a strict compliance invariant",
+          "Per-worker process memory is NOT shared across the 8 Gunicorn workers",
+          "Redis partitions and 2.5s SSO latency spikes can occur under zone stress"
+        ],
+        "initial_question": "During a 3-minute Redis partition paired with slow upstream SSO responses, why must authentication and rate limiting fail differently—and what concrete security or availability trade-off does your fallback introduce across 8 worker processes?",
+        "initial_probe_type": "SECURITY_RELIABILITY",
+        "initial_target_competency": "se_ownership",
         "twist_pool": [
           "Explain the trade-off between failing open vs. failing closed on rate limiting versus authentication during a cache outage.",
           "Write assertions for a test suite verifying expired tokens, malformed headers, and simulated store exceptions."
-        ]
+        ],
+        "grading_meta": {
+          "engine_version": "stage3-eval-2026.1",
+          "competency_weights": {
+            "se_ownership": 0.35,
+            "se_architecture": 0.30,
+            "se_testing": 0.20,
+            "se_diagnosis": 0.15
+          },
+          "rubric_anchors": [
+            "Strictly fails closed on unverified/erroring authentication paths (never returns True on exception)",
+            "Protects Gunicorn worker pool via tight SSO timeouts, circuit breaker, or load shedding",
+            "Explains multi-worker per-process LocMemCache limits cleanly (revocation lag vs conservative rate cap)",
+            "Defines alerts on 401/429/503 spikes and tests partition, expiry, and revocation behaviors"
+          ],
+          "technical_red_flags": [
+            "fail open auth", "return true on exception", "single python dict revocation", "trust unverified token"
+          ]
+        }
       }
     }
   ]

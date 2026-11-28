@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stage 3: Ownership Defense — {{ career_path.name }} — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.3">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <!-- Session Header -->
+            <header class="readiness-surface-card stage1-session-bar mb-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="readiness-pill readiness-pill-pilot">Practice Mode · AI-Assisted</span>
+                            <span class="readiness-mono-tag">{{ session.blueprint_version }}</span>
+                            {% if session.extended_time_enabled %}
+                            <span class="readiness-pill readiness-pill-active">+25% Extended Time</span>
+                            {% endif %}
+                        </div>
+                        <h1 class="h5 fw-bold mb-0">{{ career_path.name }} · Stage 3 — Ownership Defense</h1>
+                        <div class="small text-muted mt-1">{{ task.title }} · Bounded Defense ({{ min_turns }}–{{ max_turns }} turns max)</div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="stage1-timer-box">
+                            <span class="stage1-timer-label">Defense Turn</span>
+                            <span class="stage1-timer-val tabular-nums">{{ answered_count }} / {{ max_turns }} Answered</span>
+                        </div>
+                        <div class="stage1-timer-box" aria-live="off">
+                            <span class="stage1-timer-label">Time Remaining</span>
+                            <span class="stage1-timer-val tabular-nums" id="stage3TimerDisplay">--:--</span>
+                        </div>
+                        <span class="small text-muted" id="stage3AutosaveStatus" role="status">Draft synced</span>
+                        <form method="POST" action="{% url 'interviews:stage3_abandon' session.session_uuid %}" onsubmit="return confirm('Exit Stage 3 defense? Your answered turns remain saved and exiting triggers no cooldown or penalty.');">
+                            {% csrf_token %}
+                            <button type="submit" class="dash-btn dash-btn-outline dash-btn-sm">
+                                Exit Defense
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Turn Progress Bar -->
+                <div class="mt-3 pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2" style="border-color: var(--dash-border) !important;">
+                    <div class="stage3-turn-track" role="progressbar" aria-valuenow="{{ answered_count }}" aria-valuemin="0" aria-valuemax="{{ max_turns }}" aria-label="Stage 3 defense progress">
+                        {% for i in "1234" %}
+                        <span class="stage3-turn-step {% if forloop.counter <= answered_count %}is-done{% elif active_turn and forloop.counter == active_turn.turn_number %}is-active{% endif %}">
+                            Turn {{ forloop.counter }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    <div class="small text-muted tabular-nums">
+                        Daily AI Quota: <strong>{{ quota.remaining }} / {{ quota.limit }} left</strong>
+                    </div>
+                </div>
+            </header>
+
+            {% if error_message %}
+            <div class="alert alert-danger rounded-3 border mb-3" role="alert">
+                <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i> {{ error_message }}
+            </div>
+            {% endif %}
+
+            {% if is_paused_outage %}
+            <!-- Zero-Penalty AI Outage Pause & Recovery -->
+            <section class="stage3-recovery-banner mb-3" role="status">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="readiness-pill readiness-pill-warn mb-2">Session Paused · Provider Unavailable</span>
+                        <h2 class="h6 fw-bold mb-1">All Answered Turns Saved — Timer Paused Safely</h2>
+                        <p class="small text-muted mb-0">
+                            The adaptive AI interviewer encountered a temporary provider outage while preparing your next follow-up. No penalty, failure, or cooldown has been recorded. Resume safely when ready.
+                        </p>
+                    </div>
+                    <form method="POST" action="{% url 'interviews:stage3_resume' session.session_uuid %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary px-3">
+                            Resume &amp; Retry Follow-Up
+                        </button>
+                    </form>
+                </div>
+            </section>
+            {% elif is_pending_eval %}
+            <!-- Pending Evaluation Outage Recovery -->
+            <section class="stage3-recovery-banner mb-3" role="status">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="readiness-pill readiness-pill-warn mb-2">Pending Evaluation · Progress Preserved</span>
+                        <h2 class="h6 fw-bold mb-1">Defense Transcript Saved — Evaluation Retrying</h2>
+                        <p class="small text-muted mb-0">
+                            Your completed defense turns are locked safely. AI rubric synthesis timed out temporarily, so no fallback fail/pass was issued. Retry evaluation cleanly below.
+                        </p>
+                    </div>
+                    <form method="POST" action="{% url 'interviews:stage3_retry_evaluation' session.session_uuid %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary px-3">
+                            Retry Evaluation Now
+                        </button>
+                    </form>
+                </div>
+            </section>
+            {% endif %}
+
+            <div class="stage3-grid">
+                <!-- Left Column: Engineering Context & Structured Turn Record -->
+                <aside class="stage3-context-pane" aria-label="Engineering Context and Defense Log">
+                    <div class="readiness-surface-card mb-3">
+                        <span class="readiness-eyebrow d-block mb-1">Engineering Scenario</span>
+                        <h2 class="h6 fw-bold mb-2">{{ task.title }}</h2>
+                        <p class="small text-muted mb-3" style="line-height: 1.55;">{{ task.scenario_context }}</p>
+
+                        {% if task.system_constraints %}
+                        <h3 class="readiness-eyebrow mb-2">Production Constraints</h3>
+                        <ul class="stage1-compact-list mb-3">
+                            {% for c in task.system_constraints %}
+                            <li>{{ c }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+
+                        {% if prior_context %}
+                        <div class="readiness-meta-box small">
+                            <span class="readiness-eyebrow d-block mb-1">Relevant Prior Work Context</span>
+                            <div class="text-muted stage2-readonly-copy">{{ prior_context }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Readable Structured Defense Log -->
+                    <div class="readiness-surface-card">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h2 class="h6 fw-bold mb-0">Defense Log</h2>
+                            <span class="readiness-mono-tag">{{ answered_count }}/{{ max_turns }} Locked</span>
+                        </div>
+
+                        <div class="d-flex flex-column gap-3">
+                            {% for t in turns %}
+                            <div class="stage3-turn-card {% if t.is_answered %}is-locked{% endif %}">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                    <span class="readiness-eyebrow">Question #{{ t.turn_number }} · {{ t.probe_type_label }}</span>
+                                    {% if t.is_answered %}
+                                        <span class="readiness-pill readiness-pill-locked">
+                                            <i class="bi bi-lock-fill me-1" aria-hidden="true"></i> Locked
+                                        </span>
+                                    {% else %}
+                                        <span class="readiness-pill readiness-pill-active">Current Prompt</span>
+                                    {% endif %}
+                                </div>
+                                <p class="small fw-semibold mb-2" style="line-height: 1.5;">{{ t.interviewer_prompt }}</p>
+                                {% if t.is_answered %}
+                                <div class="stage3-locked-answer small text-muted stage2-readonly-copy">{{ t.candidate_reply }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Right Column: Active Question Response or Completion Confirmation -->
+                <section class="stage3-work-pane" aria-label="Active Defense Workspace">
+                    {% if ready_for_completion %}
+                    <div class="readiness-surface-card">
+                        <span class="readiness-pill readiness-pill-active mb-2">Defense Turns Complete</span>
+                        <h2 class="h5 fw-bold mb-2">Ready for Ownership Evaluation</h2>
+                        <p class="small text-muted mb-3">
+                            You have completed all {{ answered_count }} defense turns within the bounded Stage 3 session. Review your locked transcript on the left, then submit for evidence-based hybrid rubric evaluation (uses 1 of your 8 daily AI practice runs).
+                        </p>
+                        <form method="POST" action="{% url 'interviews:stage3_workbench' session.session_uuid %}" id="stage3CompleteForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="complete_stage3">
+                            <button type="submit" class="dash-btn dash-btn-primary px-4" id="completeStage3Btn">
+                                Finish &amp; Generate Evaluation
+                            </button>
+                        </form>
+                    </div>
+
+                    {% elif active_turn and not is_paused_outage and not is_pending_eval %}
+                    <form method="POST" action="{% url 'interviews:stage3_workbench' session.session_uuid %}" id="stage3TurnForm" class="readiness-surface-card">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="submit_turn">
+                        <input type="hidden" name="turn_number" value="{{ active_turn.turn_number }}">
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                            <span class="readiness-eyebrow">Active Probe · Turn {{ active_turn.turn_number }} of {{ max_turns }} max</span>
+                            <span class="readiness-mono-tag">Bounded Adaptive Defense</span>
+                        </div>
+
+                        <div class="stage2-design-callout mb-3">
+                            {{ active_turn.interviewer_prompt }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stage3ReplyInput" class="form-label small fw-bold mb-1">
+                                Your Engineering Defense
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="stage3ReplyInput"
+                                name="candidate_reply"
+                                rows="7"
+                                maxlength="3000"
+                                required
+                                placeholder="Be concise and specific: explain mechanism, trade-offs accepted, failure/retry impact, and how you would verify it..."
+                            >{{ draft_text }}</textarea>
+                            <div class="d-flex justify-content-between small text-muted mt-1">
+                                <span>Submitting locks this response permanently before the next follow-up is generated.</span>
+                                <span id="stage3GeneratingNote" class="fw-semibold d-none">Generating follow-up...</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 border-top" style="border-color: var(--dash-border) !important;">
+                            <span class="small text-muted">Concise technical clarity is valued equally with longer prose.</span>
+                            <button type="submit" class="dash-btn dash-btn-primary px-4" id="submitTurnBtn">
+                                Submit Turn {{ active_turn.turn_number }} Response
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const replyEl = document.getElementById('stage3ReplyInput');
+    const autosaveLabel = document.getElementById('stage3AutosaveStatus');
+    const draftUrl = "{% url 'interviews:stage3_save_draft' session.session_uuid %}";
+    const turnForm = document.getElementById('stage3TurnForm');
+    const activeTurnNum = {% if active_turn %}{{ active_turn.turn_number }}{% else %}null{% endif %};
+
+    if (replyEl && turnForm && activeTurnNum !== null) {
+        const csrfToken = turnForm.querySelector('[name="csrfmiddlewaretoken"]').value;
+        let saveTimer = null;
+
+        async function saveDraft() {
+            try {
+                const resp = await fetch(draftUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        turn_number: activeTurnNum,
+                        candidate_reply: replyEl.value
+                    })
+                });
+                autosaveLabel.textContent = resp.ok ? 'Draft saved' : 'Sync pending';
+            } catch (err) {
+                autosaveLabel.textContent = 'Offline draft';
+            }
+        }
+
+        replyEl.addEventListener('input', function() {
+            autosaveLabel.textContent = 'Saving...';
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveDraft, 1200);
+        });
+
+        let turnSubmitted = false;
+        turnForm.addEventListener('submit', function(e) {
+            if (turnSubmitted) {
+                e.preventDefault();
+                return;
+            }
+            turnSubmitted = true;
+            const btn = document.getElementById('submitTurnBtn');
+            const note = document.getElementById('stage3GeneratingNote');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Locking & Preparing Next Step...';
+            }
+            if (note) note.classList.remove('d-none');
+        });
+    }
+
+    const completeForm = document.getElementById('stage3CompleteForm');
+    if (completeForm) {
+        let completing = false;
+        completeForm.addEventListener('submit', function(e) {
+            if (completing) {
+                e.preventDefault();
+                return;
+            }
+            completing = true;
+            const btn = document.getElementById('completeStage3Btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Synthesizing Evidence & Grading...';
+            }
+        });
+    }
+
+    // Countdown Timer synced to server remaining_seconds
+    let remaining = parseInt("{{ remaining_seconds }}", 10) || 0;
+    const timerEl = document.getElementById('stage3TimerDisplay');
+    const isPaused = {{ is_paused_outage|yesno:"true,false" }};
+    function renderTimer() {
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        timerEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        if (remaining <= 60 && !isPaused) {
+            timerEl.classList.add('is-urgent');
+        }
+        if (remaining > 0 && !isPaused) remaining -= 1;
+    }
+    renderTimer();
+    if (!isPaused) setInterval(renderTimer, 1000);
+});
+</script>
+{% endblock %}

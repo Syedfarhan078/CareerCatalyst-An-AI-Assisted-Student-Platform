@@ -81,24 +81,64 @@ class AssessmentAIService:
     @classmethod
     def build_stage3_context_brief(cls, session: AssessmentSession, max_chars: int = 1600) -> str:
         """
-        Builds a token-bounded summary of Stage 1 and Stage 2 submissions/findings
-        so Stage 3 adaptive prompts stay concise and cost-controlled.
+        Builds a token-bounded, cross-user-isolated summary of Stage 1 and Stage 2
+        submissions/findings (on this session or the user's latest evaluated practice
+        runs on the same bundle) so Stage 3 adaptive prompts stay grounded and bounded.
         """
         lines = [
             f"Role: {session.career_path.name} ({session.blueprint_version})",
             f"Bundle: {session.task_bundle_id}",
         ]
-        for sr in session.stage_responses.filter(stage_number__in=[1, 2]).order_by('stage_number'):
+        # 1. Same-session Stage 1/2 responses (Certification / FULL mode)
+        stage_responses = list(
+            session.stage_responses.filter(stage_number__in=[1, 2]).order_by('stage_number')
+        )
+        seen_stages = set()
+        for sr in stage_responses:
+            seen_stages.add(sr.stage_number)
             det = sr.deterministic_result or {}
             resp = sr.response_payload or {}
             if sr.stage_number == 1:
-                caught = det.get('caught_defects', [])
-                missed = det.get('missed_defects', [])
-                lines.append(f"S1 caught={caught} missed={missed} ast_ok={det.get('ast_passed')}")
+                matched = [m.get('defect_id') for m in det.get('matched_defects', [])]
+                missed = [m.get('defect_id') for m in det.get('missed_defects', [])]
+                ast_status = (det.get('ast_report') or {}).get('status', 'NONE')
+                lines.append(f"S1 matched={matched} missed={missed} ast={ast_status}")
             elif sr.stage_number == 2:
-                pa = str((resp.get('part_a') or ''))[:350]
-                pb = str((resp.get('part_b') or ''))[:350]
+                pa = str((resp.get('part_a') or {}).get('initial_approach', ''))[:260]
+                pb = str((resp.get('part_b') or {}).get('updated_approach', ''))[:320]
                 lines.append(f"S2 PartA={pa} | PartB={pb}")
+
+        # 2. Standalone Stage 3 Practice: ground safely with SAME user's latest evaluated Stage 1/2 practice on same role/bundle
+        if session.mode == 'PRACTICE' and session.practice_scope == 'STAGE_3':
+            from apps.interviews.models import AssessmentStageResponse
+
+            for stage_num, scope in ((1, 'STAGE_1'), (2, 'STAGE_2')):
+                if stage_num in seen_stages:
+                    continue
+                prior_sr = (
+                    AssessmentStageResponse.objects.filter(
+                        session__user_id=session.user_id,
+                        session__career_path_id=session.career_path_id,
+                        session__task_bundle_id=session.task_bundle_id,
+                        session__mode='PRACTICE',
+                        session__practice_scope=scope,
+                        session__status='EVALUATED',
+                        stage_number=stage_num,
+                    )
+                    .order_by('-submitted_at')
+                    .first()
+                )
+                if prior_sr:
+                    det = prior_sr.deterministic_result or {}
+                    resp = prior_sr.response_payload or {}
+                    if stage_num == 1:
+                        matched = [m.get('defect_id') for m in det.get('matched_defects', [])]
+                        missed = [m.get('defect_id') for m in det.get('missed_defects', [])]
+                        lines.append(f"Prior Practice S1: matched={matched} missed={missed}")
+                    elif stage_num == 2:
+                        pb = str((resp.get('part_b') or {}).get('updated_approach', ''))[:280]
+                        if pb:
+                            lines.append(f"Prior Practice S2 adapted approach: {pb}")
 
         brief = "\n".join(lines)
         return brief[:max_chars]

@@ -117,6 +117,17 @@
                                     <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
                                 </button>
                             </form>
+                            {% if quota.allowed %}
+                            <form method="POST" action="{% url 'interviews:stage3_practice_start' pilot_path.slug %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dash-btn dash-btn-outline dash-btn-sm px-3">
+                                    Start Stage 3 Defense
+                                    <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="readiness-pill readiness-pill-warn">Stage 3 Quota Reached ({{ quota.used }}/{{ quota.limit }})</span>
+                            {% endif %}
                             <a href="{% url 'interviews:readiness_role_overview' pilot_path.slug %}" class="dash-btn dash-btn-outline dash-btn-sm px-3">
                                 Explore Role Overview
                             </a>
@@ -254,11 +265,15 @@
                                         <td><span class="readiness-pill readiness-pill-neutral">{{ item.get_status_display }}</span></td>
                                         <td class="text-end tabular-nums">
                                             {% if item.status == 'EVALUATED' and item.overall_score is not None %}
-                                                {% if item.practice_scope == 'STAGE_2' %}
+                                                {% if item.practice_scope == 'STAGE_3' %}
+                                                    <a href="{% url 'interviews:stage3_result' item.session_uuid %}" class="text-decoration-none fw-semibold">{{ item.overall_score }}%</a>
+                                                {% elif item.practice_scope == 'STAGE_2' %}
                                                     <a href="{% url 'interviews:stage2_result' item.session_uuid %}" class="text-decoration-none fw-semibold">{{ item.overall_score }}%</a>
                                                 {% else %}
                                                     <a href="{% url 'interviews:stage1_result' item.session_uuid %}" class="text-decoration-none fw-semibold">{{ item.overall_score }}%</a>
                                                 {% endif %}
+                                            {% elif item.status == 'STAGE_3' or item.status == 'PAUSED_OUTAGE' or item.status == 'PENDING_EVALUATION' %}
+                                                <a href="{% url 'interviews:stage3_workbench' item.session_uuid %}" class="small fw-semibold text-decoration-none">Resume</a>
                                             {% elif item.status == 'STAGE_2' %}
                                                 <a href="{% url 'interviews:stage2_workbench' item.session_uuid %}" class="small fw-semibold text-decoration-none">Resume</a>
                                             {% elif item.status == 'STAGE_1' %}

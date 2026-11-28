@@ -3,13 +3,14 @@ from . import views
 from . import views_readiness
 from . import views_stage1
 from . import views_stage2
+from . import views_stage3
 
 app_name = 'interviews'
 
 urlpatterns = [
     path('', views.InterviewHubView.as_view(), name='hub'),
 
-    # AI-Era Career Readiness Hub Shell & Stage 1-2 Pilots (Feature-flagged behind ENABLE_READINESS_ASSESSMENT)
+    # AI-Era Career Readiness Hub Shell & Stage 1-3 Pilots (Feature-flagged behind ENABLE_READINESS_ASSESSMENT)
     path('readiness/roles/', views_readiness.CareerSelectorView.as_view(), name='readiness_roles'),
     path('readiness/role/<slug:slug>/', views_readiness.RolePracticeOverviewView.as_view(), name='readiness_role_overview'),
     path('readiness/role/<slug:slug>/policy/', views_readiness.readiness_policy_view, name='readiness_policy'),
@@ -23,6 +24,13 @@ urlpatterns = [
     path('readiness/practice/<uuid:session_uuid>/stage-2/draft/', views_stage2.stage2_save_draft, name='stage2_save_draft'),
     path('readiness/practice/<uuid:session_uuid>/stage-2/abandon/', views_stage2.stage2_abandon, name='stage2_abandon'),
     path('readiness/practice/<uuid:session_uuid>/stage-2/result/', views_stage2.stage2_result, name='stage2_result'),
+    path('readiness/role/<slug:slug>/practice/stage-3/start/', views_stage3.stage3_practice_start, name='stage3_practice_start'),
+    path('readiness/practice/<uuid:session_uuid>/stage-3/', views_stage3.stage3_workbench, name='stage3_workbench'),
+    path('readiness/practice/<uuid:session_uuid>/stage-3/draft/', views_stage3.stage3_save_draft, name='stage3_save_draft'),
+    path('readiness/practice/<uuid:session_uuid>/stage-3/resume/', views_stage3.stage3_resume, name='stage3_resume'),
+    path('readiness/practice/<uuid:session_uuid>/stage-3/evaluate/', views_stage3.stage3_retry_evaluation, name='stage3_retry_evaluation'),
+    path('readiness/practice/<uuid:session_uuid>/stage-3/abandon/', views_stage3.stage3_abandon, name='stage3_abandon'),
+    path('readiness/practice/<uuid:session_uuid>/stage-3/result/', views_stage3.stage3_result, name='stage3_result'),
     path('readiness/history/', views_readiness.PracticeHistoryView.as_view(), name='readiness_history'),
     
     # Quiz routes

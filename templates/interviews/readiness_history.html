@@ -97,11 +97,15 @@
                                         <td><span class="readiness-pill readiness-pill-neutral">{{ s.get_status_display }}</span></td>
                                         <td class="text-end tabular-nums">
                                             {% if s.status == 'EVALUATED' and s.overall_score is not None %}
-                                                {% if s.practice_scope == 'STAGE_2' %}
+                                                {% if s.practice_scope == 'STAGE_3' %}
+                                                    <a href="{% url 'interviews:stage3_result' s.session_uuid %}" class="fw-semibold text-decoration-none">{{ s.overall_score }}% · Review</a>
+                                                {% elif s.practice_scope == 'STAGE_2' %}
                                                     <a href="{% url 'interviews:stage2_result' s.session_uuid %}" class="fw-semibold text-decoration-none">{{ s.overall_score }}% · Review</a>
                                                 {% else %}
                                                     <a href="{% url 'interviews:stage1_result' s.session_uuid %}" class="fw-semibold text-decoration-none">{{ s.overall_score }}% · Review</a>
                                                 {% endif %}
+                                            {% elif s.status == 'STAGE_3' or s.status == 'PAUSED_OUTAGE' or s.status == 'PENDING_EVALUATION' %}
+                                                <a href="{% url 'interviews:stage3_workbench' s.session_uuid %}" class="small fw-semibold text-decoration-none">Resume</a>
                                             {% elif s.status == 'STAGE_2' %}
                                                 <a href="{% url 'interviews:stage2_workbench' s.session_uuid %}" class="small fw-semibold text-decoration-none">Resume</a>
                                             {% elif s.status == 'STAGE_1' %}
