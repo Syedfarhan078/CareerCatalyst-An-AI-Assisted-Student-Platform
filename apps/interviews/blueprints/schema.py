@@ -200,6 +200,21 @@ def validate_blueprint_spec(spec: Dict[str, Any]) -> None:
         s2 = bundle.get('stage_2', {})
         if not s2.get('part_a') or not s2.get('part_b_twist'):
             raise BlueprintValidationError(f"Bundle '{bid}' Stage 2 must define both part_a and part_b_twist.")
+        part_a = s2.get('part_a', {})
+        part_b = s2.get('part_b_twist', {})
+        if not part_a.get('requirements') or not part_a.get('constraints') or not part_a.get('existing_design'):
+            raise BlueprintValidationError(
+                f"Bundle '{bid}' Stage 2 part_a must define requirements, constraints, and existing_design."
+            )
+        if not part_b.get('new_constraints') or not part_b.get('pivot_summary'):
+            raise BlueprintValidationError(
+                f"Bundle '{bid}' Stage 2 part_b_twist must define pivot_summary and new_constraints."
+            )
+        s2_meta = s2.get('grading_meta', {})
+        if not s2_meta.get('adaptation_concepts') or not s2_meta.get('testing_expectations'):
+            raise BlueprintValidationError(
+                f"Bundle '{bid}' Stage 2 grading_meta must define adaptation_concepts and testing_expectations."
+            )
 
         s3 = bundle.get('stage_3', {})
         if not s3.get('focus_competencies') or not s3.get('twist_pool'):

@@ -59,9 +59,9 @@
                         </h2>
                         <p class="small text-muted mb-0">
                             {% if quota.allowed %}
-                                {{ quota.used }} AI-assisted drill{{ quota.used|pluralize }} logged in the past 24 hours. Deterministic Stage 1 code-audit exercises do not consume this quota.
+                                {{ quota.used }} AI-assisted drill{{ quota.used|pluralize }} logged in the past 24 hours. Deterministic Stage 1 &amp; Stage 2 drills do not consume this quota.
                             {% else %}
-                                Daily AI limit reached ({{ quota.used }}/{{ quota.limit }}). Deterministic Stage 1 structural diagnosis drills remain accessible with no AI quota cap.
+                                Daily AI limit reached ({{ quota.used }}/{{ quota.limit }}). Deterministic Stage 1 structural diagnosis drills remain accessible with no AI quota cap alongside Stage 2 scenario drills.
                             {% endif %}
                         </p>
                     </div>
@@ -97,7 +97,13 @@
                                         <td><span class="readiness-pill readiness-pill-neutral">{{ s.get_status_display }}</span></td>
                                         <td class="text-end tabular-nums">
                                             {% if s.status == 'EVALUATED' and s.overall_score is not None %}
-                                                <a href="{% url 'interviews:stage1_result' s.session_uuid %}" class="fw-semibold text-decoration-none">{{ s.overall_score }}% · Review</a>
+                                                {% if s.practice_scope == 'STAGE_2' %}
+                                                    <a href="{% url 'interviews:stage2_result' s.session_uuid %}" class="fw-semibold text-decoration-none">{{ s.overall_score }}% · Review</a>
+                                                {% else %}
+                                                    <a href="{% url 'interviews:stage1_result' s.session_uuid %}" class="fw-semibold text-decoration-none">{{ s.overall_score }}% · Review</a>
+                                                {% endif %}
+                                            {% elif s.status == 'STAGE_2' %}
+                                                <a href="{% url 'interviews:stage2_workbench' s.session_uuid %}" class="small fw-semibold text-decoration-none">Resume</a>
                                             {% elif s.status == 'STAGE_1' %}
                                                 <a href="{% url 'interviews:stage1_workbench' s.session_uuid %}" class="small fw-semibold text-decoration-none">Resume</a>
                                             {% else %}

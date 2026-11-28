@@ -362,7 +362,11 @@ class AssessmentSessionService:
                 raise InvalidStateTransitionError("Stage timer has expired.")
 
             merged = dict(stage_resp.response_payload or {})
-            merged.update(payload or {})
+            incoming = dict(payload or {})
+            # Protect locked Stage 2 Part A against overwrite via draft endpoints
+            if stage_number == 2 and stage_resp.part_a_submitted_at is not None:
+                incoming.pop('part_a', None)
+            merged.update(incoming)
             stage_resp.response_payload = merged
             stage_resp.draft_saved_at = now
             stage_resp.save(update_fields=['response_payload', 'draft_saved_at'])
@@ -388,6 +392,9 @@ class AssessmentSessionService:
                 raise ValidationError("Assessment session not found.")
             cls._assert_active_stage(user, session, 2)
 
+            if session.stage_expires_at and now > session.stage_expires_at + timedelta(seconds=30):
+                raise InvalidStateTransitionError("Stage timer has expired.")
+
             stage_resp = AssessmentStageResponse.objects.select_for_update().filter(
                 session=session,
                 stage_number=2,
@@ -401,7 +408,11 @@ class AssessmentSessionService:
             merged['part_a'] = part_a_payload
             stage_resp.response_payload = merged
             stage_resp.part_a_submitted_at = now
-            stage_resp.save(update_fields=['response_payload', 'part_a_submitted_at'])
+            stage_resp.draft_saved_at = now
+            stage_resp.save(update_fields=['response_payload', 'part_a_submitted_at', 'draft_saved_at'])
+
+            session.last_heartbeat_at = now
+            session.save(update_fields=['last_heartbeat_at', 'updated_at'])
             return stage_resp
 
     @classmethod
@@ -436,7 +447,10 @@ class AssessmentSessionService:
                 raise StageLockedError(f"Stage {stage_number} is already locked.")
 
             merged = dict(stage_resp.response_payload or {})
-            merged.update(final_payload or {})
+            incoming_final = dict(final_payload or {})
+            if stage_number == 2 and stage_resp.part_a_submitted_at is not None:
+                incoming_final.pop('part_a', None)
+            merged.update(incoming_final)
             stage_resp.response_payload = merged
             if deterministic_result is not None:
                 stage_resp.deterministic_result = deterministic_result

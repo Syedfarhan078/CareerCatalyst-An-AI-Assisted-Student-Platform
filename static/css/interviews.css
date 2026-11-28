@@ -1292,3 +1292,101 @@
     font-size: 0.82rem;
     line-height: 1.5;
 }
+
+/* --------------------------------------------------------------------------
+   12. SPRINT 4: STAGE 2 SCENARIO & CONSTRAINT PIVOT WORKBENCH
+   -------------------------------------------------------------------------- */
+.stage2-progress-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+@media (max-width: 767.98px) {
+    .stage2-progress-strip {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stage2-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--dash-border);
+    background: var(--dash-surface-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--dash-text-muted);
+}
+
+.stage2-step.is-current {
+    border-color: var(--dash-primary-border, var(--dash-primary));
+    background: var(--dash-primary-subtle, rgba(59, 130, 246, 0.08));
+    color: var(--dash-text);
+}
+
+.stage2-step.is-complete {
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #059669;
+}
+
+[data-theme='dark'] .stage2-step.is-complete {
+    color: #34D399;
+}
+
+.stage2-step-num {
+    font-family: var(--interview-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.stage2-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .stage2-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stage2-context-pane,
+.stage2-form-pane {
+    min-width: 0;
+}
+
+.stage2-design-callout {
+    padding: 0.75rem 0.9rem;
+    border-radius: 8px;
+    background: var(--dash-surface-muted);
+    border-left: 3px solid var(--dash-primary);
+    color: var(--dash-text);
+    line-height: 1.5;
+}
+
+.stage2-pivot-banner {
+    background: var(--dash-surface);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    border-left: 4px solid #D97706;
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem;
+}
+
+.stage2-pivot-subbox {
+    background: var(--dash-surface-muted);
+    border: 1px solid var(--dash-border);
+    border-radius: 8px;
+    padding: 0.8rem 0.95rem;
+    height: 100%;
+}
+
+.stage2-readonly-copy {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+}

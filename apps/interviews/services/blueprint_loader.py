@@ -272,11 +272,11 @@ class BlueprintRegistryService:
             return {
                 'task_id': s2['task_id'],
                 'bundle_id': bundle['bundle_id'],
+                'title': s2.get('title', bundle.get('title', 'Scenario & Constraint Pivot')),
+                'competency_targets': list(s2.get('competency_targets', [])),
                 'part_a': s2['part_a'],
                 'part_b_twist': s2['part_b_twist'],
-                'grading_meta': {
-                    'expected_adaptation_signals': s2.get('expected_adaptation_signals', []),
-                },
+                'grading_meta': s2.get('grading_meta', {}),
             }
         if stage_number == 3:
             s3 = bundle['stage_3']
@@ -293,10 +293,21 @@ class BlueprintRegistryService:
         """
         Returns a strictly candidate-safe view of task_snapshot with all hidden
         grading rubrics, planted defects, and invariants stripped out.
+        For Stage 2, also hides part_b_twist until Phase A has been submitted/locked.
         """
         snap = dict(stage_response.task_snapshot or {})
         snap.pop('grading_meta', None)
         snap.pop('defect_categories', None)
+
+        if getattr(stage_response, 'stage_number', 1) == 2:
+            part_a_locked = getattr(stage_response, 'part_a_submitted_at', None) is not None
+            snap['phase'] = 'PHASE_B' if part_a_locked else 'PHASE_A'
+            snap['part_a_locked'] = part_a_locked
+            if not part_a_locked:
+                # Never reveal the constraint pivot before candidate submits Phase A
+                snap.pop('part_b_twist', None)
+            return snap
+
         code = snap.get('artifact_code', '')
         lines = code.splitlines()
         snap['artifact_lines'] = [

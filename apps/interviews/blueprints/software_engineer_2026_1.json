@@ -262,21 +262,206 @@
       },
       "stage_2": {
         "task_id": "se-b1-s2",
+        "title": "Flash-Sale Checkout & Inventory Reservation Pivot",
+        "competency_targets": [
+          "Architecture & Trade-offs",
+          "Engineering Ownership & Defense",
+          "Testing & Edge-Case Rigor"
+        ],
         "part_a": {
-          "title": "Flash-Sale Checkout API Design",
-          "prompt": "You are building the REST API & PostgreSQL checkout pipeline behind `process_order_batch` for 50 req/sec steady traffic. Specify your DB transaction/locking choice, API idempotency contract, and deployment strategy.",
-          "required_fields": ["db_concurrency_plan", "api_idempotency_plan", "tradeoff_rationale"]
+          "title": "Phase A: Baseline Checkout & Stock Service (50 req/s)",
+          "context": "You own the checkout API behind an e-commerce platform's order flow backed by PostgreSQL (`orders`, `catalog_items`) and an external synchronous payment capture gateway (~180ms avg response).",
+          "existing_design": "Single REST `POST /checkout/` endpoint runs inside a DB transaction: selects the catalog SKU row, checks `stock >= qty`, invokes the payment gateway HTTP call synchronously, inserts the order, and commits.",
+          "requirements": [
+            "Support 50 requests/second steady checkout volume under p95 latency <= 250ms.",
+            "Guarantee zero overselling of limited SKUs.",
+            "Record accurate payment and order state in PostgreSQL."
+          ],
+          "constraints": [
+            "PostgreSQL primary max_connections = 100 across all API workers",
+            "Client retries may occasionally happen on mobile networks"
+          ],
+          "expected_outcome": "Clean baseline design covering DB locking/transaction scope, API idempotency contract, and synchronous bottleneck handling.",
+          "prompt": "Outline your initial engineering design for this 50 req/sec checkout pipeline, specifying transaction boundaries, stock concurrency control, idempotency contract, and baseline trade-offs.",
+          "instructions": "Keep your initial design concise and concrete. Once you submit Phase A, your baseline locks and an operational constraint shift will be revealed.",
+          "required_fields": ["initial_approach", "data_and_concurrency", "initial_tradeoffs"]
         },
         "part_b_twist": {
-          "title": "Requirement Pivot: 10x Flash Spike & Duplicate Webhooks",
-          "prompt": "Constraint Shift: Flash-sale traffic jumps to 500 req/sec, p95 checkout latency must stay <= 100ms, and the payment gateway now retries webhooks up to 4 times out of order. Update your architecture without overselling inventory.",
-          "required_fields": ["revised_architecture", "dropped_or_adjusted_tradeoff", "rollback_and_monitoring"]
+          "title": "Phase B Pivot: 10x Flash-Sale Spike & Out-of-Order Duplicate Webhooks",
+          "context": "A marketing campaign triggers a 10x flash-sale spike on 3 hero SKUs while mobile clients and payment webhooks amplify retries.",
+          "pivot_summary": "Traffic jumps from 50 req/sec to 500 req/sec with strict p95 <= 100ms checkout latency. Simultaneously, the payment provider moves to async webhooks and now delivers duplicate confirmation/failure webhooks up to 4 times out of order (and occasionally times out at 3s).",
+          "new_constraints": [
+            "p95 checkout creation latency must stay <= 100ms (holding DB locks across slow payment HTTP calls now exhausts the 100-connection pool immediately).",
+            "Duplicate and out-of-order payment webhooks (retried up to 4x) must be strictly idempotent without double-decrementing stock or corrupting final order state.",
+            "Hot-row contention on the 3 flash-sale SKUs threatens lock queues and cascading 504 timeouts."
+          ],
+          "unchanged_invariants": [
+            "Zero inventory overselling remains mandatory.",
+            "Accepted customer payments must still reconcile cleanly with PostgreSQL order records."
+          ],
+          "prompt": "Re-evaluate your Phase A design against the 10x spike and duplicate out-of-order webhook pivot. Explain clearly what changes, what stays unchanged, new trade-offs, remaining risks, and your validation plan.",
+          "required_fields": [
+            "updated_approach",
+            "what_changes",
+            "what_stays_unchanged",
+            "tradeoffs",
+            "risks_and_failures",
+            "validation_and_testing"
+          ]
         },
-        "expected_adaptation_signals": [
-          "Uses atomic conditional UPDATE or select_for_update / Redis atomic reservation + DB reconciliation",
-          "Enforces unique idempotency key constraint for webhook retries",
-          "Defines p95 latency / lock-contention alerts and canary/rollback switch"
-        ]
+        "grading_meta": {
+          "engine_version": "stage2-eval-2026.1",
+          "competency_weights": {
+            "se_architecture": 0.40,
+            "se_ownership": 0.30,
+            "se_testing": 0.30
+          },
+          "initial_concepts": [
+            {
+              "id": "b1_init_concurrency",
+              "label": "DB stock atomicity (conditional UPDATE or SELECT FOR UPDATE) without holding locks indefinitely",
+              "concept_groups": [
+                ["select_for_update", "for update", "conditional update", "where stock >=", "atomic update", "row lock", "optimistic lock", "version"],
+                ["idempoten", "unique", "constraint", "request_id", "dedup", "transaction"]
+              ]
+            },
+            {
+              "id": "b1_init_external_io",
+              "label": "Separates external payment I/O or scopes transaction boundaries cleanly",
+              "concept_groups": [
+                ["transaction", "outside", "pending", "reserve", "timeout", "short lock", "connection pool", "async"]
+              ]
+            }
+          ],
+          "adaptation_concepts": [
+            {
+              "id": "b1_pivot_decouple_payment",
+              "label": "Decouples slow payment I/O from DB lock transactions to keep p95 <= 100ms",
+              "weight": 0.28,
+              "is_critical": true,
+              "alternative_paths": [
+                [
+                  ["pending", "reserve", "two-phase", "async", "queue", "outbox", "decoupl", "worker"],
+                  ["release", "commit", "lock", "100ms", "pool", "connection", "short transaction"]
+                ],
+                [
+                  ["redis", "atomic", "decr", "lua", "token", "in-memory reservation", "counter"],
+                  ["reconcil", "ttl", "expire", "db", "async", "worker", "queue"]
+                ]
+              ]
+            },
+            {
+              "id": "b1_pivot_hot_sku_contention",
+              "label": "Eliminates hot-SKU lock starvation via atomic conditional UPDATE, Redis atomic DECR, or inventory sharding/queueing",
+              "weight": 0.24,
+              "alternative_paths": [
+                [
+                  ["conditional update", "where stock >=", "update catalog", "atomic", "skip_locked", "shard", "bucket", "redis", "lua", "decr"]
+                ]
+              ]
+            },
+            {
+              "id": "b1_pivot_webhook_idempotency",
+              "label": "Handles 4x duplicate and out-of-order webhooks via unique event/idempotency key and guarded state transitions",
+              "weight": 0.28,
+              "is_critical": true,
+              "alternative_paths": [
+                [
+                  ["idempoten", "event_id", "unique", "dedup", "webhook", "processed_events"],
+                  ["state machine", "out-of-order", "out of order", "transition", "status", "terminal", "version", "timestamp", "ignore stale"]
+                ]
+              ]
+            },
+            {
+              "id": "b1_pivot_preserved_core",
+              "label": "Identifies unchanged core invariants (PostgreSQL source of truth / zero overselling / idempotency guarantees)",
+              "weight": 0.20,
+              "alternative_paths": [
+                [
+                  ["zero oversell", "oversell", "postgres", "source of truth", "relational", "idempoten", "schema", "unique", "unchanged", "preserve"]
+                ]
+              ]
+            }
+          ],
+          "tradeoff_pairs": [
+            ["eventual", "reconcil", "latency", "complexity", "consistency", "stale", "oversell", "contention", "cost", "ttl", "expiry", "throughput"]
+          ],
+          "risk_concepts": [
+            {
+              "id": "b1_risk_orphaned_reservation",
+              "label": "Orphaned stock reservations / abandoned checkouts requiring TTL expiry & reaper reconciliation",
+              "terms": ["ttl", "expir", "orphan", "abandoned", "reconcil", "reaper", "cleanup", "leak"]
+            },
+            {
+              "id": "b1_risk_redis_db_drift",
+              "label": "Cache-DB divergence, queue lag, or DB connection pool exhaustion / backpressure (429/503)",
+              "terms": ["drift", "sync", "lag", "backpressure", "429", "503", "circuit", "pool", "dlq", "dead-letter"]
+            },
+            {
+              "id": "b1_risk_monitoring_rollback",
+              "label": "Latency/contention telemetry, alerts, and feature-flag/canary rollback plan",
+              "terms": ["p95", "monitor", "alert", "metric", "rollback", "canary", "feature flag", "lock wait"]
+            }
+          ],
+          "testing_expectations": [
+            {
+              "label": "Duplicate & out-of-order webhook state-machine replay tests",
+              "concepts": ["duplicate", "webhook", "out-of-order", "out of order", "replay", "idempoten", "4x"]
+            },
+            {
+              "label": "Concurrent 500 req/s / hot-SKU load test proving zero negative stock",
+              "concepts": ["load test", "concurren", "500", "spike", "hot sku", "zero oversell", "race", "locust", "k6", "parallel"]
+            },
+            {
+              "label": "Expired reservation release / payment timeout fault-injection test",
+              "concepts": ["timeout", "ttl", "expir", "reconcil", "fault", "chaos", "partial fail", "rollback"]
+            },
+            {
+              "label": "DB query/connection pool bound & regression gate",
+              "concepts": ["connection", "pool", "p95", "latency", "regression", "assert"]
+            }
+          ],
+          "technical_traps": [
+            {
+              "id": "b1_trap_sync_lock_in_tx",
+              "pattern_terms": ["keep payment inside transaction", "hold lock during payment", "synchronous payment inside lock"],
+              "penalty": 18.0,
+              "message": "Keeping synchronous external payment calls inside a PostgreSQL row lock guarantees pool exhaustion and misses the 100ms p95 target at 500 req/sec."
+            },
+            {
+              "id": "b1_trap_skip_dedup",
+              "pattern_terms": ["disable idempotency", "process every webhook", "trust webhook order"],
+              "penalty": 15.0,
+              "message": "Trusting webhook ordering or dropping idempotency keys causes double stock decrements and corrupted order states."
+            }
+          ],
+          "assumption_red_flags": [
+            {
+              "pattern_terms": ["webhooks arrive in order", "exact-once delivery", "exactly once from gateway", "single server cache is shared"],
+              "message": "Assumes ordered/exactly-once webhook delivery or shared process-local memory across multiple API workers."
+            }
+          ],
+          "contradiction_checks": [
+            {
+              "phrase_a": ["no changes needed", "keep everything same", "identical to phase a", "nothing changes"],
+              "phrase_b": ["redis", "queue", "async", "webhook", "shard", "worker", "reservation"],
+              "penalty": 14.0,
+              "message": "Contradiction: claims nothing changes from Phase A while introducing major asynchronous/reservation changes."
+            },
+            {
+              "phrase_a": ["strong synchronous consistency", "zero lag immediately"],
+              "phrase_b": ["eventual consistency", "async worker", "queue reconciliation"],
+              "penalty": 10.0,
+              "message": "Contradiction: asserts immediate synchronous consistency while relying on asynchronous queue reconciliation without explaining bounded reservation guarantees."
+            }
+          ],
+          "buzzword_terms": ["microservices", "blockchain", "kubernetes", "kafka", "nosql", "serverless", "event mesh", "ai scaling"],
+          "expected_adaptation_signals": [
+            "Decouples payment capture from DB row locks (pending reservation + async webhook or atomic conditional UPDATE/Redis reservation)",
+            "Enforces unique idempotency key constraint and monotonic order state-machine transitions for duplicate/out-of-order webhooks",
+            "Defines TTL reservation cleanup, backpressure/pool protections, p95 latency/lock alerts, and canary rollback"
+          ]
+        }
       },
       "stage_3": {
         "task_id": "se-b1-s3",
@@ -401,21 +586,179 @@
       },
       "stage_2": {
         "task_id": "se-b2-s2",
+        "title": "Tenant Export Pipeline & Poison-Pill SLA Pivot",
+        "competency_targets": [
+          "Architecture & Trade-offs",
+          "Engineering Ownership & Defense",
+          "Testing & Edge-Case Rigor"
+        ],
         "part_a": {
-          "title": "Async Export API & PostgreSQL Indexing",
-          "prompt": "Design the API and worker pipeline allowing enterprise tenants with 200k invoices to trigger CSV exports cleanly without blocking web Gunicorn workers.",
-          "required_fields": ["db_concurrency_plan", "api_idempotency_plan", "tradeoff_rationale"]
+          "title": "Phase A: Async Billing Export API & Worker Pipeline",
+          "context": "Enterprise B2B customers export monthly CSV invoice histories directly from PostgreSQL into cloud object storage before downloading a pre-signed link.",
+          "existing_design": "Export requests enqueue a background job that runs ORM queries per tenant, assembles rows, uploads a CSV file to S3/cloud storage, and updates the job status to READY.",
+          "requirements": [
+            "Prevent large exports (up to 200k invoices) from blocking web Gunicorn request threads.",
+            "Deliver valid Decimal currency formatting and tenant isolation.",
+            "Track export job status cleanly (`PENDING`, `RUNNING`, `READY`, `FAILED`)."
+          ],
+          "constraints": [
+            "Shared PostgreSQL read replica for reporting queries",
+            "HTTP request timeout is 30 seconds"
+          ],
+          "expected_outcome": "Async job handoff (HTTP 202 + job polling), efficient batching/indexing, and safe object storage upload.",
+          "prompt": "Specify your baseline async export API contract, PostgreSQL query/indexing strategy, and worker memory/upload handling.",
+          "instructions": "Document your baseline plan carefully before locking Phase A to reveal the production incident constraint.",
+          "required_fields": ["initial_approach", "data_and_concurrency", "initial_tradeoffs"]
         },
         "part_b_twist": {
-          "title": "Requirement Pivot: Poison-Pill Tenant & 15s Freshness SLA",
-          "prompt": "Constraint Shift: Corrupted UTF-16 invoice rows from one tenant crash shared worker retries repeatedly, while small tenants demand <15s export turnaround during billing close.",
-          "required_fields": ["revised_architecture", "dropped_or_adjusted_tradeoff", "rollback_and_monitoring"]
+          "title": "Phase B Pivot: Poison-Pill Tenant Payloads, 512MB Worker Cap & <15s Small-Tenant SLA",
+          "context": "During month-end billing close, one enterprise tenant injects malformed UTF-16/null invoice notes while export demand spikes.",
+          "pivot_summary": "A poison-pill enterprise export repeatedly triggers OOM crashes and infinite queue retries on the shared worker pool (capped at 512MB RAM). Meanwhile, thousands of small tenants (<500 rows) complain that exports take 20+ minutes and violate the new <15-second turnaround SLA.",
+          "new_constraints": [
+            "Worker container memory is strictly capped at 512MB (loading 200k ORM objects or buffering full CSV strings causes SIGKILL OOM).",
+            "Head-of-line blocking from poison-pill retries starves small tenants needing <15s export turnaround.",
+            "Partial or corrupted CSV uploads must never be exposed to customers as valid READY downloads."
+          ],
+          "unchanged_invariants": [
+            "Strict tenant data isolation (one tenant must never see another tenant's rows).",
+            "Exact Decimal monetary precision and valid CSV escaping must hold."
+          ],
+          "prompt": "Adapt your Phase A export pipeline to eliminate head-of-line starvation, bound memory strictly under 512MB, contain poison-pill failures, and protect small-tenant <15s SLAs.",
+          "required_fields": [
+            "updated_approach",
+            "what_changes",
+            "what_stays_unchanged",
+            "tradeoffs",
+            "risks_and_failures",
+            "validation_and_testing"
+          ]
         },
-        "expected_adaptation_signals": [
-          "Separates fast-lane small exports from large queued exports (priority queues/streaming)",
-          "Isolates poison-pill payloads via dead-letter queue + per-row validation error reporting",
-          "Adds PostgreSQL composite index (tenant_id, created_at) and worker memory/failure metrics"
-        ]
+        "grading_meta": {
+          "engine_version": "stage2-eval-2026.1",
+          "competency_weights": {
+            "se_architecture": 0.40,
+            "se_ownership": 0.30,
+            "se_testing": 0.30
+          },
+          "initial_concepts": [
+            {
+              "id": "b2_init_async",
+              "label": "Offloads export execution from web workers via async job ID / HTTP 202 polling",
+              "concept_groups": [
+                ["202", "async", "queue", "worker", "job_id", "poll", "background"],
+                ["index", "tenant_id", "replica", "batch", "csv", "s3", "storage"]
+              ]
+            }
+          ],
+          "adaptation_concepts": [
+            {
+              "id": "b2_pivot_lane_isolation",
+              "label": "Separates small fast-lane exports (<15s SLA) from bulk/enterprise exports via priority queues or dedicated worker pools",
+              "weight": 0.28,
+              "is_critical": true,
+              "alternative_paths": [
+                [
+                  ["fast lane", "fast-lane", "priority queue", "separate queue", "dedicated worker", "lane", "tier", "routing", "synchronous small", "head-of-line", "head of line"],
+                  ["small", "15s", "bulk", "large", "starvation", "sla", "isolate"]
+                ]
+              ]
+            },
+            {
+              "id": "b2_pivot_streaming_memory",
+              "label": "Bounds memory under 512MB via streaming cursor / keyset chunk pagination / multipart upload",
+              "weight": 0.26,
+              "alternative_paths": [
+                [
+                  ["stream", "chunk", "cursor", "keyset", "iterator", "server-side cursor", "values_list", "multipart", "generator"],
+                  ["512", "memory", "ram", "oom", "constant memory", "bounded"]
+                ]
+              ]
+            },
+            {
+              "id": "b2_pivot_poison_pill_dlq",
+              "label": "Stops infinite retry loops with bounded retries, dead-letter queue (DLQ), sanitization, and per-row error handling",
+              "weight": 0.26,
+              "is_critical": true,
+              "alternative_paths": [
+                [
+                  ["dead-letter", "dead letter", "dlq", "max retry", "max_retries", "retry limit", "quarantine", "circuit", "sanitiz", "utf"],
+                  ["poison", "crash", "row", "skip", "fail", "manifest", "alert"]
+                ]
+              ]
+            },
+            {
+              "id": "b2_pivot_preserved_core",
+              "label": "Preserves strict tenant isolation, composite indexing (tenant_id, created_at), Decimal totals, and atomic download visibility",
+              "weight": 0.20,
+              "alternative_paths": [
+                [
+                  ["tenant isolation", "tenant_id", "decimal", "index", "atomic", "presigned", "ready", "unchanged", "preserve", "temp"]
+                ]
+              ]
+            }
+          ],
+          "tradeoff_pairs": [
+            ["cost", "worker", "complexity", "queue", "memory", "latency", "completeness", "skip", "retry", "replica", "throughput"]
+          ],
+          "risk_concepts": [
+            {
+              "id": "b2_risk_partial_file",
+              "label": "Prevents customers seeing half-written corrupted files (atomic rename / finalize status only after checksum + complete upload)",
+              "terms": ["partial", "corrupt", "atomic", "rename", "ready", "abort", "multipart", "checksum", "temp"]
+            },
+            {
+              "id": "b2_risk_observability",
+              "label": "Monitors queue depth per lane, worker RSS memory, DLQ spikes, and export SLA p95",
+              "terms": ["dlq", "queue depth", "rss", "memory", "alert", "metric", "sla", "15s", "rollback"]
+            }
+          ],
+          "testing_expectations": [
+            {
+              "label": "Poison-pill malformed encoding / null payload retry cap & DLQ test",
+              "concepts": ["poison", "utf", "malformed", "dlq", "dead-letter", "retry", "encoding", "crash"]
+            },
+            {
+              "label": "Priority queue SLA test under bulk queue saturation",
+              "concepts": ["fast", "priority", "lane", "15s", "sla", "small tenant", "bulk", "starv"]
+            },
+            {
+              "label": "200k-row streaming memory ceiling benchmark (<512MB)",
+              "concepts": ["memory", "512", "200k", "stream", "chunk", "oom", "profile", "peak"]
+            },
+            {
+              "label": "Partial upload failure & tenant isolation integration tests",
+              "concepts": ["partial", "isolation", "tenant", "decimal", "ready", "s3", "atomic"]
+            }
+          ],
+          "technical_traps": [
+            {
+              "id": "b2_trap_infinite_retry",
+              "pattern_terms": ["unlimited retries", "retry forever", "load entire table into list"],
+              "penalty": 16.0,
+              "message": "Retrying poison-pill exports indefinitely or loading full ORM query sets into RAM perpetuates OOM crashes and worker starvation."
+            }
+          ],
+          "assumption_red_flags": [
+            {
+              "pattern_terms": ["all data is valid utf-8", "offset pagination is fast at 200k", "auto-scaling fixes poison pill"],
+              "message": "Assumes clean input encoding or ignores that scaling replicas simply amplifies a deterministic poison-pill crash across more workers."
+            }
+          ],
+          "contradiction_checks": [
+            {
+              "phrase_a": ["keep single shared fifo queue", "no queue separation"],
+              "phrase_b": ["priority lane", "separate worker pool", "fast-lane", "dedicated queue"],
+              "penalty": 12.0,
+              "message": "Contradiction: states a single shared FIFO queue remains unchanged while adding separate priority/fast-lane queues."
+            }
+          ],
+          "buzzword_terms": ["microservices", "blockchain", "hadoop", "spark cluster", "kubernetes", "serverless magic", "graphql"],
+          "expected_adaptation_signals": [
+            "Separates fast-lane small exports from large queued exports (priority queues/streaming)",
+            "Isolates poison-pill payloads via dead-letter queue + per-row validation error reporting",
+            "Bounds RAM with server-side cursors/keyset chunking + monitors worker RSS/DLQ/SLA"
+          ]
+        }
       },
       "stage_3": {
         "task_id": "se-b2-s3",
@@ -540,21 +883,187 @@
       },
       "stage_2": {
         "task_id": "se-b3-s2",
+        "title": "Multi-Worker Auth & Cache Partition Resilience Pivot",
+        "competency_targets": [
+          "Architecture & Trade-offs",
+          "Engineering Ownership & Defense",
+          "Testing & Edge-Case Rigor"
+        ],
         "part_a": {
-          "title": "Multi-Worker Auth & Rate Limiting Architecture",
-          "prompt": "Deploy this auth/rate-limiting layer across 8 Gunicorn web workers behind Nginx with PostgreSQL token revocation support.",
-          "required_fields": ["db_concurrency_plan", "api_idempotency_plan", "tradeoff_rationale"]
+          "title": "Phase A: Baseline Multi-Worker Token Auth & Rate Limiter",
+          "context": "Customer financial API endpoints run behind Nginx across 8 Gunicorn worker processes, backed by PostgreSQL token/revocation tables and shared Redis.",
+          "existing_design": "Auth middleware extracts a Bearer token, looks up active token metadata and revocation status in Redis (falling back to PostgreSQL on cache miss), checks `expires_at`, and atomically increments a 100 req/60s rate counter in Redis.",
+          "requirements": [
+            "Enforce immediate token revocation and exact expiration checks.",
+            "Limit authenticated tokens to 100 requests per 60-second window globally across all 8 workers.",
+            "Keep median auth/rate-limit middleware overhead <= 15ms."
+          ],
+          "constraints": [
+            "8 independent Gunicorn OS worker processes (per-process RAM is NOT shared)",
+            "PostgreSQL primary cannot serve raw uncached auth lookups at peak edge RPS"
+          ],
+          "expected_outcome": "Atomic Redis rate counters with TTL, constant-time token comparison, and safe PostgreSQL/cache lookup boundaries.",
+          "prompt": "Describe your baseline multi-worker authentication, revocation lookup, atomic rate-limit storage, and core trade-offs.",
+          "instructions": "Lock Phase A to receive the network-partition and dependency-latency pivot.",
+          "required_fields": ["initial_approach", "data_and_concurrency", "initial_tradeoffs"]
         },
         "part_b_twist": {
-          "title": "Requirement Pivot: Cache Store Outage & Latency Budget",
-          "prompt": "Constraint Shift: Shared Redis rate-limit cache experiences a 3-minute partition while external SSO validation spikes to 2.5s. Keep unauthorized access strictly zero while preserving legitimate traffic.",
-          "required_fields": ["revised_architecture", "dropped_or_adjusted_tradeoff", "rollback_and_monitoring"]
+          "title": "Phase B Pivot: 3-Minute Redis Partition & 2.5s SSO Latency Spike",
+          "context": "An infrastructure zone issue fragments Redis connectivity while the upstream enterprise SSO introspection service degrades.",
+          "pivot_summary": "Shared Redis experiences a 3-minute partition/timeout while upstream SSO token validation spikes from 40ms to 2.5 seconds. Unauthorized access MUST remain strictly zero, yet legitimate requests must not cause thread exhaustion or total API collapse where safe fallback exists.",
+          "new_constraints": [
+            "Redis calls either time out at 200ms or raise connection errors for 3 minutes.",
+            "Falling straight through to 2.5s synchronous SSO or unthrottled PostgreSQL queries will exhaust all 8 Gunicorn worker threads within seconds.",
+            "Security compliance forbids failing open on unverified or revoked credentials."
+          ],
+          "unchanged_invariants": [
+            "Zero unauthorized requests may succeed (fail-closed authentication invariant).",
+            "Constant-time signature/secret comparison and token expiry enforcement remain mandatory."
+          ],
+          "prompt": "Adapt your Phase A design to decouple authentication fail-closed security from rate-limiter resilience, contain the 2.5s SSO timeout risk, and detail your verification strategy.",
+          "required_fields": [
+            "updated_approach",
+            "what_changes",
+            "what_stays_unchanged",
+            "tradeoffs",
+            "risks_and_failures",
+            "validation_and_testing"
+          ]
         },
-        "expected_adaptation_signals": [
-          "Fails closed for authentication while applying bounded circuit-breaker/local fallback for rate limiting",
-          "Never trusts per-worker LocMemCache as authoritative revocation state",
-          "Monitors 401/429/503 surges and defines short-lived signed token vs. revocation list trade-off"
-        ]
+        "grading_meta": {
+          "engine_version": "stage2-eval-2026.1",
+          "competency_weights": {
+            "se_architecture": 0.40,
+            "se_ownership": 0.30,
+            "se_testing": 0.30
+          },
+          "initial_concepts": [
+            {
+              "id": "b3_init_atomic_rate",
+              "label": "Shared atomic Redis rate counter with window/TTL + constant-time verification",
+              "concept_groups": [
+                ["redis", "atomic", "incr", "lua", "ttl", "window", "sliding", "token bucket"],
+                ["revok", "expir", "compare_digest", "hmac", "hash", "postgres"]
+              ]
+            }
+          ],
+          "adaptation_concepts": [
+            {
+              "id": "b3_pivot_auth_vs_ratelimit",
+              "label": "Distinguishes authentication (strictly fail closed) from rate limiting (bounded degraded fallback / 503 or conservative per-worker quota)",
+              "weight": 0.30,
+              "is_critical": true,
+              "alternative_paths": [
+                [
+                  ["fail closed", "fail-closed", "reject", "401", "503", "zero unauthorized"],
+                  ["rate limit", "ratelimit", "rate-limit", "fallback", "conservative", "local", "per-worker", "degrad", "nginx", "fail-safe", "bypass rate", "stricter"]
+                ],
+                [
+                  ["jwt", "signed", "short-lived", "short lived", "stateless", "public key", "jwks"],
+                  ["revocation", "stale", "window", "fail closed", "fail-closed", "expir"]
+                ]
+              ]
+            },
+            {
+              "id": "b3_pivot_sso_circuit_breaker",
+              "label": "Protects worker threads from 2.5s SSO hang via strict tight timeouts, circuit breaker, bulkhead, or short-TTL validated cache",
+              "weight": 0.28,
+              "is_critical": true,
+              "alternative_paths": [
+                [
+                  ["circuit breaker", "circuit-breaker", "timeout", "bulkhead", "bounded", "thread", "503", "shed load", "load shed", "cache", "short ttl"]
+                ]
+              ]
+            },
+            {
+              "id": "b3_pivot_worker_state_limits",
+              "label": "Recognizes per-worker LocMemCache is isolated (never trusted as authoritative revocation across workers without short bounds)",
+              "weight": 0.22,
+              "alternative_paths": [
+                [
+                  ["per-worker", "per worker", "locmem", "local memory", "shared", "authoritative", "8 worker", "revok", "divide", "split"]
+                ]
+              ]
+            },
+            {
+              "id": "b3_pivot_preserved_core",
+              "label": "Preserves Bearer parsing hygiene, constant-time checks, expiry validation, and zero unauthorized access invariant",
+              "weight": 0.20,
+              "alternative_paths": [
+                [
+                  ["bearer", "expir", "compare_digest", "hmac", "zero unauthorized", "fail closed", "fail-closed", "unchanged", "preserve"]
+                ]
+              ]
+            }
+          ],
+          "tradeoff_pairs": [
+            ["availability", "security", "revocation", "latency", "burst", "8x", "per-worker", "false positive", "503", "stale", "ttl", "short-lived"]
+          ],
+          "risk_concepts": [
+            {
+              "id": "b3_risk_revocation_lag",
+              "label": "Addresses revocation staleness window or per-worker 8x rate burst ceiling during partition",
+              "terms": ["revocation lag", "revoked", "staleness", "8x", "divide", "split limit", "burst", "thundering herd", "stampede"]
+            },
+            {
+              "id": "b3_risk_observability",
+              "label": "Monitors 401/429/503 spikes, Redis timeout rate, SSO circuit state, and rollback/kill-switch recovery",
+              "terms": ["401", "429", "503", "alert", "monitor", "metric", "circuit", "rollback", "kill switch"]
+            }
+          ],
+          "testing_expectations": [
+            {
+              "label": "Simulated Redis partition / connection timeout verification test",
+              "concepts": ["redis", "partition", "timeout", "outage", "fault", "mock", "connectionerror"]
+            },
+            {
+              "label": "SSO 2.5s slow-dependency & circuit-breaker open/half-open test",
+              "concepts": ["sso", "2.5s", "slow", "circuit", "breaker", "timeout", "503", "thread"]
+            },
+            {
+              "label": "Zero fail-open / revoked / expired token security verification",
+              "concepts": ["fail closed", "fail-closed", "revok", "expir", "401", "unauthorized", "jwt", "invalid"]
+            },
+            {
+              "label": "Multi-worker rate-limit split / degraded fallback ceiling check",
+              "concepts": ["worker", "fallback", "rate", "429", "burst", "recover", "concurren"]
+            }
+          ],
+          "technical_traps": [
+            {
+              "id": "b3_trap_fail_open_auth",
+              "pattern_terms": ["fail open for authentication", "fail-open auth", "return true on redis outage", "skip token check during outage", "allow unauthenticated"],
+              "penalty": 25.0,
+              "message": "Failing authentication open during cache/SSO outages directly violates the zero-unauthorized-access security invariant."
+            },
+            {
+              "id": "b3_trap_locmem_revocation",
+              "pattern_terms": ["store revocations only in python dict", "use worker dict as authoritative revocation"],
+              "penalty": 14.0,
+              "message": "A local Python dict is isolated per Gunicorn worker and fails to revoke tokens across the remaining 7 worker processes."
+            }
+          ],
+          "assumption_red_flags": [
+            {
+              "pattern_terms": ["sso will never timeout", "in-memory cache is shared across gunicorn", "users retry cleanly without jitter"],
+              "message": "Assumes process-local memory shares state across Gunicorn workers or ignores retry storms during partial SSO degradation."
+            }
+          ],
+          "contradiction_checks": [
+            {
+              "phrase_a": ["zero unauthorized access", "strictly fail closed"],
+              "phrase_b": ["allow requests through if auth errors", "fail-open auth", "skip signature validation"],
+              "penalty": 18.0,
+              "message": "Contradiction: claims zero unauthorized access while bypassing/failing open on auth verification failures."
+            }
+          ],
+          "buzzword_terms": ["microservices", "blockchain", "web3", "graphql", "kubernetes magic", "service mesh fixes everything"],
+          "expected_adaptation_signals": [
+            "Fails closed for authentication while applying bounded circuit-breaker/local fallback for rate limiting",
+            "Never trusts per-worker LocMemCache as authoritative revocation state",
+            "Monitors 401/429/503 surges and defines short-lived signed token vs revocation list trade-off"
+          ]
+        }
       },
       "stage_3": {
         "task_id": "se-b3-s3",

@@ -130,6 +130,13 @@
                                         Start Stage 1 Drill
                                     </button>
                                 </form>
+                                {% elif fmt.scope == 'STAGE_2' %}
+                                <form method="POST" action="{% url 'interviews:stage2_practice_start' career_path.slug %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                                        Start Stage 2 Drill
+                                    </button>
+                                </form>
                                 {% else %}
                                 <a href="{% url 'interviews:readiness_policy' career_path.slug %}?scope={{ fmt.scope }}" class="small fw-semibold text-decoration-none">
                                     Review Policy <i class="bi bi-chevron-right" aria-hidden="true"></i>

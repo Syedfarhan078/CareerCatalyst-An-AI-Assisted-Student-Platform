@@ -297,7 +297,7 @@ class RolePracticeOverviewView(TemplateView):
                 'title': 'Engineering Scenario & Constraint Pivot',
                 'duration_min': 10,
                 'evaluates': 'Designing pragmatic API/database solutions and adapting decisively when scale, SLA, or failure constraints shift mid-task.',
-                'requires_ai': True,
+                'requires_ai': False,
             },
             {
                 'scope': 'STAGE_3',
