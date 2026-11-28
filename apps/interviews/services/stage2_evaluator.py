@@ -94,9 +94,9 @@ class Stage2DeterministicEvaluator:
         src_tokens = set(WORD_RE.findall(combined_src))
         if not src_tokens:
             return False
-        # Pure copy-paste has very high token subset ratio with near-zero candidate additions
+        # Pure copy-paste has high subset ratio with minimal original candidate reasoning
         overlap_ratio = len(cand_tokens & src_tokens) / max(1, len(cand_tokens))
-        return overlap_ratio >= 0.92 and len(cand_tokens) >= 15
+        return overlap_ratio >= 0.85 and len(cand_tokens) >= 7
 
     @classmethod
     def _token_overlap_ratio(cls, text_a: str, text_b: str) -> float:
@@ -283,8 +283,8 @@ class Stage2DeterministicEvaluator:
         # ------------------------------------------------------------------
         # 4. Decision Change vs Preserved Invariant Clarity
         # ------------------------------------------------------------------
-        changes_ok = not cls._is_low_entropy(what_changes, min_chars=12, min_tokens=3)
-        stays_ok = not cls._is_low_entropy(what_stays, min_chars=12, min_tokens=3)
+        changes_ok = not (cls._is_low_entropy(what_changes, min_chars=12, min_tokens=3) or cls._is_prompt_echo(what_changes, prompt_sources))
+        stays_ok = not (cls._is_low_entropy(what_stays, min_chars=12, min_tokens=3) or cls._is_prompt_echo(what_stays, prompt_sources))
         clarity_score = (55.0 if changes_ok else 0.0) + (45.0 if stays_ok else 0.0)
         if not changes_ok:
             missed_considerations.append("Did not clearly articulate what changes from the Phase A design.")
@@ -371,7 +371,7 @@ class Stage2DeterministicEvaluator:
         risk_concepts = grading_meta.get('risk_concepts') or []
         risk_text_lower = f"{risks_text} {upd_approach}".lower()
         risk_matched_count = 0
-        if cls._is_low_entropy(risks_text, min_chars=15, min_tokens=4) or cls._is_prompt_echo(risks_text, prompt_sources):
+        if cls._is_low_entropy(risks_text, min_chars=15, min_tokens=4) or cls._is_prompt_echo(risks_text, prompt_sources) or phase_b_echo:
             risk_coverage_pct = 0.0
             for rc in risk_concepts:
                 risks_not_considered.append(rc['label'])
@@ -386,14 +386,15 @@ class Stage2DeterministicEvaluator:
             risk_coverage_pct = (risk_matched_count / max(1, len(risk_concepts))) * 100.0
 
         hygiene_score = max(0.0, 100.0 - (25.0 * len(unsupported_assumptions)))
-        raw_ownership = (0.55 * risk_coverage_pct) + (0.25 * hygiene_score) + (0.20 * (100.0 if stays_ok else 30.0)) - penalty_ownership
+        raw_ownership = (0.55 * risk_coverage_pct) + (0.25 * hygiene_score) + (0.20 * (100.0 if stays_ok else 0.0)) - penalty_ownership
         ownership_score = max(0.0, min(100.0, raw_ownership))
 
         # ------------------------------------------------------------------
         # 8. Testing & Validation Strategy (se_testing, CRITICAL GATE >= 60%)
         # ------------------------------------------------------------------
         testing_expectations = grading_meta.get('testing_expectations') or []
-        test_search_lower = f"{testing_text} {risks_text}".lower()
+        # Evaluate testing strictly against validation_and_testing so un-tested risk confessions do not score as tests
+        test_search_lower = testing_text.lower()
         test_matched: List[str] = []
         test_missed: List[str] = []
 
@@ -430,6 +431,9 @@ class Stage2DeterministicEvaluator:
             # Missing all or any critical pivot mechanism prevents strong architecture score
             cap = 54.0 if len(missed_critical_adaptation) >= 2 else 66.0
             arch_score = min(arch_score, cap)
+        if phase_b_echo:
+            arch_score = min(arch_score, 15.0)
+            ownership_score = min(ownership_score, 15.0)
 
         # ------------------------------------------------------------------
         # 10. Competency Breakdown & Weighted Total

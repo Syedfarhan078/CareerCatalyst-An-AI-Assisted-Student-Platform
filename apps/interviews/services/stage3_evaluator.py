@@ -117,14 +117,21 @@ class Stage3OwnershipEvaluator:
 
         injection_hits = 0
         low_entropy_turns = 0
+        repeated_turns = 0
+        seen_normalized_replies: Set[str] = set()
         triggered_red_flags: List[str] = []
         contradiction_flags: List[str] = []
 
         for t in answered:
             analysis = t.turn_analysis or {}
             injection_hits += len(analysis.get('injection_flags') or [])
+            norm_reply = re.sub(r'\s+', ' ', (t.candidate_reply or '').strip().lower())
             if cls._is_low_entropy(t.candidate_reply):
                 low_entropy_turns += 1
+            elif norm_reply in seen_normalized_replies:
+                repeated_turns += 1
+            if norm_reply:
+                seen_normalized_replies.add(norm_reply)
 
         for rf in red_flags:
             if cls._term_matches(rf, combined_lower):
@@ -155,7 +162,7 @@ class Stage3OwnershipEvaluator:
         buzzword_hits = sum(1 for b in BUZZWORD_ONLY_TERMS if cls._term_matches(b, combined_lower))
 
         answered_count = len(answered)
-        substantive_turns = max(0, answered_count - low_entropy_turns)
+        substantive_turns = max(0, answered_count - low_entropy_turns - repeated_turns)
         engagement_ratio = substantive_turns / max(1, min(3, answered_count or 1))
 
         # Length-neutral mechanistic scoring (concise accurate replies achieve full credit easily)
@@ -168,7 +175,8 @@ class Stage3OwnershipEvaluator:
         penalty = (
             (18.0 * len(triggered_red_flags))
             + (15.0 * len(contradiction_flags))
-            + (18.0 if injection_hits > 0 else 0.0)
+            + (15.0 * repeated_turns)
+            + (22.0 if injection_hits > 0 else 0.0)
             + (25.0 if (buzzword_hits >= 2 and reasoning_hits <= 1) else 0.0)
         )
 
@@ -182,6 +190,13 @@ class Stage3OwnershipEvaluator:
             'se_diagnosis': clamp((0.70 * mech_pct + 0.30 * (engagement_ratio * 100.0)) - penalty),
         }
 
+        # Guardrail against hollow fluent prose ("because servers work..."), prompt injection, and repeated-paste exploits
+        if reasoning_hits < 2:
+            det_scores = {k: min(v, 30.0) for k, v in det_scores.items()}
+        if repeated_turns >= 1:
+            det_scores = {k: min(v, 32.0) for k, v in det_scores.items()}
+        if injection_hits > 0:
+            det_scores = {k: min(v, 25.0) for k, v in det_scores.items()}
         if low_entropy_turns == answered_count and answered_count > 0:
             det_scores = {k: 5.0 for k in det_scores}
 
@@ -195,6 +210,7 @@ class Stage3OwnershipEvaluator:
             'answered_turns': answered_count,
             'substantive_turns': substantive_turns,
             'low_entropy_turns': low_entropy_turns,
+            'repeated_turns': repeated_turns,
             'reasoning_hits': reasoning_hits,
             'testing_hits': testing_hits,
             'acknowledges_limitations': honesty_hits >= 1,
@@ -408,9 +424,9 @@ class Stage3OwnershipEvaluator:
             det_val = float(det['det_scores'].get(code, 50.0))
             ai_val = float(ai_assessments[code]['score'])
 
-            # Safeguard against prompt-injection or empty/spam AI inflation
+            # Safeguard against prompt-injection, repeated replies, or empty/hollow prose AI inflation
             blended = (0.40 * det_val) + (0.60 * ai_val)
-            if det['injection_attempts'] > 0 or det_val < 35.0:
+            if det['injection_attempts'] > 0 or det.get('repeated_turns', 0) > 0 or det_val < 35.0:
                 blended = min(blended, det_val + 12.0)
             blended = round(max(0.0, min(100.0, blended)), 2)
             blended_by_code[code] = blended

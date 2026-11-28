@@ -208,7 +208,7 @@
             "label": "Missing validation for None inputs, negative/zero qty, or missing dict keys",
             "explanation": "Negative `order['qty']` passes `stock >= qty` (accidentally incrementing stock!), and missing keys (`order_id`, `sku`, `qty`) or `None` inputs raise unhandled KeyError/TypeError.",
             "root_cause_concepts": [
-              ["validat", "negative", "zero", "qty", "quantity", "bound", "edge case", "missing key", "keyerror", "none", "null"]
+              ["negative", "zero", "qty", "quantity", "bound", "edge case", "missing key", "keyerror", "none", "null", "empty batch", "order validation", "input validation"]
             ],
             "impact_concepts": ["corrupt", "crash", "keyerror", "typeerror", "increment", "invalid"],
             "fix_concepts": ["<= 0", "> 0", "not orders", "is none", "isinstance", ".get(", "raise valueerror", "if not"]

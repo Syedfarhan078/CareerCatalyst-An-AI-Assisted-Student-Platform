@@ -64,7 +64,13 @@ class Stage1DeterministicEvaluator:
         return bool(re.search(r'(?<![a-z0-9_])' + re.escape(t), text_lower))
 
     @classmethod
-    def _is_low_entropy_or_echo(cls, text: str, artifact_code: str, fields: Tuple[str, ...] = ()) -> bool:
+    def _is_low_entropy_or_echo(
+        cls,
+        text: str,
+        artifact_code: str,
+        fields: Tuple[str, ...] = (),
+        prompt_sources: Tuple[str, ...] = (),
+    ) -> bool:
         cleaned = (text or '').strip()
         if len(cleaned) < 12:
             return True
@@ -79,10 +85,19 @@ class Stage1DeterministicEvaluator:
             if len(cleaned) > 25 and max_char_ratio > 0.45:
                 return True
         norm_code = re.sub(r'\s+', ' ', (artifact_code or '').strip().lower())
+        norm_prompts = [re.sub(r'\s+', ' ', (p or '').strip().lower()) for p in prompt_sources if p]
+        combined_prompt_tokens = set(WORD_RE.findall(" ".join(norm_prompts))) if norm_prompts else set()
         for candidate_str in (cleaned,) + fields:
             norm_part = re.sub(r'\s+', ' ', (candidate_str or '').strip().lower())
             if len(norm_part) > 30 and norm_code and norm_part in norm_code:
                 return True
+            if len(norm_part) >= 24 and any(norm_part in p for p in norm_prompts if len(p) >= 24):
+                return True
+            part_tokens = set(WORD_RE.findall(norm_part))
+            if len(part_tokens) >= 12 and combined_prompt_tokens:
+                overlap = len(part_tokens & combined_prompt_tokens) / max(1, len(part_tokens))
+                if overlap >= 0.88:
+                    return True
         return False
 
     @classmethod
@@ -101,6 +116,7 @@ class Stage1DeterministicEvaluator:
         finding: Dict[str, Any],
         defect: Dict[str, Any],
         artifact_code: str,
+        prompt_sources: Tuple[str, ...] = (),
     ) -> Dict[str, Any]:
         title = str(finding.get('title', '') or '')
         impact = str(finding.get('impact', '') or '')
@@ -110,7 +126,7 @@ class Stage1DeterministicEvaluator:
         line_ref = str(finding.get('line_ref', '') or '')
 
         combined_text = f"{title} {impact} {fix}".strip()
-        if cls._is_low_entropy_or_echo(combined_text, artifact_code, fields=(title, impact)):
+        if cls._is_low_entropy_or_echo(combined_text, artifact_code, fields=(title, impact), prompt_sources=prompt_sources):
             return {
                 'affinity': 0.0,
                 'root_cause_score': 0.0,
@@ -121,8 +137,8 @@ class Stage1DeterministicEvaluator:
             }
 
         combined_lower = combined_text.lower()
-        impact_lower = f"{title} {impact}".lower()
-        fix_lower = f"{fix} {impact}".lower()
+        impact_lower = impact.lower()
+        fix_lower = fix.lower()
 
         # 1. Line overlap (tolerance +/- 1 line for boundary interpretations)
         cand_lines = cls._parse_line_numbers(line_ref)
@@ -188,6 +204,9 @@ class Stage1DeterministicEvaluator:
             + (15.0 * impact_score)
             + (15.0 * fix_score),
         )
+        # Naming a bug with neither production impact nor fix/mitigation cannot earn strong credit
+        if impact_score == 0.0 and fix_score == 0.0:
+            quality_score = min(quality_score, 48.0)
 
         return {
             'affinity': round(affinity, 3) if is_viable_match else 0.0,
@@ -216,6 +235,13 @@ class Stage1DeterministicEvaluator:
         testing_expectations = grading_meta.get('testing_expectations', [])
         ast_invariants = grading_meta.get('ast_invariants', [])
         artifact_code = snapshot.get('artifact_code', '')
+        prompt_sources = (
+            str(snapshot.get('scenario', '') or ''),
+            str(snapshot.get('prompt', '') or ''),
+            str(snapshot.get('expected_behavior', '') or ''),
+            " ".join(snapshot.get('requirements', []) or []),
+            " ".join(snapshot.get('constraints', []) or []),
+        ) + tuple(snapshot.get('requirements', []) or [])
 
         raw_findings = list(response_payload.get('findings') or [])[:cls.MAX_FINDINGS]
         proposed_fix_code = str(response_payload.get('proposed_fix_code') or '')
@@ -234,7 +260,7 @@ class Stage1DeterministicEvaluator:
                 continue
             scored_any_nonzero = False
             for d_idx, defect in enumerate(planted_defects):
-                res = cls._score_finding_against_defect(finding, defect, artifact_code)
+                res = cls._score_finding_against_defect(finding, defect, artifact_code, prompt_sources=prompt_sources)
                 if res.get('low_entropy'):
                     low_entropy_findings.append(f_idx)
                     break
@@ -270,7 +296,7 @@ class Stage1DeterministicEvaluator:
             best_dup = 0.0
             for d_idx, defect in enumerate(planted_defects):
                 if d_idx in matched_d:
-                    chk = cls._score_finding_against_defect(finding, defect, artifact_code)
+                    chk = cls._score_finding_against_defect(finding, defect, artifact_code, prompt_sources=prompt_sources)
                     best_dup = max(best_dup, chk['affinity'])
             if best_dup < 0.44:
                 unsupported_findings.append({
@@ -332,7 +358,7 @@ class Stage1DeterministicEvaluator:
         ).lower()
         test_matched: List[str] = []
         test_missed: List[str] = []
-        if cls._is_low_entropy_or_echo(test_plan, artifact_code) and len(test_plan.strip()) > 0:
+        if cls._is_low_entropy_or_echo(test_plan, artifact_code, prompt_sources=prompt_sources) and len(test_plan.strip()) > 0:
             test_score = 10.0
             test_missed = [t['label'] for t in testing_expectations]
         else:
@@ -350,7 +376,7 @@ class Stage1DeterministicEvaluator:
         # 4. AI Output Verification (se_ai_critique)
         caught_ratio = len(matched_d) / max(1, len(planted_defects))
         precision_ratio = len(matched_d) / max(1, len(matched_d) + len(unsupported_findings))
-        summary_bonus = 10.0 if (not cls._is_low_entropy_or_echo(overall_summary, artifact_code) and len(overall_summary.split()) >= 10) else 0.0
+        summary_bonus = 10.0 if (not cls._is_low_entropy_or_echo(overall_summary, artifact_code, prompt_sources=prompt_sources) and len(overall_summary.split()) >= 10) else 0.0
         ai_critique_score = min(
             100.0,
             max(0.0, (70.0 * caught_ratio) + (20.0 * precision_ratio) + summary_bonus),

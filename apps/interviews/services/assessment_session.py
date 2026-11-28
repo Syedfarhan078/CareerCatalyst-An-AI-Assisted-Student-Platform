@@ -508,6 +508,18 @@ class AssessmentSessionService:
         if answered_turns < min_turns:
             return False, 'BELOW_MIN_TURNS'
 
+        # AI confidence cannot justify early stopping if answered turns include trivial, repeated, or injection-flagged content
+        answered_list = list(
+            AdaptiveInterviewTurn.objects.filter(session=session, replied_at__isnull=False)
+            .order_by('turn_number')
+        )
+        seen_replies = set()
+        for t in answered_list:
+            txt = (t.candidate_reply or '').strip().lower()
+            if len(txt) < 15 or txt in seen_replies or (t.turn_analysis or {}).get('injection_flags'):
+                return False, 'TURN_SUBSTANCE_INSUFFICIENT_FOR_EARLY_STOP'
+            seen_replies.add(txt)
+
         if session.mode == 'CERTIFICATION' and not rules.get('allow_early_stop_certification', False):
             return False, 'CERTIFICATION_REQUIRES_FULL_TURNS'
 
