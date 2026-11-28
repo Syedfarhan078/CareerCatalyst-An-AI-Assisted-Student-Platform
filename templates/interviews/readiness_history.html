@@ -96,7 +96,13 @@
                                         <td><span class="readiness-mono-tag">{{ s.blueprint_version }}</span></td>
                                         <td><span class="readiness-pill readiness-pill-neutral">{{ s.get_status_display }}</span></td>
                                         <td class="text-end tabular-nums">
-                                            {% if s.overall_score is not None %}{{ s.overall_score }}%{% else %}—{% endif %}
+                                            {% if s.status == 'EVALUATED' and s.overall_score is not None %}
+                                                <a href="{% url 'interviews:stage1_result' s.session_uuid %}" class="fw-semibold text-decoration-none">{{ s.overall_score }}% · Review</a>
+                                            {% elif s.status == 'STAGE_1' %}
+                                                <a href="{% url 'interviews:stage1_workbench' s.session_uuid %}" class="small fw-semibold text-decoration-none">Resume</a>
+                                            {% else %}
+                                                —
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}

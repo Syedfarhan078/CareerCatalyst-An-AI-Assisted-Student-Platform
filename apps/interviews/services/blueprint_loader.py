@@ -221,26 +221,49 @@ class BlueprintRegistryService:
                 return bundle
         raise BlueprintValidationError(f"Task bundle '{bundle_id}' not found in spec '{spec.get('blueprint_version')}'.")
 
+    # Standard neutral taxonomy shown to candidates (never exposes hidden planted defect categories/lines)
+    CANDIDATE_ISSUE_CATEGORIES = [
+        ('LOGIC_ERROR', 'Logic Error / Incorrect Assumption'),
+        ('PERFORMANCE_COMPLEXITY', 'Performance / Algorithmic Complexity'),
+        ('INPUT_VALIDATION', 'Input Validation / Edge Case'),
+        ('SECURITY_VULNERABILITY', 'Security / Auth Vulnerability'),
+        ('CONCURRENCY_RACE', 'Concurrency / Race Condition'),
+        ('ERROR_HANDLING', 'Error Handling / Failure Visibility'),
+        ('DATA_INTEGRITY', 'Data Integrity / Precision'),
+        ('RESOURCE_SCALABILITY', 'Resource / Scalability Risk'),
+    ]
+
+    CANDIDATE_SEVERITY_LEVELS = [
+        ('CRITICAL', 'Critical (Data loss / Security / Outage)'),
+        ('HIGH', 'High (Major reliability / SLA risk)'),
+        ('MEDIUM', 'Medium (Edge case / Maintainability)'),
+        ('LOW', 'Low (Minor hygiene)'),
+    ]
+
     @classmethod
     def build_stage_snapshot(cls, bundle: Dict[str, Any], stage_number: int) -> Dict[str, Any]:
         """
-        Builds immutable candidate-safe task snapshot stored in AssessmentStageResponse.
-        Keeps solution keys / hidden evaluation signals separated from initial UI context.
+        Builds immutable task snapshot stored in AssessmentStageResponse.
+        Keeps hidden grading keys cleanly isolated inside 'grading_meta' so
+        views never serialize answers or planted defect lines before submission.
         """
         if stage_number == 1:
             s1 = bundle['stage_1']
             return {
                 'task_id': s1['task_id'],
                 'bundle_id': bundle['bundle_id'],
+                'title': s1.get('title', bundle.get('title', 'Applied Code Diagnosis')),
                 'prompt': s1['prompt'],
+                'scenario': s1.get('scenario', ''),
+                'requirements': list(s1.get('requirements', [])),
+                'expected_behavior': s1.get('expected_behavior', ''),
+                'constraints': list(s1.get('constraints', [])),
+                'competency_targets': list(s1.get('competency_targets', [])),
                 'language': s1.get('language', 'python'),
                 'artifact_code': s1['artifact_code'],
-                'defect_categories': [
-                    {'id': d['id'], 'line_range': d['line_range'], 'category': d['category']}
-                    for d in s1['planted_defects']
-                ],
                 'grading_meta': {
                     'planted_defects': s1['planted_defects'],
+                    'testing_expectations': s1.get('testing_expectations', []),
                     'ast_invariants': s1['ast_invariants'],
                 },
             }
@@ -264,3 +287,28 @@ class BlueprintRegistryService:
                 'twist_pool': s3['twist_pool'],
             }
         raise ValueError(f"Unsupported stage_number: {stage_number}")
+
+    @classmethod
+    def get_candidate_stage_context(cls, stage_response) -> Dict[str, Any]:
+        """
+        Returns a strictly candidate-safe view of task_snapshot with all hidden
+        grading rubrics, planted defects, and invariants stripped out.
+        """
+        snap = dict(stage_response.task_snapshot or {})
+        snap.pop('grading_meta', None)
+        snap.pop('defect_categories', None)
+        code = snap.get('artifact_code', '')
+        lines = code.splitlines()
+        snap['artifact_lines'] = [
+            {'number': idx + 1, 'text': line}
+            for idx, line in enumerate(lines)
+        ]
+        snap['issue_categories'] = [
+            {'code': code_val, 'label': label_val}
+            for code_val, label_val in cls.CANDIDATE_ISSUE_CATEGORIES
+        ]
+        snap['severity_levels'] = [
+            {'code': code_val, 'label': label_val}
+            for code_val, label_val in cls.CANDIDATE_SEVERITY_LEVELS
+        ]
+        return snap

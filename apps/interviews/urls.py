@@ -1,16 +1,22 @@
 from django.urls import path
 from . import views
 from . import views_readiness
+from . import views_stage1
 
 app_name = 'interviews'
 
 urlpatterns = [
     path('', views.InterviewHubView.as_view(), name='hub'),
 
-    # AI-Era Career Readiness Hub Shell (Feature-flagged behind ENABLE_READINESS_ASSESSMENT)
+    # AI-Era Career Readiness Hub Shell & Stage 1 Pilot (Feature-flagged behind ENABLE_READINESS_ASSESSMENT)
     path('readiness/roles/', views_readiness.CareerSelectorView.as_view(), name='readiness_roles'),
     path('readiness/role/<slug:slug>/', views_readiness.RolePracticeOverviewView.as_view(), name='readiness_role_overview'),
     path('readiness/role/<slug:slug>/policy/', views_readiness.readiness_policy_view, name='readiness_policy'),
+    path('readiness/role/<slug:slug>/practice/stage-1/start/', views_stage1.stage1_practice_start, name='stage1_practice_start'),
+    path('readiness/practice/<uuid:session_uuid>/stage-1/', views_stage1.stage1_workbench, name='stage1_workbench'),
+    path('readiness/practice/<uuid:session_uuid>/stage-1/draft/', views_stage1.stage1_save_draft, name='stage1_save_draft'),
+    path('readiness/practice/<uuid:session_uuid>/stage-1/abandon/', views_stage1.stage1_abandon, name='stage1_abandon'),
+    path('readiness/practice/<uuid:session_uuid>/result/', views_stage1.stage1_result, name='stage1_result'),
     path('readiness/history/', views_readiness.PracticeHistoryView.as_view(), name='readiness_history'),
     
     # Quiz routes

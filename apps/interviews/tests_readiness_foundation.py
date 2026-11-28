@@ -162,10 +162,13 @@ class Sprint1FoundationTests(TestCase):
             seen.append(s.task_bundle_id)
         # All 3 bundles must be distinct across the first 3 sessions
         self.assertEqual(len(set(seen)), 3)
-        # Verify frozen snapshot persisted
+        # Verify frozen snapshot persisted and hidden grading data is isolated from candidate context
         sr = AssessmentStageResponse.objects.get(session__session_uuid=s.session_uuid, stage_number=1)
         self.assertIn('artifact_code', sr.task_snapshot)
-        self.assertEqual(len(sr.task_snapshot['defect_categories']), 4)
+        self.assertEqual(len(sr.task_snapshot['grading_meta']['planted_defects']), 4)
+        candidate_ctx = BlueprintRegistryService.get_candidate_stage_context(sr)
+        self.assertNotIn('grading_meta', candidate_ctx)
+        self.assertNotIn('defect_categories', candidate_ctx)
 
     def test_certification_eligibility_and_concurrency_constraint(self):
         # Not enrolled -> blocked

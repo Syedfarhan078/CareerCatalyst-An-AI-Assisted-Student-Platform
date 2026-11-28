@@ -56,10 +56,18 @@
                 <div>
                     <strong>Preferences and policy consent saved</strong> for {{ career_path.name }} ({{ blueprint.version }} · {{ durations_preview.multiplier_label }}).
                     <div class="small mt-1">
-                        Interactive Stage 1–3 practice workbenches are scheduled for the next implementation sprints and are not active yet.
+                        Stage 1 Applied Diagnosis is active for Practice Mode; Stages 2–3 open in upcoming sprints.
                     </div>
                 </div>
-                <a href="{% url 'interviews:hub' %}" class="dash-btn dash-btn-outline dash-btn-sm">Return to Hub</a>
+                <div class="d-flex flex-wrap gap-2">
+                    <form method="POST" action="{% url 'interviews:stage1_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                            Start Stage 1 Practice Drill
+                        </button>
+                    </form>
+                    <a href="{% url 'interviews:hub' %}" class="dash-btn dash-btn-outline dash-btn-sm">Return to Hub</a>
+                </div>
             </div>
             {% endif %}
 

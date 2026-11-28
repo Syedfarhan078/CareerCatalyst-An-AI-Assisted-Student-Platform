@@ -159,34 +159,100 @@
       ],
       "stage_1": {
         "task_id": "se-b1-s1",
-        "prompt": "An AI coding assistant drafted this Python service helper to deduplicate incoming order batches and decrement cached/DB stock. Review the artifact, localize all 4 defects, submit a safe Python patch, and list concrete pytest cases.",
+        "title": "Order Deduplication & Inventory Decrement Review",
+        "prompt": "An AI coding assistant drafted this Python service helper to deduplicate incoming order batches and decrement catalog stock. Critically review the artifact against the production requirements, log every meaningful issue you find, explain impact, supply a proposed Python fix, and specify key test cases.",
+        "scenario": "You are reviewing a pull request for an e-commerce checkout batch worker handling up to 5,000 orders per minute across multiple worker processes.",
+        "requirements": [
+          "Skip duplicate order_id values within the same incoming batch reliably.",
+          "Validate order payloads safely (non-empty batch, valid dict keys, positive integer qty).",
+          "Prevent overselling when concurrent checkout workers decrement stock simultaneously.",
+          "Surface repository/database exceptions cleanly instead of silently pretending the order succeeded."
+        ],
+        "expected_behavior": "Valid, non-duplicate orders with sufficient atomic stock are persisted once; invalid inputs fail fast with explicit errors; DB errors propagate or enter structured failure tracking.",
+        "constraints": [
+          "Python 3.10+ multi-worker web/worker environment",
+          "Do not assume catalog_items in memory stays synchronized across workers",
+          "Target O(N + M) batch complexity instead of quadratic scans"
+        ],
+        "competency_targets": ["Code & Defect Diagnosis", "AI Output Verification", "Testing & Edge-Case Rigor"],
         "language": "python",
         "artifact_code": "def process_order_batch(orders, catalog_items, repo):\n    processed = []\n    for order in orders:\n        if any(p['order_id'] == order['order_id'] for p in processed):\n            continue\n        for item in catalog_items:\n            if item['sku'] == order['sku']:\n                if item['stock'] >= order['qty']:\n                    try:\n                        repo.decrement_stock(order['sku'], order['qty'])\n                        processed.append(order)\n                    except Exception:\n                        pass\n    return processed\n",
         "planted_defects": [
           {
             "id": "def_1_on2",
             "line_range": "4-7",
+            "line_numbers": [4, 5, 6, 7],
             "category": "PERFORMANCE_COMPLEXITY",
-            "label": "O(N^2) linear scan over processed orders and catalog_items inside nested loop"
+            "accepted_categories": ["PERFORMANCE_COMPLEXITY", "LOGIC_ERROR", "RESOURCE_SCALABILITY"],
+            "severity": "HIGH",
+            "is_critical": false,
+            "weight": 0.22,
+            "label": "O(N^2) linear scan over processed orders and catalog_items inside nested loop",
+            "explanation": "Checking membership with `any(p['order_id'] == ... for p in processed)` and scanning `catalog_items` per order degrades batch throughput quadratically as batch/catalog size grows.",
+            "root_cause_concepts": [
+              ["o(n^2)", "o(n*m)", "quadratic", "nested loop", "linear scan", "slow", "complexity"],
+              ["set", "dict", "hashmap", "lookup", "index", "o(1)", "seen"]
+            ],
+            "impact_concepts": ["latency", "cpu", "timeout", "throughput", "scale", "slow"],
+            "fix_concepts": ["set", "dict", "lookup", "seen_ids", "index"]
           },
           {
             "id": "def_2_validation",
             "line_range": "1-8",
-            "category": "BOUNDARY_VALIDATION",
-            "label": "Missing validation for None inputs, negative/zero qty, or missing dict keys"
+            "line_numbers": [1, 3, 4, 7, 8],
+            "category": "INPUT_VALIDATION",
+            "accepted_categories": ["INPUT_VALIDATION", "EDGE_CASE", "DATA_INTEGRITY", "LOGIC_ERROR"],
+            "severity": "HIGH",
+            "is_critical": false,
+            "weight": 0.22,
+            "label": "Missing validation for None inputs, negative/zero qty, or missing dict keys",
+            "explanation": "Negative `order['qty']` passes `stock >= qty` (accidentally incrementing stock!), and missing keys (`order_id`, `sku`, `qty`) or `None` inputs raise unhandled KeyError/TypeError.",
+            "root_cause_concepts": [
+              ["validat", "negative", "zero", "qty", "quantity", "bound", "edge case", "missing key", "keyerror", "none", "null"]
+            ],
+            "impact_concepts": ["corrupt", "crash", "keyerror", "typeerror", "increment", "invalid"],
+            "fix_concepts": ["<= 0", "> 0", "not orders", "is none", "isinstance", ".get(", "raise valueerror", "if not"]
           },
           {
             "id": "def_3_silent_except",
             "line_range": "11-12",
+            "line_numbers": [10, 11, 12, 13],
             "category": "ERROR_HANDLING",
-            "label": "Bare Exception swallowed with pass hides DB/stock failures silently"
+            "accepted_categories": ["ERROR_HANDLING", "LOGIC_ERROR", "DATA_INTEGRITY", "API_BEHAVIOR"],
+            "severity": "CRITICAL",
+            "is_critical": true,
+            "weight": 0.28,
+            "label": "Bare Exception swallowed with pass hides DB/stock failures silently",
+            "explanation": "`except Exception: pass` silently drops repository/database failures and returns partial state with zero logging, retry signaling, or caller visibility.",
+            "root_cause_concepts": [
+              ["except", "swallow", "silent", "pass", "error handling", "hide", "suppress", "ignore"]
+            ],
+            "impact_concepts": ["silent", "data loss", "invisible", "debug", "retry", "inconsistent"],
+            "fix_concepts": ["log", "logger", "raise", "specific", "failed", "error"]
           },
           {
             "id": "def_4_stale_race",
             "line_range": "8-10",
-            "category": "CONCURRENCY_INTEGRITY",
-            "label": "Check-then-act stock check on stale in-memory item dict risks overselling under concurrent requests"
+            "line_numbers": [8, 9, 10],
+            "category": "CONCURRENCY_RACE",
+            "accepted_categories": ["CONCURRENCY_RACE", "DATA_INTEGRITY", "LOGIC_ERROR"],
+            "severity": "CRITICAL",
+            "is_critical": true,
+            "weight": 0.28,
+            "label": "Check-then-act stock check on stale in-memory item dict risks overselling under concurrent requests",
+            "explanation": "Comparing stale in-memory `item['stock'] >= order['qty']` before calling `repo.decrement_stock` creates a TOCTOU race across concurrent workers and never decrements the in-memory copy across same-SKU orders in one batch.",
+            "root_cause_concepts": [
+              ["race", "concurren", "toctou", "stale", "in-memory", "atomic", "lock", "oversell", "same sku", "not updated"]
+            ],
+            "impact_concepts": ["oversell", "negative stock", "race", "corrupt", "double"],
+            "fix_concepts": ["atomic", "transaction", "select_for_update", "conditional", "decrement", "lock", "return"]
           }
+        ],
+        "testing_expectations": [
+          {"label": "Duplicate order_id deduplication test", "concepts": ["duplicate", "dedup", "idempoten", "same order"]},
+          {"label": "Negative / zero quantity & missing key boundary tests", "concepts": ["negative", "zero", "none", "missing", "invalid", "boundary", "valueerror"]},
+          {"label": "Repository exception propagation / failure handling test", "concepts": ["exception", "error", "mock", "fail", "raise", "timeout"]},
+          {"label": "Concurrent / repeated same-SKU stock decrement test", "concepts": ["concurren", "oversell", "stock", "same sku", "insufficient", "atomic"]}
         ],
         "ast_invariants": [
           {"rule": "no_bare_except_pass", "description": "Must not swallow exceptions silently with except ...: pass"},
@@ -234,34 +300,99 @@
       ],
       "stage_1": {
         "task_id": "se-b2-s1",
-        "prompt": "An AI assistant generated this Python background worker function to compile per-tenant CSV billing summaries from ORM repositories. Identify all 4 defects, submit a safe structural Python fix, and specify test cases.",
+        "title": "Tenant Billing Export Worker Review",
+        "prompt": "An AI coding assistant generated this Python background worker function to compile per-tenant billing summaries from repository calls. Inspect the code for reliability, correctness, performance, and data-integrity flaws.",
+        "scenario": "This worker executes nightly across 25,000 B2B tenants, where top enterprise tenants hold 100k+ historical invoices.",
+        "requirements": [
+          "Fetch tenant metadata and billing totals efficiently without per-tenant N+1 DB round-trips.",
+          "Handle missing/deleted tenants or null invoice amounts gracefully without crashing the entire batch.",
+          "Bound worker memory usage cleanly when exporting large tenant populations.",
+          "Compute financial totals accurately using exact decimal arithmetic."
+        ],
+        "expected_behavior": "Batched or streamed aggregation skips/reports missing tenants cleanly, bounds RAM usage, and outputs exact Decimal currency totals.",
+        "constraints": [
+          "Background worker RAM limit is 512MB",
+          "PostgreSQL query latency degrades sharply under 25k sequential round-trips",
+          "Financial amounts must avoid floating-point rounding drift"
+        ],
+        "competency_targets": ["Code & Defect Diagnosis", "AI Output Verification", "Testing & Edge-Case Rigor"],
         "language": "python",
         "artifact_code": "def build_tenant_exports(tenant_ids, db):\n    all_rows = []\n    for tid in tenant_ids:\n        tenant = db.get_tenant(tid)\n        invoices = db.get_invoices_for_tenant(tid)\n        total = 0\n        for inv in invoices:\n            total += inv['amount']\n        all_rows.append({'name': tenant['name'], 'total': total})\n    return all_rows\n",
         "planted_defects": [
           {
             "id": "def_1_n_plus_one",
             "line_range": "3-5",
+            "line_numbers": [3, 4, 5],
             "category": "PERFORMANCE_COMPLEXITY",
-            "label": "N+1 repository queries per tenant inside loop instead of batched/aggregated query"
+            "accepted_categories": ["PERFORMANCE_COMPLEXITY", "RESOURCE_SCALABILITY", "API_BEHAVIOR"],
+            "severity": "CRITICAL",
+            "is_critical": true,
+            "weight": 0.28,
+            "label": "N+1 repository queries per tenant inside loop instead of batched/aggregated query",
+            "explanation": "Issuing 2 separate DB queries (`get_tenant` + `get_invoices_for_tenant`) inside the `for tid in tenant_ids` loop triggers 50,000+ round-trips at scale.",
+            "root_cause_concepts": [
+              ["n+1", "n + 1", "loop", "per tenant", "per-tenant", "round-trip", "batch", "aggregat", "query inside"]
+            ],
+            "impact_concepts": ["latency", "timeout", "db", "exhaust", "connection", "slow"],
+            "fix_concepts": ["batch", "in_", "bulk", "aggregat", "sum(", "group by", "chunk", "prefetch"]
           },
           {
             "id": "def_2_null_guard",
             "line_range": "4-9",
-            "category": "BOUNDARY_VALIDATION",
-            "label": "Missing None check when db.get_tenant(tid) or inv['amount'] is missing/null"
+            "line_numbers": [1, 4, 5, 8, 9],
+            "category": "INPUT_VALIDATION",
+            "accepted_categories": ["INPUT_VALIDATION", "EDGE_CASE", "ERROR_HANDLING", "LOGIC_ERROR"],
+            "severity": "CRITICAL",
+            "is_critical": true,
+            "weight": 0.27,
+            "label": "Missing None check when db.get_tenant(tid) or inv['amount'] is missing/null",
+            "explanation": "If `db.get_tenant(tid)` returns `None`, `tenant['name']` throws `TypeError` and aborts the entire nightly batch; similarly `None` or missing `inv['amount']` crashes summation.",
+            "root_cause_concepts": [
+              ["none", "null", "missing", "get_tenant", "typeerror", "keyerror", "guard", "empty"]
+            ],
+            "impact_concepts": ["crash", "abort", "entire batch", "fail", "typeerror", "keyerror"],
+            "fix_concepts": ["if not tenant", "is none", "continue", "skip", ".get(", "or 0"]
           },
           {
             "id": "def_3_unbounded_mem",
             "line_range": "2-10",
-            "category": "SCALABILITY_RESOURCE",
-            "label": "Accumulates unbounded in-memory all_rows list without chunking/streaming pagination"
+            "line_numbers": [2, 5, 9, 10],
+            "category": "RESOURCE_SCALABILITY",
+            "accepted_categories": ["RESOURCE_SCALABILITY", "PERFORMANCE_COMPLEXITY", "DATA_INTEGRITY"],
+            "severity": "HIGH",
+            "is_critical": false,
+            "weight": 0.23,
+            "label": "Accumulates unbounded in-memory list and loads all invoices per tenant without streaming/chunking",
+            "explanation": "Materializing every invoice and appending every export dict into `all_rows` exhausts the 512MB worker RAM on large tenant populations.",
+            "root_cause_concepts": [
+              ["memory", "oom", "ram", "unbounded", "all_rows", "chunk", "stream", "generat", "paginat", "yield"]
+            ],
+            "impact_concepts": ["oom", "crash", "memory", "512mb", "killed"],
+            "fix_concepts": ["yield", "generator", "chunk", "batch", "stream", "iterator", "limit"]
           },
           {
             "id": "def_4_float_precision",
             "line_range": "6-8",
-            "category": "DATA_CORRECTNESS",
-            "label": "Uses integer/float zero sum on financial amounts without Decimal/currency validation or empty guard"
+            "line_numbers": [6, 7, 8],
+            "category": "DATA_INTEGRITY",
+            "accepted_categories": ["DATA_INTEGRITY", "LOGIC_ERROR", "INPUT_VALIDATION"],
+            "severity": "MEDIUM",
+            "is_critical": false,
+            "weight": 0.22,
+            "label": "Uses unvalidated zero sum on financial amounts without Decimal precision or currency boundary checks",
+            "explanation": "Summing billing amounts starting with untyped `0` risks floating-point rounding drift and mixes invalid/negative or multi-currency amounts blindly.",
+            "root_cause_concepts": [
+              ["decimal", "float", "precision", "rounding", "money", "financial", "currency"]
+            ],
+            "impact_concepts": ["drift", "inaccura", "billing", "penny", "round"],
+            "fix_concepts": ["decimal", "decimal('0.00')", "decimal(\"0", "quantize"]
           }
+        ],
+        "testing_expectations": [
+          {"label": "Missing/None tenant & null invoice amount handling", "concepts": ["none", "null", "missing tenant", "deleted", "skip", "error"]},
+          {"label": "Query count / batch aggregation regression check", "concepts": ["query", "n+1", "count", "batch", "assertnumqueries"]},
+          {"label": "Chunked/streaming memory bound & empty list test", "concepts": ["empty", "large", "chunk", "stream", "generator", "memory"]},
+          {"label": "Decimal monetary precision test", "concepts": ["decimal", "float", "precision", "0.1", "0.2", "currency"]}
         ],
         "ast_invariants": [
           {"rule": "require_explicit_guard", "description": "Must guard missing tenant/None or invalid tenant_ids input"},
@@ -308,34 +439,99 @@
       ],
       "stage_1": {
         "task_id": "se-b3-s1",
-        "prompt": "An AI assistant generated this Python request guard handling bearer token verification and per-user rate limiting. Diagnose all 4 defects, patch the logic structurally, and write critical security/edge tests.",
+        "title": "API Token Auth & Rate-Limiter Middleware Review",
+        "prompt": "An AI coding assistant generated this Python request guard for bearer token verification and per-token rate limiting (100 req/minute). Audit the code for security vulnerabilities, concurrency races, and input edge cases.",
+        "scenario": "This guard sits in front of customer financial endpoints running behind 8 Gunicorn worker processes with a shared cache.",
+        "requirements": [
+          "Fail strictly closed (return False) if the header is missing, malformed, token expired, or backing stores error.",
+          "Verify bearer scheme and constant-time token comparison safely.",
+          "Enforce token expiration against `now_ts`.",
+          "Apply atomic rate-limit incrementing with time-window expiry (100 requests per 60s window)."
+        ],
+        "expected_behavior": "Requests pass only with valid, non-expired Bearer tokens within atomic rate limits; store outages never grant access.",
+        "constraints": [
+          "Multi-worker production API behind Nginx",
+          "Zero unauthorized access is a strict invariant",
+          "Python standard library (`hmac.compare_digest`) + atomic cache operations"
+        ],
+        "competency_targets": ["Code & Defect Diagnosis", "AI Output Verification", "Testing & Edge-Case Rigor"],
         "language": "python",
         "artifact_code": "def authorize_request(headers, token_store, rate_cache, now_ts):\n    token = headers.get('Authorization', '').replace('Bearer ', '')\n    try:\n        record = token_store.get(token)\n        if record and record['secret'] == token:\n            hits = rate_cache.get(token, 0)\n            if hits < 100:\n                rate_cache[token] = hits + 1\n                return True\n    except Exception:\n        return True\n    return False\n",
         "planted_defects": [
           {
             "id": "def_1_fail_open",
             "line_range": "10-11",
-            "category": "SECURITY_FAIL_OPEN",
-            "label": "except Exception returns True (fail-open bypasses all authentication on cache/store error)"
+            "line_numbers": [10, 11],
+            "category": "SECURITY_VULNERABILITY",
+            "accepted_categories": ["SECURITY_VULNERABILITY", "ERROR_HANDLING", "LOGIC_ERROR"],
+            "severity": "CRITICAL",
+            "is_critical": true,
+            "weight": 0.30,
+            "label": "except Exception returns True (fail-open bypasses all authentication on cache/store error)",
+            "explanation": "Returning `True` inside `except Exception` allows an attacker (or transient cache outage) to trigger an error and bypass authentication completely.",
+            "root_cause_concepts": [
+              ["fail-open", "fail open", "return true", "except", "bypass", "outage", "auth bypass"]
+            ],
+            "impact_concepts": ["unauthoriz", "bypass", "all requests", "breach", "admin", "security"],
+            "fix_concepts": ["return false", "fail closed", "fail-closed", "log", "raise"]
           },
           {
             "id": "def_2_expiry_timing",
             "line_range": "5",
-            "category": "AUTH_INTEGRITY",
-            "label": "Ignores now_ts token expiration check and uses non-constant-time == comparison"
+            "line_numbers": [4, 5],
+            "category": "SECURITY_VULNERABILITY",
+            "accepted_categories": ["SECURITY_VULNERABILITY", "LOGIC_ERROR", "API_BEHAVIOR"],
+            "severity": "CRITICAL",
+            "is_critical": true,
+            "weight": 0.26,
+            "label": "Ignores now_ts token expiration check and uses non-constant-time == comparison",
+            "explanation": "`now_ts` is passed as an argument yet completely unused—expired or revoked tokens stay valid forever, and `==` leaks timing side-channels.",
+            "root_cause_concepts": [
+              ["expir", "now_ts", "unused", "revok", "ttl", "hmac", "compare_digest", "timing attack", "constant"]
+            ],
+            "impact_concepts": ["expired token", "replay", "forever", "side-channel", "timing"],
+            "fix_concepts": ["now_ts", "expires_at", "compare_digest", "hmac", ">="]
           },
           {
             "id": "def_3_header_parse",
             "line_range": "2",
-            "category": "BOUNDARY_VALIDATION",
-            "label": "Naive .replace('Bearer ', '') accepts empty/missing scheme or case/whitespace bypasses"
+            "line_numbers": [1, 2, 4],
+            "category": "INPUT_VALIDATION",
+            "accepted_categories": ["INPUT_VALIDATION", "SECURITY_VULNERABILITY", "EDGE_CASE"],
+            "severity": "HIGH",
+            "is_critical": false,
+            "weight": 0.22,
+            "label": "Naive .replace('Bearer ', '') accepts empty/missing scheme or case/whitespace bypasses",
+            "explanation": "`.replace('Bearer ', '')` parses `'Basic foo'` or empty strings `''` as raw tokens, and crashes with `AttributeError` if `headers` is `None` or value is `None`.",
+            "root_cause_concepts": [
+              ["replace(", "bearer", "scheme", "startswith", "split", "empty", "whitespace", "malformed", "none"]
+            ],
+            "impact_concepts": ["malformed", "empty token", "crash", "attributeerror", "wrong scheme"],
+            "fix_concepts": ["startswith", "split(", "strip(", "if not token", "not headers", "removeprefix"]
           },
           {
             "id": "def_4_rate_race",
             "line_range": "6-8",
-            "category": "CONCURRENCY_INTEGRITY",
-            "label": "Non-atomic read-then-write rate counter allows concurrent burst bypass and never expires window"
+            "line_numbers": [6, 7, 8],
+            "category": "CONCURRENCY_RACE",
+            "accepted_categories": ["CONCURRENCY_RACE", "DATA_INTEGRITY", "RESOURCE_SCALABILITY", "LOGIC_ERROR"],
+            "severity": "HIGH",
+            "is_critical": false,
+            "weight": 0.22,
+            "label": "Non-atomic read-then-write rate counter allows concurrent burst bypass and never expires window",
+            "explanation": "Doing `get` then `hits + 1` races across Gunicorn workers (allowing bursts > 100), and the counter key has no TTL/window reset so legitimate users are permanently locked after 100 lifetime requests.",
+            "root_cause_concepts": [
+              ["race", "atomic", "incr", "read-then-write", "window", "ttl", "expir", "permanent", "lockout", "burst"]
+            ],
+            "impact_concepts": ["burst", "bypass", "permanent", "locked out", "dos", "worker"],
+            "fix_concepts": ["incr", "atomic", "ttl", "window", "now_ts //", "expire"]
           }
+        ],
+        "testing_expectations": [
+          {"label": "Cache/store exception fails strictly closed (returns False)", "concepts": ["exception", "error", "fail closed", "false", "mock", "outage"]},
+          {"label": "Expired token & invalid secret rejection tests", "concepts": ["expir", "now_ts", "invalid", "mismatch", "secret"]},
+          {"label": "Malformed/missing Authorization header & None tests", "concepts": ["missing", "malformed", "empty", "bearer", "basic", "none"]},
+          {"label": "Atomic rate limit ceiling & window rollover tests", "concepts": ["100", "limit", "429", "window", "reset", "concurren"]}
         ],
         "ast_invariants": [
           {"rule": "no_fail_open_return_true", "description": "Exception handlers in auth logic must never return True"},

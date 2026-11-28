@@ -1047,6 +1047,7 @@
 .readiness-mono-tag {
     font-family: var(--interview-mono);
     font-size: 0.74rem;
+    white-space: nowrap;
     padding: 0.18rem 0.5rem;
     border-radius: 6px;
     background: var(--dash-surface-muted);
@@ -1164,4 +1165,130 @@
 
 .readiness-policy-list li + li {
     margin-top: 0.45rem;
+}
+
+/* --------------------------------------------------------------------------
+   11. SPRINT 3: STAGE 1 APPLIED DIAGNOSIS WORKBENCH
+   -------------------------------------------------------------------------- */
+.stage1-workbench-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .stage1-workbench-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stage1-left-pane,
+.stage1-right-pane {
+    min-width: 0;
+}
+
+.stage1-timer-box {
+    display: flex;
+    flex-direction: column;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--dash-border);
+    background: var(--dash-surface-muted);
+}
+
+.stage1-timer-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--dash-text-muted);
+}
+
+.stage1-timer-val {
+    font-family: var(--interview-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dash-text);
+}
+
+.stage1-timer-val.is-urgent {
+    color: var(--interview-danger);
+}
+
+.stage1-compact-list {
+    padding-left: 1.1rem;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: var(--dash-text-muted);
+}
+
+.stage1-compact-list li + li {
+    margin-top: 0.35rem;
+}
+
+.stage1-code-panel {
+    border: 1px solid var(--dash-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--dash-surface);
+}
+
+.stage1-code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--dash-surface-muted);
+    border-bottom: 1px solid var(--dash-border);
+}
+
+.stage1-code-scroll {
+    max-height: 460px;
+    overflow: auto;
+    background: #0F172A;
+    color: #E2E8F0;
+}
+
+.stage1-code-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--interview-mono);
+    font-size: 0.8rem;
+    line-height: 1.55;
+}
+
+.stage1-line-num {
+    width: 44px;
+    padding: 0.15rem 0.75rem;
+    text-align: right;
+    color: #64748B;
+    user-select: none;
+    border-right: 1px solid rgba(148, 163, 184, 0.18);
+    vertical-align: top;
+}
+
+.stage1-line-code {
+    padding: 0.15rem 0.9rem;
+    white-space: pre;
+}
+
+.stage1-line-code code {
+    color: #E2E8F0;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.stage1-finding-card {
+    padding: 0.95rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--dash-border);
+    background: var(--dash-surface-muted);
+}
+
+.stage1-mono-textarea {
+    font-family: var(--interview-mono);
+    font-size: 0.82rem;
+    line-height: 1.5;
 }

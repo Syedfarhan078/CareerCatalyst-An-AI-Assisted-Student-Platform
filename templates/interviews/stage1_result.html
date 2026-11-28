@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stage 1 Feedback — {{ career_path.name }} — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.1">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <div class="readiness-header">
+                <div>
+                    <nav class="interview-breadcrumb" aria-label="Breadcrumb">
+                        <a href="{% url 'interviews:hub' %}">Career Readiness</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <a href="{% url 'interviews:readiness_history' %}">Practice History</a>
+                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <span aria-current="page">Stage 1 Evaluation</span>
+                    </nav>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h1 class="interview-page-title mb-0">{{ career_path.name }} · Stage 1 Feedback</h1>
+                        <span class="readiness-pill readiness-pill-pilot">Practice Mode · Deterministic</span>
+                    </div>
+                    <p class="interview-page-subtitle">{{ candidate_task.title }} · {{ session.task_bundle_id }}</p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <form method="POST" action="{% url 'interviews:stage1_practice_start' career_path.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="dash-btn dash-btn-primary dash-btn-sm px-3">
+                            Practice Another Artifact
+                        </button>
+                    </form>
+                    <a href="{% url 'interviews:readiness_history' %}" class="dash-btn dash-btn-outline dash-btn-sm">
+                        View History
+                    </a>
+                </div>
+            </div>
+
+            <!-- Overall Verdict Summary Strip -->
+            <section class="readiness-surface-card mb-4" aria-label="Evaluation Summary">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <div class="readiness-stat-label">Deterministic Stage 1 Score</div>
+                        <div class="readiness-stat-value tabular-nums">{{ evaluation.weighted_total }}%</div>
+                        <div class="small text-muted mt-1">
+                            Practice benchmark: 70.0% + Critical floors &ge; 60%
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="readiness-stat-label">Critical Competency Gates</div>
+                        <div class="mt-1">
+                            {% if evaluation.critical_gates_passed %}
+                                <span class="readiness-pill readiness-pill-active">All Critical Gates Passed</span>
+                            {% else %}
+                                <span class="readiness-pill readiness-pill-warn">Critical Floor Missed</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted mt-2">
+                            Matched {{ evidence.matched_defects|length }} of 4 planted defects
+                            {% if evidence.unsupported_findings %}· {{ evidence.unsupported_findings|length }} unsupported{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="readiness-meta-box small text-muted">
+                            <strong class="d-block text-body mb-1">Practice Record Only</strong>
+                            Evaluated deterministically without consuming your 8/day AI quota. Practice Mode never issues certificates or cooldowns.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Competency Breakdown -->
+            <section class="readiness-surface-card mb-4" aria-labelledby="comp-breakdown-heading">
+                <h2 id="comp-breakdown-heading" class="h6 fw-bold mb-3">Competency Breakdown &amp; Remediation</h2>
+                <div class="row g-3">
+                    {% for item in competency_cards %}
+                    <div class="col-md-4">
+                        <div class="stage1-finding-card h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                    <span class="fw-bold small">{{ item.obj.competency_name }}</span>
+                                    <span class="readiness-pill {% if item.obj.gate_passed and item.obj.score >= 70 %}readiness-pill-active{% else %}readiness-pill-warn{% endif %} tabular-nums">
+                                        {{ item.obj.score }}%
+                                    </span>
+                                </div>
+                                <div class="small text-muted mb-2">
+                                    Weight {% widthratio item.obj.weight 1 100 %}%
+                                    {% if item.obj.is_critical %} · Critical Floor {{ item.obj.critical_floor|floatformat:0 }}%{% endif %}
+                                </div>
+                                <p class="small mb-2" style="color: var(--dash-text-muted);">{{ item.obj.reasoning }}</p>
+                            </div>
+                            {% if item.topics and item.obj.score < 70 or item.topics and not item.obj.gate_passed %}
+                            <div class="pt-2 border-top" style="border-color: var(--dash-border) !important;">
+                                <div class="readiness-eyebrow mb-1">Recommended Roadmap Topics</div>
+                                <ul class="stage1-compact-list mb-0">
+                                    {% for t in item.topics %}
+                                    <li>
+                                        <a href="{% url 'roadmaps:learning_detail' career_path.slug %}#milestone-week-{{ t.milestone.week_number }}" class="text-decoration-none">
+                                            W{{ t.milestone.week_number }}: {{ t.title }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Defect Audit Breakdown (Unlocked Post-Evaluation) -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="readiness-surface-card h-100">
+                        <h2 class="h6 fw-bold mb-3">Issues Identified Correctly ({{ evidence.matched_defects|length }})</h2>
+                        {% if evidence.matched_defects %}
+                            <div class="d-flex flex-column gap-2">
+                                {% for m in evidence.matched_defects %}
+                                <div class="stage1-finding-card">
+                                    <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                                        <strong class="small">{{ m.defect_label }}</strong>
+                                        <span class="readiness-mono-tag">Lines {{ m.line_range }}</span>
+                                    </div>
+                                    <div class="small text-muted mb-1">Matched your finding: <em>{{ m.finding_title }}</em> (Quality: {{ m.metrics.quality_score }}%)</div>
+                                    <div class="small text-muted">{{ m.explanation }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="small text-muted mb-0">None of the planted issues were matched with sufficient explanation.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="readiness-surface-card h-100">
+                        <h2 class="h6 fw-bold mb-3">Missed Issues ({{ evidence.missed_defects|length }})</h2>
+                        {% if evidence.missed_defects %}
+                            <div class="d-flex flex-column gap-2">
+                                {% for miss in evidence.missed_defects %}
+                                <div class="stage1-finding-card">
+                                    <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                                        <strong class="small">{{ miss.label }}</strong>
+                                        {% if miss.is_critical %}
+                                            <span class="readiness-pill readiness-pill-warn">Critical Missed</span>
+                                        {% else %}
+                                            <span class="readiness-mono-tag">Lines {{ miss.line_range }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="small text-muted">{{ miss.explanation }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="small text-success mb-0">You located every planted defect in this artifact.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- False Positives & AST Static Audit -->
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="readiness-surface-card h-100">
+                        <h2 class="h6 fw-bold mb-3">False Positives / Unsupported Claims ({{ evidence.unsupported_findings|length }})</h2>
+                        {% if evidence.unsupported_findings %}
+                            <ul class="stage1-compact-list mb-0">
+                                {% for u in evidence.unsupported_findings %}
+                                <li>
+                                    <strong>{{ u.title }}</strong>{% if u.line_ref %} (Lines {{ u.line_ref }}){% endif %} — {{ u.reason }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="small text-muted mb-0">No unsupported or false-positive findings detected.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="readiness-surface-card h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h2 class="h6 fw-bold mb-0">Safe AST Structural Analysis</h2>
+                            <span class="readiness-mono-tag">Zero Code Execution</span>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            AST Status: <strong>{{ evidence.ast_report.status }}</strong>
+                            {% if evidence.ast_report.error %} — {{ evidence.ast_report.error }}{% endif %}
+                        </div>
+                        {% if evidence.ast_report.checks %}
+                            <ul class="stage1-compact-list mb-0">
+                                {% for chk in evidence.ast_report.checks %}
+                                <li>
+                                    <strong>{% if chk.passed %}Pass{% else %}Gap{% endif %}:</strong> {{ chk.detail }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="small text-muted mb-0">{{ evidence.ast_report.supplementary_observations|first|default:"Analyzed safely via Python AST." }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

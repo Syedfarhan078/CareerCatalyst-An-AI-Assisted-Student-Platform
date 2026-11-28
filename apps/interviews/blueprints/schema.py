@@ -186,6 +186,14 @@ def validate_blueprint_spec(spec: Dict[str, Any]) -> None:
             raise BlueprintValidationError(
                 f"Bundle '{bid}' Stage 1 must define artifact_code and exactly 4 calibrated planted_defects."
             )
+        if not s1.get('requirements') or not s1.get('expected_behavior'):
+            raise BlueprintValidationError(
+                f"Bundle '{bid}' Stage 1 must define candidate-facing requirements and expected_behavior."
+            )
+        if not any(d.get('is_critical') for d in defects):
+            raise BlueprintValidationError(
+                f"Bundle '{bid}' Stage 1 must designate at least 1 critical planted defect."
+            )
         if not isinstance(s1.get('ast_invariants', []), list) or len(s1.get('ast_invariants', [])) < 2:
             raise BlueprintValidationError(f"Bundle '{bid}' Stage 1 must define at least 2 deterministic ast_invariants.")
 

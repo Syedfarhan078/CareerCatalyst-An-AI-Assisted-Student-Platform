@@ -1,0 +1,461 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stage 1: Applied Diagnosis — {{ career_path.name }} — CareerCatalyst{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+<link rel="stylesheet" href="{% static 'css/interviews.css' %}?v=2.1">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block chatbot %}{% endblock %}
+
+{% block main_wrapper %}
+<div class="dash-shell">
+    {% include "core/partials/dashboard_sidebar.html" %}
+    <div class="dash-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="dash-main">
+        <header class="dash-mobile-header" aria-label="Mobile Header">
+            <button type="button" class="dash-mobile-toggle" id="sidebarToggleBtn" aria-label="Open navigation sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            <a href="{% url 'dashboard' %}" class="dash-brand">
+                <img src="{% static 'images/favicon.png' %}" alt="CareerCatalyst Logo" width="24" height="24">
+                <span>Career<span class="dash-brand-accent">Catalyst</span></span>
+            </a>
+            <div class="dash-avatar-circle" style="width: 30px; height: 30px;">
+                <span class="dash-avatar-initials" style="font-size: 0.75rem;">{{ user_initials }}</span>
+            </div>
+        </header>
+
+        <main class="dash-content">
+            <!-- Session Header Bar -->
+            <header class="readiness-surface-card stage1-session-bar mb-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="readiness-pill readiness-pill-pilot">Practice Mode</span>
+                            <span class="readiness-mono-tag">{{ session.blueprint_version }}</span>
+                            {% if session.extended_time_enabled %}
+                            <span class="readiness-pill readiness-pill-active">+25% Extended Time</span>
+                            {% endif %}
+                        </div>
+                        <h1 class="h5 fw-bold mb-0">{{ career_path.name }} · Stage 1 — Applied Diagnosis</h1>
+                        <div class="small text-muted mt-1">{{ task.title }}</div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <div class="stage1-timer-box" aria-live="off">
+                            <span class="stage1-timer-label">Time Remaining</span>
+                            <span class="stage1-timer-val tabular-nums" id="stage1TimerDisplay">--:--</span>
+                        </div>
+                        <span class="small text-muted" id="autosaveStatus" role="status">Draft synced</span>
+                        <form method="POST" action="{% url 'interviews:stage1_abandon' session.session_uuid %}" onsubmit="return confirm('Exit this practice drill? Your unsubmitted session will close without affecting your record.');">
+                            {% csrf_token %}
+                            <button type="submit" class="dash-btn dash-btn-outline dash-btn-sm">
+                                Exit Session
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </header>
+
+            {% if error_message %}
+            <div class="alert alert-danger rounded-3 border mb-3" role="alert">
+                <i class="bi bi-exclamation-circle me-1" aria-hidden="true"></i> {{ error_message }}
+            </div>
+            {% endif %}
+
+            <!-- Main Workbench Split Layout -->
+            <div class="stage1-workbench-grid">
+                <!-- Left Pane: Requirements, Constraints & Code Artifact -->
+                <section class="stage1-left-pane" aria-label="Problem Context and Code Artifact">
+                    <div class="readiness-surface-card mb-3">
+                        <span class="readiness-eyebrow d-block mb-1">Problem Context</span>
+                        <p class="small mb-3" style="color: var(--dash-text); line-height: 1.55;">
+                            {{ task.scenario }} {{ task.prompt }}
+                        </p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <h2 class="h6 fw-bold mb-2">Requirements</h2>
+                                <ul class="stage1-compact-list mb-0">
+                                    {% for req in task.requirements %}
+                                    <li>{{ req }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h2 class="h6 fw-bold mb-2">Expected Behavior &amp; Constraints</h2>
+                                <p class="small text-muted mb-2">{{ task.expected_behavior }}</p>
+                                <ul class="stage1-compact-list mb-0">
+                                    {% for c in task.constraints %}
+                                    <li>{{ c }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stage1-code-panel">
+                        <div class="stage1-code-header">
+                            <span class="small fw-semibold">AI-Generated Artifact Under Review ({{ task.language|upper }})</span>
+                            <span class="readiness-mono-tag">Read-Only Inspection</span>
+                        </div>
+                        <div class="stage1-code-scroll" tabindex="0" aria-label="Python artifact under review with line numbers">
+                            <table class="stage1-code-table">
+                                <tbody>
+                                    {% for line in task.artifact_lines %}
+                                    <tr>
+                                        <td class="stage1-line-num tabular-nums" aria-hidden="true">{{ line.number }}</td>
+                                        <td class="stage1-line-code"><code>{{ line.text }}</code></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Pane: Structured Findings Builder & Final Submission -->
+                <section class="stage1-right-pane" aria-label="Candidate Diagnosis Workspace">
+                    <form method="POST" action="{% url 'interviews:stage1_workbench' session.session_uuid %}" id="stage1SubmitForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="findings_json" id="findingsJsonInput" value="{{ draft_findings_json|escape }}">
+
+                        <div class="readiness-surface-card mb-3">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                <div>
+                                    <h2 class="h6 fw-bold mb-0">1. Structured Issue Findings</h2>
+                                    <div class="small text-muted">Log each bug, vulnerability, or flawed assumption you identified in any order.</div>
+                                </div>
+                                <button type="button" class="dash-btn dash-btn-primary dash-btn-sm" id="addFindingBtn">
+                                    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> Add Finding
+                                </button>
+                            </div>
+
+                            <div id="findingsList" class="d-flex flex-column gap-3"></div>
+                            <div id="findingsEmptyState" class="readiness-empty-box d-none">
+                                <p class="small text-muted mb-2">No findings added yet.</p>
+                                <button type="button" class="dash-btn dash-btn-outline dash-btn-sm" id="addFindingEmptyBtn">Add First Finding</button>
+                            </div>
+                        </div>
+
+                        <div class="readiness-surface-card mb-3">
+                            <label for="proposedFixCode" class="form-label small fw-bold mb-1">
+                                2. Proposed Python Fix / Key Refactor (Optional Structural Check)
+                            </label>
+                            <p class="small text-muted mb-2">
+                                Checked safely via static AST inspection only — never executed on the server.
+                            </p>
+                            <textarea
+                                class="form-control stage1-mono-textarea"
+                                id="proposedFixCode"
+                                name="proposed_fix_code"
+                                rows="6"
+                                maxlength="12000"
+                                placeholder="Paste or sketch the fixed Python function or critical guard blocks..."
+                            >{{ draft.proposed_fix_code|default:'' }}</textarea>
+                        </div>
+
+                        <div class="readiness-surface-card mb-3">
+                            <label for="testPlanInput" class="form-label small fw-bold mb-1">
+                                3. Concrete Test &amp; Edge-Case Verification Plan
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="testPlanInput"
+                                name="test_plan"
+                                rows="4"
+                                maxlength="4000"
+                                placeholder="List specific unit/integration test scenarios (boundary values, error paths, concurrency/idempotency cases)..."
+                            >{{ draft.test_plan|default:'' }}</textarea>
+
+                            <label for="overallSummaryInput" class="form-label small fw-bold mt-3 mb-1">
+                                4. AI Output Review Notes (Optional)
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="overallSummaryInput"
+                                name="overall_summary"
+                                rows="2"
+                                maxlength="2500"
+                                placeholder="Summarize why this AI draft would fail in production and how you would verify it..."
+                            >{{ draft.overall_summary|default:'' }}</textarea>
+                        </div>
+
+                        <div class="readiness-surface-card d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="small text-muted">
+                                Evaluated deterministically without using your 8/day AI practice quota.
+                            </div>
+                            <button type="button" class="dash-btn dash-btn-primary px-4" id="openConfirmModalBtn">
+                                Review &amp; Submit Diagnosis
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Submission Confirmation Modal -->
+<div class="modal fade" id="stage1ConfirmModal" tabindex="-1" aria-labelledby="stage1ConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--dash-surface); color: var(--dash-text); border: 1px solid var(--dash-border);">
+            <div class="modal-header border-bottom" style="border-color: var(--dash-border) !important;">
+                <h2 class="modal-title h6 fw-bold" id="stage1ConfirmTitle">Submit Stage 1 Diagnosis?</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body small text-muted">
+                <p class="mb-2">Your findings (<strong id="confirmFindingCount" class="text-body">0</strong> logged), proposed fix, and verification plan will be locked and evaluated immediately against the task rubric.</p>
+                <p class="mb-0">Once submitted, this practice attempt cannot be edited.</p>
+            </div>
+            <div class="modal-footer border-top" style="border-color: var(--dash-border) !important;">
+                <button type="button" class="dash-btn dash-btn-outline dash-btn-sm" data-bs-dismiss="modal">Keep Editing</button>
+                <button type="button" class="dash-btn dash-btn-primary dash-btn-sm px-3" id="confirmFinalSubmitBtn">
+                    Confirm &amp; Evaluate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categories = [
+        {% for cat in task.issue_categories %}
+        { code: "{{ cat.code|escapejs }}", label: "{{ cat.label|escapejs }}" },
+        {% endfor %}
+    ];
+    const severities = [
+        {% for sev in task.severity_levels %}
+        { code: "{{ sev.code|escapejs }}", label: "{{ sev.label|escapejs }}" },
+        {% endfor %}
+    ];
+
+    const findingsList = document.getElementById('findingsList');
+    const emptyState = document.getElementById('findingsEmptyState');
+    const hiddenInput = document.getElementById('findingsJsonInput');
+    const formEl = document.getElementById('stage1SubmitForm');
+    const autosaveLabel = document.getElementById('autosaveStatus');
+    const draftUrl = "{% url 'interviews:stage1_save_draft' session.session_uuid %}";
+    const csrfToken = formEl.querySelector('[name="csrfmiddlewaretoken"]').value;
+
+    let findings = [];
+    try {
+        const parsed = JSON.parse(hiddenInput.value || '[]');
+        if (Array.isArray(parsed)) findings = parsed;
+    } catch (e) {
+        findings = [];
+    }
+    if (findings.length === 0) {
+        findings.push({
+            title: '',
+            category: categories[0] ? categories[0].code : 'LOGIC_ERROR',
+            severity: 'HIGH',
+            line_ref: '',
+            impact: '',
+            fix_suggestion: ''
+        });
+    }
+
+    function syncHidden() {
+        hiddenInput.value = JSON.stringify(findings);
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function renderFindings() {
+        findingsList.innerHTML = '';
+        if (findings.length === 0) {
+            emptyState.classList.remove('d-none');
+            syncHidden();
+            return;
+        }
+        emptyState.classList.add('d-none');
+
+        findings.forEach((f, idx) => {
+            const card = document.createElement('div');
+            card.className = 'stage1-finding-card';
+
+            const catOptions = categories.map(c =>
+                `<option value="${c.code}" ${f.category === c.code ? 'selected' : ''}>${escapeHtml(c.label)}</option>`
+            ).join('');
+            const sevOptions = severities.map(s =>
+                `<option value="${s.code}" ${f.severity === s.code ? 'selected' : ''}>${escapeHtml(s.label)}</option>`
+            ).join('');
+
+            card.innerHTML = `
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="readiness-eyebrow">Finding #${idx + 1}</span>
+                    <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none remove-finding-btn" data-idx="${idx}" aria-label="Remove finding ${idx + 1}">Remove</button>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-semibold mb-1" for="f-title-${idx}">Issue Summary</label>
+                    <input type="text" id="f-title-${idx}" class="form-control form-control-sm finding-field" data-idx="${idx}" data-key="title" maxlength="240" value="${escapeHtml(f.title)}" placeholder="e.g., Bare Exception silently hides database write failure">
+                </div>
+                <div class="row g-2 mb-2">
+                    <div class="col-sm-5">
+                        <label class="form-label small fw-semibold mb-1" for="f-cat-${idx}">Category</label>
+                        <select id="f-cat-${idx}" class="form-select form-select-sm finding-field" data-idx="${idx}" data-key="category">${catOptions}</select>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="form-label small fw-semibold mb-1" for="f-sev-${idx}">Severity</label>
+                        <select id="f-sev-${idx}" class="form-select form-select-sm finding-field" data-idx="${idx}" data-key="severity">${sevOptions}</select>
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="form-label small fw-semibold mb-1" for="f-line-${idx}">Lines</label>
+                        <input type="text" id="f-line-${idx}" class="form-control form-control-sm finding-field" data-idx="${idx}" data-key="line_ref" maxlength="40" value="${escapeHtml(f.line_ref)}" placeholder="e.g. 11-12">
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-semibold mb-1" for="f-impact-${idx}">Why It Matters (Production Impact)</label>
+                    <textarea id="f-impact-${idx}" class="form-control form-control-sm finding-field" data-idx="${idx}" data-key="impact" rows="2" maxlength="1500" placeholder="Explain failure mode, corruption, or latency impact...">${escapeHtml(f.impact)}</textarea>
+                </div>
+                <div>
+                    <label class="form-label small fw-semibold mb-1" for="f-fix-${idx}">Recommended Fix</label>
+                    <textarea id="f-fix-${idx}" class="form-control form-control-sm finding-field" data-idx="${idx}" data-key="fix_suggestion" rows="2" maxlength="1500" placeholder="Explain concrete correction...">${escapeHtml(f.fix_suggestion)}</textarea>
+                </div>
+            `;
+            findingsList.appendChild(card);
+        });
+        syncHidden();
+    }
+
+    findingsList.addEventListener('input', function(e) {
+        const el = e.target;
+        if (!el.classList.contains('finding-field')) return;
+        const idx = parseInt(el.dataset.idx, 10);
+        const key = el.dataset.key;
+        if (findings[idx]) {
+            findings[idx][key] = el.value;
+            syncHidden();
+            scheduleDraftSave();
+        }
+    });
+
+    findingsList.addEventListener('change', function(e) {
+        const el = e.target;
+        if (!el.classList.contains('finding-field')) return;
+        const idx = parseInt(el.dataset.idx, 10);
+        const key = el.dataset.key;
+        if (findings[idx]) {
+            findings[idx][key] = el.value;
+            syncHidden();
+            scheduleDraftSave();
+        }
+    });
+
+    findingsList.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('remove-finding-btn')) return;
+        const idx = parseInt(e.target.dataset.idx, 10);
+        findings.splice(idx, 1);
+        renderFindings();
+        scheduleDraftSave();
+    });
+
+    function addNewFinding() {
+        if (findings.length >= 12) return;
+        findings.push({
+            title: '',
+            category: categories[0] ? categories[0].code : 'LOGIC_ERROR',
+            severity: 'HIGH',
+            line_ref: '',
+            impact: '',
+            fix_suggestion: ''
+        });
+        renderFindings();
+    }
+
+    document.getElementById('addFindingBtn').addEventListener('click', addNewFinding);
+    document.getElementById('addFindingEmptyBtn').addEventListener('click', addNewFinding);
+
+    ['proposedFixCode', 'testPlanInput', 'overallSummaryInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', scheduleDraftSave);
+    });
+
+    let saveTimer = null;
+    function scheduleDraftSave() {
+        autosaveLabel.textContent = 'Saving...';
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveDraftNow, 1500);
+    }
+
+    async function saveDraftNow() {
+        try {
+            const resp = await fetch(draftUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    findings: findings,
+                    proposed_fix_code: document.getElementById('proposedFixCode').value,
+                    test_plan: document.getElementById('testPlanInput').value,
+                    overall_summary: document.getElementById('overallSummaryInput').value
+                })
+            });
+            autosaveLabel.textContent = resp.ok ? 'Draft saved' : 'Sync pending';
+        } catch (err) {
+            autosaveLabel.textContent = 'Offline draft';
+        }
+    }
+
+    // Countdown timer synced to server remaining_seconds
+    let remaining = parseInt("{{ remaining_seconds }}", 10) || 0;
+    const timerEl = document.getElementById('stage1TimerDisplay');
+    function updateTimer() {
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        timerEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        if (remaining <= 60) {
+            timerEl.classList.add('is-urgent');
+        }
+        if (remaining > 0) {
+            remaining -= 1;
+        }
+    }
+    updateTimer();
+    setInterval(updateTimer, 1000);
+
+    // Confirmation modal & double-submit guard
+    let submitted = false;
+    const confirmModalEl = document.getElementById('stage1ConfirmModal');
+    const confirmModal = (window.bootstrap && confirmModalEl) ? new window.bootstrap.Modal(confirmModalEl) : null;
+
+    document.getElementById('openConfirmModalBtn').addEventListener('click', function() {
+        syncHidden();
+        const nonEmptyCount = findings.filter(f => (f.title || '').trim() || (f.impact || '').trim() || (f.fix_suggestion || '').trim()).length;
+        document.getElementById('confirmFindingCount').textContent = String(nonEmptyCount);
+        if (confirmModal) {
+            confirmModal.show();
+        } else {
+            formEl.submit();
+        }
+    });
+
+    document.getElementById('confirmFinalSubmitBtn').addEventListener('click', function() {
+        if (submitted) return;
+        submitted = true;
+        this.disabled = true;
+        this.textContent = 'Evaluating...';
+        syncHidden();
+        formEl.submit();
+    });
+
+    renderFindings();
+});
+</script>
+{% endblock %}
